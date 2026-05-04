@@ -1,12 +1,12 @@
-import { mockLecture } from "@/lib/mockData";
+import type { Lecture } from "@/lib/mockData";
 import { BloomBadge } from "@/components/BloomBadge";
 import { CognitiveLoad } from "@/components/CognitiveLoad";
 
-export const OutlineTab = () => (
+export const OutlineTab = ({ lecture }: { lecture: Lecture }) => (
   <div className="space-y-2">
-    {mockLecture.outline.map((item) => (
+    {lecture.outline.map((item, idx) => (
       <div
-        key={item.timestamp}
+        key={`${item.timestamp}-${idx}`}
         className="group flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-card transition-colors hover:border-primary/40"
       >
         <span className="font-mono text-sm text-muted-foreground tabular-nums w-14">{item.timestamp}</span>
