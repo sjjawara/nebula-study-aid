@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { mockLecture } from "@/lib/mockData";
+import type { Lecture } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ const depths = [
   { id: "full", label: "Full summary" },
 ] as const;
 
-export const SummariesTab = () => {
+export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
   const [depth, setDepth] = useState<typeof depths[number]["id"]>("short");
   return (
     <div className="space-y-6">
@@ -27,7 +27,7 @@ export const SummariesTab = () => {
       </div>
       <article className="rounded-xl border border-border bg-card p-6 shadow-card">
         <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line">
-          {mockLecture.summaries[depth]}
+          {lecture.summaries[depth] || "No summary available."}
         </p>
       </article>
     </div>

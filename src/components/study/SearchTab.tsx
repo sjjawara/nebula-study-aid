@@ -1,15 +1,19 @@
 import { useMemo, useState } from "react";
-import { mockLecture } from "@/lib/mockData";
+import type { Lecture } from "@/lib/mockData";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
-export const SearchTab = () => {
+export const SearchTab = ({ lecture }: { lecture: Lecture }) => {
   const [q, setQ] = useState("");
   const results = useMemo(() => {
-    if (!q.trim()) return mockLecture.searchIndex;
+    if (!q.trim()) return lecture.searchIndex;
     const needle = q.toLowerCase();
-    return mockLecture.searchIndex.filter((m) => m.excerpt.toLowerCase().includes(needle));
-  }, [q]);
+    return lecture.searchIndex.filter((m) =>
+      [m.excerpt, m.topic, ...(m.keywords ?? [])]
+        .filter(Boolean)
+        .some((s) => String(s).toLowerCase().includes(needle))
+    );
+  }, [q, lecture.searchIndex]);
 
   return (
     <div className="space-y-4">
@@ -29,7 +33,17 @@ export const SearchTab = () => {
         {results.map((m, idx) => (
           <div key={idx} className="flex gap-4 rounded-xl border border-border bg-card p-4 shadow-card hover:border-primary/40 transition-colors cursor-pointer">
             <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
-            <p className="text-sm text-foreground/80 leading-relaxed">{m.excerpt}</p>
+            <div className="space-y-1">
+              {m.topic && <p className="text-sm font-medium text-foreground">{m.topic}</p>}
+              <p className="text-sm text-foreground/80 leading-relaxed">{m.excerpt}</p>
+              {m.keywords && m.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {m.keywords.map((k) => (
+                    <span key={k} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{k}</span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>

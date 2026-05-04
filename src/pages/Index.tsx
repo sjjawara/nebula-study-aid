@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
-import { Sparkles, Youtube } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sparkles, Youtube, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockLecture } from "@/lib/mockData";
+import { parseLecture, type Lecture, type ApiResponse } from "@/lib/mockData";
 import { OutlineTab } from "@/components/study/OutlineTab";
 import { SummariesTab } from "@/components/study/SummariesTab";
 import { FlashcardsTab } from "@/components/study/FlashcardsTab";
 import { SearchTab } from "@/components/study/SearchTab";
 
-type Stage = "input" | "loading" | "results";
+type Stage = "input" | "loading" | "results" | "error";
 
 const loadingSteps = [
   "Extracting transcript...",
@@ -17,26 +17,78 @@ const loadingSteps = [
   "Building your study environment...",
 ];
 
+const API_URL = "https://nebulalearn-production.up.railway.app/process";
+
 const Index = () => {
   const [stage, setStage] = useState<Stage>("input");
   const [url, setUrl] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
+  const [lecture, setLecture] = useState<Lecture | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const elapsedRef = useRef<number>(0);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     if (stage !== "loading") return;
     setStepIndex(0);
-    const timers = [
-      setTimeout(() => setStepIndex(1), 1100),
-      setTimeout(() => setStepIndex(2), 2300),
-      setTimeout(() => setStage("results"), 3600),
+    elapsedRef.current = 0;
+    setElapsed(0);
+    // Slowly progress through visual steps over the expected 30-60s window
+    const stepTimers = [
+      setTimeout(() => setStepIndex(1), 8000),
+      setTimeout(() => setStepIndex(2), 22000),
     ];
-    return () => timers.forEach(clearTimeout);
+    const tick = setInterval(() => {
+      elapsedRef.current += 1;
+      setElapsed(elapsedRef.current);
+    }, 1000);
+    return () => {
+      stepTimers.forEach(clearTimeout);
+      clearInterval(tick);
+    };
   }, [stage]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
+    setError(null);
+    setLecture(null);
     setStage("loading");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request failed (${res.status})`);
+      }
+
+      const payload = await res.json();
+
+      if (payload?.error) {
+        throw new Error(String(payload.error));
+      }
+
+      const raw = payload?.data;
+      if (!raw) throw new Error("Malformed response: missing 'data' field.");
+
+      const parsed: ApiResponse = typeof raw === "string" ? JSON.parse(raw) : raw;
+      setLecture(parseLecture(parsed));
+      setStage("results");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setStage("error");
+    }
+  };
+
+  const reset = () => {
+    setStage("input");
+    setUrl("");
+    setLecture(null);
+    setError(null);
   };
 
   return (
@@ -54,8 +106,8 @@ const Index = () => {
               <p className="text-xs text-muted-foreground -mt-0.5">Turn any lecture into a study environment</p>
             </div>
           </div>
-          {stage === "results" && (
-            <Button variant="ghost" size="sm" onClick={() => { setStage("input"); setUrl(""); }}>
+          {(stage === "results" || stage === "error") && (
+            <Button variant="ghost" size="sm" onClick={reset}>
               New lecture
             </Button>
           )}
@@ -125,14 +177,30 @@ const Index = () => {
                 );
               })}
             </ul>
+            <p className="text-xs text-muted-foreground">
+              This usually takes 30–60 seconds · {elapsed}s elapsed
+            </p>
           </section>
         )}
 
-        {stage === "results" && (
+        {stage === "error" && (
+          <section className="py-20 flex flex-col items-center gap-6 text-center">
+            <div className="h-14 w-14 rounded-full bg-destructive/15 flex items-center justify-center">
+              <AlertCircle className="h-7 w-7 text-destructive" />
+            </div>
+            <div className="space-y-2 max-w-md">
+              <h3 className="text-xl font-semibold">We couldn't process that lecture</h3>
+              <p className="text-sm text-muted-foreground">{error ?? "Unknown error."}</p>
+            </div>
+            <Button onClick={reset} className="bg-gradient-primary">Try another URL</Button>
+          </section>
+        )}
+
+        {stage === "results" && lecture && (
           <section className="space-y-8">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-wider text-primary font-medium">Lecture loaded</p>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{mockLecture.title}</h2>
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{lecture.title}</h2>
             </div>
 
             <Tabs defaultValue="outline" className="w-full">
@@ -143,16 +211,16 @@ const Index = () => {
                 <TabsTrigger value="search">Search</TabsTrigger>
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
-                <OutlineTab />
+                <OutlineTab lecture={lecture} />
               </TabsContent>
               <TabsContent value="summaries" className="mt-6">
-                <SummariesTab />
+                <SummariesTab lecture={lecture} />
               </TabsContent>
               <TabsContent value="flashcards" className="mt-6">
-                <FlashcardsTab />
+                <FlashcardsTab lecture={lecture} />
               </TabsContent>
               <TabsContent value="search" className="mt-6">
-                <SearchTab />
+                <SearchTab lecture={lecture} />
               </TabsContent>
             </Tabs>
           </section>

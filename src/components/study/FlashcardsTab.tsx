@@ -1,14 +1,19 @@
 import { useState } from "react";
-import { mockLecture } from "@/lib/mockData";
+import type { Lecture } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
 import { ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
 
-export const FlashcardsTab = () => {
+export const FlashcardsTab = ({ lecture }: { lecture: Lecture }) => {
   const [i, setI] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const card = mockLecture.flashcards[i];
-  const total = mockLecture.flashcards.length;
+  const total = lecture.flashcards.length;
+
+  if (total === 0) {
+    return <p className="text-sm text-muted-foreground text-center py-8">No flashcards available.</p>;
+  }
+
+  const card = lecture.flashcards[i % total];
 
   const go = (delta: number) => {
     setFlipped(false);
@@ -18,7 +23,7 @@ export const FlashcardsTab = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Card {i + 1} of {total}</span>
+        <span>Card {i + 1} of {total}{card.timestamp ? ` · ${card.timestamp}` : ""}</span>
         <BloomBadge level={card.bloom} />
       </div>
 
