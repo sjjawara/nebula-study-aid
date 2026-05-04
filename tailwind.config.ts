@@ -57,6 +57,17 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        bloom: {
+          remember: "hsl(var(--bloom-remember))",
+          understand: "hsl(var(--bloom-understand))",
+          apply: "hsl(var(--bloom-apply))",
+          analyze: "hsl(var(--bloom-analyze))",
+          evaluate: "hsl(var(--bloom-evaluate))",
+          create: "hsl(var(--bloom-create))",
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
