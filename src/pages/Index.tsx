@@ -18,6 +18,21 @@ const loadingSteps = [
 ];
 
 const API_URL = "https://nebulalearn-production.up.railway.app/process";
+const API_URL_WITH_TRANSCRIPT = "https://nebulalearn-production.up.railway.app/process-with-transcript";
+const TRANSCRIPT_URL = "https://api.supadata.ai/v1/youtube/transcript";
+
+const fetchTranscript = async (youtubeUrl: string): Promise<string | null> => {
+  try {
+    const res = await fetch(`${TRANSCRIPT_URL}?url=${encodeURIComponent(youtubeUrl)}&text=true`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = typeof data === "string" ? data : data?.content ?? data?.text ?? data?.transcript;
+    if (typeof text === "string" && text.trim().length > 0) return text;
+    return null;
+  } catch {
+    return null;
+  }
+};
 
 const Index = () => {
   const [stage, setStage] = useState<Stage>("input");
