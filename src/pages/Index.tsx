@@ -57,12 +57,11 @@ const Index = () => {
 
     try {
       const trimmedUrl = url.trim();
-      const transcript = await fetchTranscript(trimmedUrl);
 
-      const res = await fetch(API_URL_WITH_TRANSCRIPT, {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: trimmedUrl, transcript }),
+        body: JSON.stringify({ url: trimmedUrl }),
       });
 
       if (!res.ok) {
