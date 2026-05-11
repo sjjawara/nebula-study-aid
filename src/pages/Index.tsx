@@ -17,21 +17,34 @@ const loadingSteps = [
   "Building your study environment...",
 ];
 
-const API_URL = "https://nebulalearn-production.up.railway.app/process";
 const API_URL_WITH_TRANSCRIPT = "https://nebulalearn-production.up.railway.app/process-with-transcript";
 const TRANSCRIPT_URL = "https://api.supadata.ai/v1/youtube/transcript";
 
-const fetchTranscript = async (youtubeUrl: string): Promise<string | null> => {
+const TRANSCRIPT_ERROR = "Could not retrieve transcript. Please ensure the video has closed captions enabled.";
+
+const fetchTranscript = async (youtubeUrl: string): Promise<string> => {
+  let res: Response;
   try {
-    const res = await fetch(`${TRANSCRIPT_URL}?url=${encodeURIComponent(youtubeUrl)}&text=true`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text = typeof data === "string" ? data : data?.content ?? data?.text ?? data?.transcript;
-    if (typeof text === "string" && text.trim().length > 0) return text;
-    return null;
+    res = await fetch(`${TRANSCRIPT_URL}?url=${encodeURIComponent(youtubeUrl)}&text=true`);
   } catch {
-    return null;
+    throw new Error(TRANSCRIPT_ERROR);
   }
+  if (!res.ok) throw new Error(TRANSCRIPT_ERROR);
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(TRANSCRIPT_ERROR);
+  }
+  const d = data as Record<string, unknown> | string;
+  const text =
+    typeof d === "string"
+      ? d
+      : (d?.content as string) ?? (d?.text as string) ?? (d?.transcript as string);
+  if (typeof text !== "string" || text.trim().length === 0) {
+    throw new Error(TRANSCRIPT_ERROR);
+  }
+  return text;
 };
 
 const Index = () => {
