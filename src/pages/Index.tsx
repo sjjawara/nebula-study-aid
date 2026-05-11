@@ -25,7 +25,9 @@ const TRANSCRIPT_ERROR = "Could not retrieve transcript. Please ensure the video
 const fetchTranscript = async (youtubeUrl: string): Promise<string> => {
   let res: Response;
   try {
-    res = await fetch(`${TRANSCRIPT_URL}?url=${encodeURIComponent(youtubeUrl)}&text=true`);
+    res = await fetch(`${TRANSCRIPT_URL}?url=${encodeURIComponent(youtubeUrl)}&text=true`, {
+      headers: { "x-api-key": "sd_edec8f6fedd695966f25f6c5283ca21e" },
+    });
   } catch {
     throw new Error(TRANSCRIPT_ERROR);
   }
