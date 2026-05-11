@@ -234,6 +234,9 @@ const Index = () => {
                   }
                 />
               </TabsContent>
+              <TabsContent value="quiz" className="mt-6">
+                <TopDownMasteryQuiz lecture={lecture} />
+              </TabsContent>
             </Tabs>
           </section>
         )}
