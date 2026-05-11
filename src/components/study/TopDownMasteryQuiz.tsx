@@ -42,6 +42,27 @@ type Feedback = {
 
 type Stage = "l5" | "l4" | "l3" | "l1" | "done";
 
+const Section = ({
+  children,
+  show,
+  badge,
+}: {
+  children: React.ReactNode;
+  show: boolean;
+  badge?: string;
+}) =>
+  show ? (
+    <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm">
+      {badge && (
+        <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+          <Unlock className="h-3 w-3" />
+          {badge}
+        </div>
+      )}
+      {children}
+    </div>
+  ) : null;
+
 const shuffle = <T,>(arr: T[]): T[] => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
