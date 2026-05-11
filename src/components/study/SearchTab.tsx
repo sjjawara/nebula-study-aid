@@ -63,7 +63,7 @@ const dedupeKeywords = (keywords: string[] | undefined, topic: string | undefine
     const kTokens = tokenize(k);
     if (kTokens.length > 0 && topicTokens.size > 0) {
       const overlap = kTokens.filter((t) => topicTokens.has(t)).length;
-      if (overlap / kTokens.length >= 0.7) continue;
+      if (overlap / kTokens.length > 0.5) continue;
     }
 
     seen.add(norm);
