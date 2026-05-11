@@ -3,6 +3,13 @@ import type { Lecture, Flashcard, BloomLevel, SearchMoment } from "@/lib/mockDat
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Search, Sparkles, Plus, Check, ExternalLink, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -32,16 +39,57 @@ const buildYoutubeLink = (videoUrl: string | undefined, ts: string): string | nu
   }
 };
 
+const tokenize = (s: string): string[] =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !["the", "and", "for", "with", "from", "this", "that"].includes(w));
+
+const dedupeKeywords = (keywords: string[] | undefined, topic: string | undefined): string[] => {
+  if (!keywords) return [];
+  const topicTokens = new Set(tokenize(topic ?? ""));
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const k of keywords) {
+    const norm = k.trim().toLowerCase();
+    if (!norm || seen.has(norm)) continue;
+
+    // Skip if keyword equals topic
+    if (topic && norm === topic.trim().toLowerCase()) continue;
+
+    // Skip if keyword tokens are mostly contained in the topic (>=70% overlap)
+    const kTokens = tokenize(k);
+    if (kTokens.length > 0 && topicTokens.size > 0) {
+      const overlap = kTokens.filter((t) => topicTokens.has(t)).length;
+      if (overlap / kTokens.length >= 0.7) continue;
+    }
+
+    seen.add(norm);
+    result.push(k);
+  }
+  return result;
+};
+
+const bloomFor = (
+  moment: SearchMoment | null,
+  outline: Lecture["outline"]
+): BloomLevel => {
+  if (!moment) return "Understand";
+  const matched = outline.find(
+    (o) => o.timestamp === moment.timestamp || (moment.topic && o.topic === moment.topic)
+  );
+  return matched?.bloom ?? "Understand";
+};
+
 const generateFlashcard = (
   moment: SearchMoment,
   outline: Lecture["outline"]
 ): Flashcard => {
   const topic = moment.topic ?? "this moment";
   const keywords = moment.keywords ?? [];
-  const matched = outline.find(
-    (o) => o.timestamp === moment.timestamp || (moment.topic && o.topic === moment.topic)
-  );
-  const bloom: BloomLevel = matched?.bloom ?? "Understand";
+  const bloom = bloomFor(moment, outline);
 
   const verbByBloom: Record<BloomLevel, string> = {
     Remember: `What are the key facts about "${topic}"?`,
@@ -65,10 +113,38 @@ const generateFlashcard = (
   };
 };
 
+const generateKeywordFlashcard = (
+  keyword: string,
+  moment: SearchMoment,
+  outline: Lecture["outline"]
+): Flashcard => {
+  const topic = moment.topic ?? "the lecture";
+  const bloom = bloomFor(moment, outline);
+
+  const promptByBloom: Record<BloomLevel, string> = {
+    Remember: `Define "${keyword}" as it appears in "${topic}".`,
+    Understand: `Explain "${keyword}" in the context of "${topic}".`,
+    Apply: `How is "${keyword}" applied within "${topic}"?`,
+    Analyze: `Analyze the role of "${keyword}" within "${topic}".`,
+    Evaluate: `Why is "${keyword}" important to "${topic}"?`,
+    Create: `Construct an example that uses "${keyword}" to illustrate "${topic}".`,
+  };
+
+  return {
+    question: promptByBloom[bloom],
+    answer: moment.excerpt
+      ? `In the context of "${topic}": ${moment.excerpt}`
+      : `Refer to "${topic}" at ${moment.timestamp}.`,
+    bloom,
+    timestamp: moment.timestamp,
+  };
+};
+
 export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps) => {
   const [q, setQ] = useState("");
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
+  const [modalCard, setModalCard] = useState<{ card: Flashcard; saveKey: string } | null>(null);
 
   const results = useMemo(() => {
     if (!q.trim()) return lecture.searchIndex;
@@ -79,6 +155,18 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
         .some((s) => String(s).toLowerCase().includes(needle))
     );
   }, [q, lecture.searchIndex]);
+
+  const handleSave = (card: Flashcard, key: string) => {
+    onSaveFlashcard?.(card);
+    setSavedKeys((s) => new Set(s).add(key));
+    toast({
+      title: "Saved to Flashcards",
+      description: "You can review it from the Flashcards tab.",
+    });
+  };
+
+  const modalLink = modalCard ? buildYoutubeLink(videoUrl, modalCard.card.timestamp ?? "") : null;
+  const modalSaved = modalCard ? savedKeys.has(modalCard.saveKey) : false;
 
   return (
     <div className="space-y-4">
@@ -99,32 +187,57 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
           const isOpen = openIdx === idx;
           const card = isOpen ? generateFlashcard(m, lecture.outline) : null;
           const link = buildYoutubeLink(videoUrl, m.timestamp);
-          const savedKey = `${m.timestamp}|${m.topic ?? ""}`;
+          const savedKey = `moment|${m.timestamp}|${m.topic ?? ""}`;
           const isSaved = savedKeys.has(savedKey);
+          const cleanKeywords = dedupeKeywords(m.keywords, m.topic);
 
           return (
             <div key={idx} className="space-y-2">
-              <button
-                type="button"
-                onClick={() => setOpenIdx(isOpen ? null : idx)}
+              <div
                 className={`w-full text-left flex gap-4 rounded-xl border bg-card p-4 shadow-card transition-colors ${
                   isOpen ? "border-primary/60" : "border-border hover:border-primary/40"
                 }`}
               >
-                <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
-                <div className="space-y-1 flex-1">
-                  {m.topic && <p className="text-sm font-medium text-foreground">{m.topic}</p>}
-                  <p className="text-sm text-foreground/80 leading-relaxed">{m.excerpt}</p>
-                  {m.keywords && m.keywords.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {m.keywords.map((k) => (
-                        <span key={k} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{k}</span>
-                      ))}
-                    </div>
-                  )}
+                <button
+                  type="button"
+                  onClick={() => setOpenIdx(isOpen ? null : idx)}
+                  className="flex gap-4 flex-1 text-left"
+                >
+                  <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
+                  <div className="space-y-1 flex-1">
+                    {m.topic && <p className="text-sm font-medium text-foreground">{m.topic}</p>}
+                    <p className="text-sm text-foreground/80 leading-relaxed">{m.excerpt}</p>
+                  </div>
+                  <Sparkles className={`h-4 w-4 shrink-0 mt-0.5 transition-colors ${isOpen ? "text-primary" : "text-muted-foreground"}`} />
+                </button>
+              </div>
+
+              {cleanKeywords.length > 0 && (
+                <div className="flex flex-wrap gap-1 pl-4">
+                  {cleanKeywords.map((k) => {
+                    const kKey = `kw|${m.timestamp}|${k.toLowerCase()}`;
+                    const kSaved = savedKeys.has(kKey);
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const generated = generateKeywordFlashcard(k, m, lecture.outline);
+                          setModalCard({ card: generated, saveKey: kKey });
+                        }}
+                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                          kSaved
+                            ? "bg-primary/15 text-primary border-primary/30"
+                            : "bg-muted text-muted-foreground border-transparent hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+                        }`}
+                      >
+                        {k}
+                      </button>
+                    );
+                  })}
                 </div>
-                <Sparkles className={`h-4 w-4 shrink-0 mt-0.5 transition-colors ${isOpen ? "text-primary" : "text-muted-foreground"}`} />
-              </button>
+              )}
 
               {isOpen && card && (
                 <div className="ml-0 md:ml-8 rounded-xl border border-primary/40 bg-card/80 p-5 shadow-glow space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -170,25 +283,14 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                     <Button
                       size="sm"
                       disabled={isSaved || !onSaveFlashcard}
-                      onClick={() => {
-                        onSaveFlashcard?.(card);
-                        setSavedKeys((s) => new Set(s).add(savedKey));
-                        toast({
-                          title: "Saved to Flashcards",
-                          description: "You can review it from the Flashcards tab.",
-                        });
-                      }}
+                      onClick={() => handleSave(card, savedKey)}
                       className={isSaved ? "" : "bg-gradient-primary hover:opacity-90"}
                       variant={isSaved ? "secondary" : "default"}
                     >
                       {isSaved ? (
-                        <>
-                          <Check className="h-4 w-4 mr-1.5" /> Saved
-                        </>
+                        <><Check className="h-4 w-4 mr-1.5" /> Saved</>
                       ) : (
-                        <>
-                          <Plus className="h-4 w-4 mr-1.5" /> Save to Flashcards
-                        </>
+                        <><Plus className="h-4 w-4 mr-1.5" /> Save to Flashcards</>
                       )}
                     </Button>
                   </div>
@@ -198,6 +300,64 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
           );
         })}
       </div>
+
+      <Dialog open={!!modalCard} onOpenChange={(open) => !open && setModalCard(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Keyword flashcard
+            </DialogTitle>
+            <DialogDescription>
+              Generated from a keyword in the lecture context.
+            </DialogDescription>
+          </DialogHeader>
+
+          {modalCard && (
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <BloomBadge level={modalCard.card.bloom} />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Question</p>
+                <p className="text-base text-foreground leading-relaxed">{modalCard.card.question}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Answer</p>
+                <p className="text-sm text-foreground/90 leading-relaxed">{modalCard.card.answer}</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border">
+                {modalLink && modalCard.card.timestamp ? (
+                  <a
+                    href={modalLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
+                  >
+                    {modalCard.card.timestamp}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <span className="text-sm font-mono text-primary">{modalCard.card.timestamp}</span>
+                )}
+                <Button
+                  size="sm"
+                  disabled={modalSaved || !onSaveFlashcard}
+                  onClick={() => handleSave(modalCard.card, modalCard.saveKey)}
+                  className={modalSaved ? "" : "bg-gradient-primary hover:opacity-90"}
+                  variant={modalSaved ? "secondary" : "default"}
+                >
+                  {modalSaved ? (
+                    <><Check className="h-4 w-4 mr-1.5" /> Saved</>
+                  ) : (
+                    <><Plus className="h-4 w-4 mr-1.5" /> Save to Flashcards</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
