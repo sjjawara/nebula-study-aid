@@ -194,92 +194,45 @@ export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
           </div>
         </div>
 
-        {/* Level 5 — Justify */}
-        <Section show={unlocked.has("l5") && stage !== "done"}>
+        {/* Level 1 — True/False */}
+        <Section show={unlocked.has("l1") && stage !== "done"} badge="Hint Unlocked">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Defend your reasoning
+                  Foundational check
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Why is this the correct explanation, and not an alternative? Justify it.
+                  True or false: <span className="text-foreground">{card.answer}</span>
                 </p>
               </div>
-              <BloomBadge level="Evaluate" />
+              <BloomBadge level="Remember" />
             </div>
-            <Textarea
-              value={justification}
-              onChange={(e) => setJustification(e.target.value)}
-              placeholder="Write your justification here..."
-              className="min-h-[140px] resize-none bg-background"
-            />
-            {submitError && (
-              <p className="text-xs text-destructive">{submitError}</p>
-            )}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <Tooltip>
-                <TooltipTrigger asChild>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "True", value: true },
+                { label: "False", value: false },
+              ].map((o) => {
+                const selected = tfChoice === o.value;
+                const correct = o.value === true;
+                const showRight = selected && correct;
+                const showWrong = selected && !correct;
+                return (
                   <button
-                    onClick={requestScaffold}
-                    className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                    key={o.label}
+                    onClick={() => setTfChoice(o.value)}
+                    className={cn(
+                      "rounded-xl border bg-background p-4 text-sm font-medium transition-all hover:border-primary/40",
+                      !selected && "border-border text-foreground",
+                      showRight && "border-emerald-500/50 bg-emerald-500/5 text-emerald-700",
+                      showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
+                    )}
                   >
-                    I'm stuck, break it down for me
+                    {o.label}
                   </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  Struggling a bit longer improves retention.
-                </TooltipContent>
-              </Tooltip>
-              <Button
-                onClick={submitJustification}
-                disabled={!justification.trim() || submitting}
-                className="bg-gradient-primary"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Evaluating...
-                  </>
-                ) : (
-                  <>
-                    Submit Justification
-                    <ChevronRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
+                );
+              })}
             </div>
-          </div>
-        </Section>
-
-        {/* Level 4 — Brainstorm */}
-        <Section show={unlocked.has("l4") && stage !== "done"} badge="Hint Unlocked">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  What concepts are relevant here?
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Free-write the ideas, terms, or relationships you'd need.
-                </p>
-              </div>
-              <BloomBadge level="Analyze" />
-            </div>
-            <Textarea
-              value={brainstorm}
-              onChange={(e) => setBrainstorm(e.target.value)}
-              placeholder="List the concepts that come to mind..."
-              className="min-h-[100px] resize-none bg-background"
-            />
-            {stage === "l4" && (
-              <div className="flex justify-end">
-                <Button variant="secondary" onClick={requestScaffold}>
-                  Still stuck — show options
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
           </div>
         </Section>
 
@@ -341,44 +294,91 @@ export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
           </div>
         </Section>
 
-        {/* Level 1 — True/False */}
-        <Section show={unlocked.has("l1") && stage !== "done"} badge="Hint Unlocked">
+        {/* Level 4 — Brainstorm */}
+        <Section show={unlocked.has("l4") && stage !== "done"} badge="Hint Unlocked">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Foundational check
+                  What concepts are relevant here?
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  True or false: <span className="text-foreground">{card.answer}</span>
+                  Free-write the ideas, terms, or relationships you'd need.
                 </p>
               </div>
-              <BloomBadge level="Remember" />
+              <BloomBadge level="Analyze" />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "True", value: true },
-                { label: "False", value: false },
-              ].map((o) => {
-                const selected = tfChoice === o.value;
-                const correct = o.value === true;
-                const showRight = selected && correct;
-                const showWrong = selected && !correct;
-                return (
+            <Textarea
+              value={brainstorm}
+              onChange={(e) => setBrainstorm(e.target.value)}
+              placeholder="List the concepts that come to mind..."
+              className="min-h-[100px] resize-none bg-background"
+            />
+            {stage === "l4" && (
+              <div className="flex justify-end">
+                <Button variant="secondary" onClick={requestScaffold}>
+                  Still stuck — show options
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </Section>
+
+        {/* Level 5 — Justify (original hard question, stays at bottom) */}
+        <Section show={unlocked.has("l5") && stage !== "done"}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Defend your reasoning
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Why is this the correct explanation, and not an alternative? Justify it.
+                </p>
+              </div>
+              <BloomBadge level="Evaluate" />
+            </div>
+            <Textarea
+              value={justification}
+              onChange={(e) => setJustification(e.target.value)}
+              placeholder="Write your justification here..."
+              className="min-h-[140px] resize-none bg-background"
+            />
+            {submitError && (
+              <p className="text-xs text-destructive">{submitError}</p>
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <button
-                    key={o.label}
-                    onClick={() => setTfChoice(o.value)}
-                    className={cn(
-                      "rounded-xl border bg-background p-4 text-sm font-medium transition-all hover:border-primary/40",
-                      !selected && "border-border text-foreground",
-                      showRight && "border-emerald-500/50 bg-emerald-500/5 text-emerald-700",
-                      showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
-                    )}
+                    onClick={requestScaffold}
+                    className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                   >
-                    {o.label}
+                    I'm stuck, break it down for me
                   </button>
-                );
-              })}
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Struggling a bit longer improves retention.
+                </TooltipContent>
+              </Tooltip>
+              <Button
+                onClick={submitJustification}
+                disabled={!justification.trim() || submitting}
+                className="bg-gradient-primary"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Evaluating...
+                  </>
+                ) : (
+                  <>
+                    Submit Justification
+                    <ChevronRight className="h-4 w-4" />
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </Section>
