@@ -207,11 +207,12 @@ const Index = () => {
             </div>
 
             <Tabs defaultValue="outline" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 bg-card border border-border h-12 p-1">
+              <TabsList className="grid w-full grid-cols-5 bg-card border border-border h-12 p-1">
                 <TabsTrigger value="outline">Outline</TabsTrigger>
                 <TabsTrigger value="summaries">Summaries</TabsTrigger>
                 <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
                 <TabsTrigger value="search">Search</TabsTrigger>
+                <TabsTrigger value="quiz">Quiz</TabsTrigger>
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
                 <OutlineTab lecture={lecture} />
