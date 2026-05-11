@@ -26,7 +26,10 @@ const fetchTranscript = async (youtubeUrl: string): Promise<string> => {
   let res: Response;
   try {
     res = await fetch(`${TRANSCRIPT_URL}?url=${encodeURIComponent(youtubeUrl)}&text=true`, {
-      headers: { "x-api-key": "sd_edec8f6fedd695966f25f6c5283ca21e" },
+      headers: {
+        "x-api-key": "sd_edec8f6fedd695966f25f6c5283ca21e",
+        "Content-Type": "application/json",
+      },
     });
   } catch {
     throw new Error(TRANSCRIPT_ERROR);
