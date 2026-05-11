@@ -17,40 +17,7 @@ const loadingSteps = [
   "Building your study environment...",
 ];
 
-const API_URL_WITH_TRANSCRIPT = "https://nebulalearn-production.up.railway.app/process-with-transcript";
-const TRANSCRIPT_URL = "https://api.supadata.ai/v1/youtube/transcript";
-
-const TRANSCRIPT_ERROR = "Could not retrieve transcript. Please ensure the video has closed captions enabled.";
-
-const fetchTranscript = async (youtubeUrl: string): Promise<string> => {
-  let res: Response;
-  try {
-    res = await fetch(`${TRANSCRIPT_URL}?url=${encodeURIComponent(youtubeUrl)}&text=true`, {
-      headers: {
-        "x-api-key": "sd_edec8f6fedd695966f25f6c5283ca21e",
-        "Content-Type": "application/json",
-      },
-    });
-  } catch {
-    throw new Error(TRANSCRIPT_ERROR);
-  }
-  if (!res.ok) throw new Error(TRANSCRIPT_ERROR);
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error(TRANSCRIPT_ERROR);
-  }
-  const d = data as Record<string, unknown> | string;
-  const text =
-    typeof d === "string"
-      ? d
-      : (d?.content as string) ?? (d?.text as string) ?? (d?.transcript as string);
-  if (typeof text !== "string" || text.trim().length === 0) {
-    throw new Error(TRANSCRIPT_ERROR);
-  }
-  return text;
-};
+const API_URL = "https://nebulalearn-production.up.railway.app/process";
 
 const Index = () => {
   const [stage, setStage] = useState<Stage>("input");
@@ -90,12 +57,11 @@ const Index = () => {
 
     try {
       const trimmedUrl = url.trim();
-      const transcript = await fetchTranscript(trimmedUrl);
 
-      const res = await fetch(API_URL_WITH_TRANSCRIPT, {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: trimmedUrl, transcript }),
+        body: JSON.stringify({ url: trimmedUrl }),
       });
 
       if (!res.ok) {
