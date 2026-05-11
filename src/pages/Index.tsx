@@ -222,7 +222,15 @@ const Index = () => {
                 <FlashcardsTab lecture={lecture} />
               </TabsContent>
               <TabsContent value="search" className="mt-6">
-                <SearchTab lecture={lecture} />
+                <SearchTab
+                  lecture={lecture}
+                  videoUrl={url}
+                  onSaveFlashcard={(card) =>
+                    setLecture((prev) =>
+                      prev ? { ...prev, flashcards: [...prev.flashcards, card] } : prev
+                    )
+                  }
+                />
               </TabsContent>
             </Tabs>
           </section>
