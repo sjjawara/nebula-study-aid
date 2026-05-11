@@ -71,10 +71,18 @@ const Index = () => {
     setStage("loading");
 
     try {
-      const res = await fetch(API_URL, {
+      const trimmedUrl = url.trim();
+      const transcript = await fetchTranscript(trimmedUrl);
+
+      const endpoint = transcript ? API_URL_WITH_TRANSCRIPT : API_URL;
+      const body = transcript
+        ? { url: trimmedUrl, transcript }
+        : { url: trimmedUrl };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
