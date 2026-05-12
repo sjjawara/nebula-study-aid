@@ -683,6 +683,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                 const totalTextHeight = lines.length * fs + (lines.length - 1) * LINE_GAP;
                 const firstBaselineY = (h - totalTextHeight) / 2 + fs * 0.82;
                 const hasNote = !!notes[n.data.id]?.trim();
+                const shouldLerp = draggingRef.current?.lerpIds?.has(n.data.id);
                 return (
                   <g
                     key={n.data.id}
@@ -694,7 +695,11 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     onPointerUp={handleNodePointerUp}
                     onMouseEnter={() => setHoveredId(n.data.id)}
                     onMouseLeave={() => setHoveredId((cur) => (cur === n.data.id ? null : cur))}
-                    style={{ cursor: tool === "relabel" ? "pointer" : "grab", touchAction: "none" }}
+                    style={{
+                      cursor: tool === "relabel" ? "pointer" : "grab",
+                      touchAction: "none",
+                      transition: shouldLerp ? "transform 150ms ease-out" : undefined,
+                    }}
                   >
                     <rect
                       width={w}
