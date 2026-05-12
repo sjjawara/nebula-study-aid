@@ -423,6 +423,14 @@ const Index = () => {
           </section>
         )}
       </main>
+
+      <SessionHistoryPanel
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        sessions={sessions}
+        onLoad={loadStored}
+        onRemove={removeStored}
+      />
     </div>
   );
 };
