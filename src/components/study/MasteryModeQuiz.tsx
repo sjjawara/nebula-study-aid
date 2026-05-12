@@ -285,17 +285,17 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-primary">Quiz complete</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-primary">{t("Quiz complete")}</p>
               <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-primary" />
-                {accuracy}% overall · peak level {peakLevel}
+                {accuracy}% {t("overall · peak level")} {t(peakLevel)}
               </h3>
-              <p className="text-sm text-muted-foreground">{overall}</p>
+              <p className="text-sm text-muted-foreground">{t(overall)}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={onExit}>
                 <X className="h-4 w-4" />
-                Close
+                {t("Close")}
               </Button>
             </div>
           </div>
