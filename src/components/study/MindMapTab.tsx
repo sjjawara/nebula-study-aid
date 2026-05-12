@@ -256,7 +256,17 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [selected, setSelected] = useState<TreeDatum | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const draggingRef = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number; moved: boolean } | null>(null);
+  const draggingRef = useRef<{
+    id: string;
+    startX: number;
+    startY: number;
+    baseX: number;
+    baseY: number;
+    moved: boolean;
+    descendants: { id: string; dx: number; dy: number }[];
+  } | null>(null);
+  // Latest laid-out nodes (with positions) so pointer handlers can find descendants.
+  const nodesRef = useRef<d3.HierarchyNode<TreeDatum>[]>([]);
 
   // Load persisted state on lecture change
   useEffect(() => {
