@@ -25,31 +25,7 @@ const labelFor: Record<LoadBucket, string> = {
   high: "High",
 };
 
-const timestampToSeconds = (ts: string): number => {
-  const parts = ts.split(":").map((p) => parseInt(p, 10) || 0);
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  return parts[0] || 0;
-};
-
-const extractVideoId = (videoUrl: string): string | null => {
-  try {
-    const u = new URL(videoUrl);
-    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1) || null;
-    const v = u.searchParams.get("v");
-    if (v) return v;
-    const m = u.pathname.match(/\/(?:embed|shorts|v)\/([^/?#]+)/);
-    if (m) return m[1];
-    return null;
-  } catch {
-    return null;
-  }
-};
-
-const openTimestamp = (videoId: string, seconds: number) => {
-  const url = `https://www.youtube.com/watch?v=${videoId}&t=${seconds}s`;
-  window.open(url, "_blank", "noopener,noreferrer");
-};
+import { extractVideoId, openYoutubeAt } from "@/lib/timestamp";
 
 export const OutlineTab = ({ lecture, videoUrl }: { lecture: Lecture; videoUrl?: string }) => {
   const videoId = videoUrl ? extractVideoId(videoUrl) : null;
