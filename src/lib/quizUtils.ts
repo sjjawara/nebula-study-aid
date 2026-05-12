@@ -76,6 +76,8 @@ export const pickDistractors = (
   const correct = card.answer.trim();
   const correctNorm = correct.toLowerCase();
   const correctLen = correct.length;
+  const correctTokens = new Set(contentTokens(correct));
+  const questionTokens = new Set(contentTokens(card.question));
 
   const pool = lecture.flashcards
     .filter((f) => {
@@ -85,6 +87,15 @@ export const pickDistractors = (
       if (an === correctNorm) return false;
       // Drop trivially-contained duplicates
       if (an.length > 6 && (correctNorm.includes(an) || an.includes(correctNorm))) return false;
+      // Drop wildly off-topic distractors — must share at least one
+      // content keyword with the question OR the correct answer to feel plausible.
+      const aTokens = contentTokens(a);
+      const sharesContext =
+        aTokens.some((t) => questionTokens.has(t) || correctTokens.has(t));
+      if (!sharesContext) return false;
+      // Length sanity: discard distractors more than 2.5x or less than 0.4x correct length
+      if (a.length > correctLen * 2.5 + 20) return false;
+      if (correctLen > 20 && a.length < correctLen * 0.4) return false;
       return true;
     })
     .map((f) => ({ text: f.answer.trim(), bloom: f.bloom }));
@@ -97,29 +108,39 @@ export const pickDistractors = (
       Math.abs(a.text.length - correctLen) - Math.abs(b.text.length - correctLen),
   );
 
-  // Take a wider candidate set then randomize within it so it isn't always the
-  // exact same three options.
   const candidates = ranked.slice(0, Math.max(count * 3, 6));
   return shuffle(candidates).slice(0, count).map((c) => c.text);
 };
 
 /**
- * Build a True/False statement for a card. Randomly returns either the real
- * answer (correctValue=true) or another lecture answer presented as if it
- * answered the same question (correctValue=false). Distractor statements are
- * length-matched so length isn't the giveaway.
+ * Build a True/False statement for a card. The statement is presented as a
+ * proposed answer to the card's actual question (which the caller should also
+ * render) so the claim is self-contained and unambiguous.
+ *
+ * Only single-claim answers are used — compound or multi-sentence answers are
+ * skipped so the True/False question tests one clear assertion.
  */
 export const buildTrueFalseStatement = (
   lecture: Lecture,
   card: Flashcard,
-): { statement: string; correctValue: boolean } => {
-  const showTrue = Math.random() < 0.5;
-  if (showTrue) return { statement: card.answer, correctValue: true };
+): { question: string; statement: string; correctValue: boolean } => {
+  const correctIsAtomic = isSingleClaim(card.answer);
 
-  const distractors = pickDistractors(lecture, card, 5);
+  // Try to source a single-claim distractor that contextually fits the question.
+  const distractors = pickDistractors(lecture, card, 6).filter(isSingleClaim);
+
+  const showTrue = correctIsAtomic ? Math.random() < 0.5 : false;
+
+  if (showTrue) {
+    return { question: card.question, statement: card.answer, correctValue: true };
+  }
+
   const fallback = distractors[0];
-  if (!fallback) return { statement: card.answer, correctValue: true };
-  return { statement: fallback, correctValue: false };
+  if (fallback) {
+    return { question: card.question, statement: fallback, correctValue: false };
+  }
+  // No good false statement available — fall back to truthful presentation.
+  return { question: card.question, statement: card.answer, correctValue: true };
 };
 
 export const BLOOM_ORDER: BloomLevel[] = [
@@ -131,27 +152,38 @@ export const BLOOM_ORDER: BloomLevel[] = [
   "Create",
 ];
 
+/**
+ * Pick a flashcard for a given Bloom level, silently skipping cards that fail
+ * quality validation (stem leaks the answer, etc.).
+ */
 export const pickCardForLevel = (
   lecture: Lecture,
   level: BloomLevel,
   exclude?: Set<string>,
 ): Flashcard | null => {
   const used = exclude ?? new Set<string>();
-  const exact = lecture.flashcards.filter((f) => f.bloom === level && !used.has(f.question));
+  const isUsable = (f: Flashcard) => !used.has(f.question) && isCleanFlashcard(f);
+
+  const exact = lecture.flashcards.filter((f) => f.bloom === level && isUsable(f));
   if (exact.length) return exact[Math.floor(Math.random() * exact.length)];
 
-  // Fallback to nearest-level card
+  // Fallback to nearest-level card (still validated)
   const idx = BLOOM_ORDER.indexOf(level);
   for (let r = 1; r < BLOOM_ORDER.length; r++) {
     for (const dir of [-1, 1]) {
       const ni = idx + dir * r;
       if (ni < 0 || ni >= BLOOM_ORDER.length) continue;
       const near = lecture.flashcards.filter(
-        (f) => f.bloom === BLOOM_ORDER[ni] && !used.has(f.question),
+        (f) => f.bloom === BLOOM_ORDER[ni] && isUsable(f),
       );
       if (near.length) return near[Math.floor(Math.random() * near.length)];
     }
   }
+
+  // Last resort: any clean unused card; if none, allow a leaky one rather than crash.
+  const cleanRemaining = lecture.flashcards.filter(isUsable);
+  if (cleanRemaining.length) return cleanRemaining[0];
   const remaining = lecture.flashcards.filter((f) => !used.has(f.question));
   return remaining[0] ?? lecture.flashcards[0] ?? null;
 };
+
