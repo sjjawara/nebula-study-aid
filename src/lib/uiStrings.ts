@@ -144,7 +144,7 @@ export const UI_STRINGS = [
   "The Build Up approach is grounded in scaffolding theory (Vygotsky, 1978) and mastery learning research (Bloom, 1968). Students build foundational knowledge before advancing to complex tasks, staying within their Zone of Proximal Development. Research shows scaffolded learning improves both confidence and long-term retention, particularly for students encountering unfamiliar material. Source: Wood, Bruner & Ross (1976). The role of tutoring in problem solving. Journal of Child Psychology and Psychiatry, 17(2).",
   "Cognitive Load Theory (Sweller): High load sections require more mental effort. Slow down and review these moments.",
   "Derived from the highest Bloom's level chunks in this lecture — the concepts that require the most sophisticated thinking.",
-  "Mastery Mode is based on Benjamin Bloom's Learning for Mastery model (1968), which found that 95% of students can achieve high levels of learning when given adequate time and appropriate instruction. Combined with spaced repetition principles (Ebbinghaus, 1885), the adaptive difficulty in Mastery Mode ensures concepts are reinforced at increasing cognitive depth — mirroring how long-term memory consolidation actually works.",
+  "Use Mastery Mode for a challenge that grows with you — questions start simple and get harder as you prove you're ready. It's the closest thing to how your brain actually builds expertise: small wins that compound into deep understanding.",
 
   // ===== Key Takeaways =====
   "Key Takeaways",
