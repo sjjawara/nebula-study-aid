@@ -246,9 +246,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Explain in your own words</p>
+              <p className="text-sm font-medium text-foreground">{t("Explain in your own words")}</p>
               <p className="text-xs text-muted-foreground">
-                Briefly restate the key idea behind the answer.
+                {t("Briefly restate the key idea behind the answer.")}
               </p>
             </div>
             <BloomBadge level="Understand" />
@@ -256,7 +256,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <Textarea
             value={understandText}
             onChange={(e) => setUnderstandText(e.target.value)}
-            placeholder="In a sentence or two..."
+            placeholder={t("In a sentence or two...")}
             className="min-h-[90px] resize-none bg-background"
           />
           {showImmediate && understandText.trim().length >= 8 && (
@@ -272,7 +272,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={understandText.trim().length < 8}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
