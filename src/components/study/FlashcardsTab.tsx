@@ -127,30 +127,62 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
   const openEdit = (idx: number) => {
     const c = lecture.flashcards[idx];
     if (!c) return;
+    const hasSteps = !!c.steps?.length;
     setEditor({
       open: true,
       index: idx,
+      cardType: hasSteps ? "steps" : "standard",
       question: c.question,
       answer: c.answer,
       bloom: c.bloom,
       timestamp: c.timestamp ?? "",
       formula: c.formula ?? "",
+      steps: hasSteps ? c.steps! : ["", ""],
+      multiPath: !!c.multiPath,
     });
   };
 
   const closeEditor = () => setEditor((e) => ({ ...e, open: false }));
 
+  const updateStep = (i: number, value: string) =>
+    setEditor((s) => {
+      const steps = s.steps.slice();
+      steps[i] = value;
+      return { ...s, steps };
+    });
+  const addStep = () =>
+    setEditor((s) => ({ ...s, steps: [...s.steps, ""] }));
+  const removeStep = (i: number) =>
+    setEditor((s) => ({
+      ...s,
+      steps: s.steps.length > 2 ? s.steps.filter((_, idx) => idx !== i) : s.steps,
+    }));
+  const moveStep = (i: number, dir: -1 | 1) =>
+    setEditor((s) => {
+      const j = i + dir;
+      if (j < 0 || j >= s.steps.length) return s;
+      const steps = s.steps.slice();
+      [steps[i], steps[j]] = [steps[j], steps[i]];
+      return { ...s, steps };
+    });
+
   const saveEditor = () => {
     if (!onUpdateFlashcards) return;
     const q = editor.question.trim();
-    const a = editor.answer.trim();
-    if (!q || !a) return;
+    if (!q) return;
+    const isSteps = editor.cardType === "steps";
+    const cleanSteps = editor.steps.map((s) => s.trim()).filter(Boolean);
+    if (isSteps && cleanSteps.length < 2) return;
+    const a = editor.answer.trim() || (isSteps ? cleanSteps.join(" → ") : "");
+    if (!a) return;
     const updated: Flashcard = {
       question: q,
       answer: a,
       bloom: editor.bloom,
       timestamp: editor.timestamp.trim() || undefined,
-      formula: editor.formula.trim() || undefined,
+      formula: !isSteps && editor.formula.trim() ? editor.formula.trim() : undefined,
+      steps: isSteps ? cleanSteps : undefined,
+      multiPath: isSteps ? editor.multiPath : undefined,
     };
     onUpdateFlashcards((cards) => {
       if (editor.index === null) {
