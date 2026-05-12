@@ -518,35 +518,72 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
           </div>
         )}
 
-        {/* Mastery bar */}
-        <div className="mt-5 space-y-2">
-          <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="absolute inset-y-0 left-0 bg-gradient-primary transition-[width] duration-500"
-              style={{ width: `${masteryPct}%` }}
-            />
-            {BLOOM_ORDER.map((_, i) => (
-              <div
-                key={i}
-                className="absolute top-0 h-full w-px bg-background/70"
-                style={{ left: `${(i / BLOOM_ORDER.length) * 100}%` }}
-              />
-            ))}
-          </div>
-          <div className="flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-            {BLOOM_ORDER.map((l) => (
-              <span
-                key={l}
-                className={cn(
-                  "transition-colors",
-                  l === currentLevel && "font-semibold text-primary",
-                )}
-              >
-                {l.slice(0, 4)}
+        {/* Counter + Mastery bar */}
+        <TooltipProvider delayDuration={150}>
+          <div className="mt-5 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-foreground">
+                {t("Question")} {questionNum}
               </span>
-            ))}
+              <span className="text-muted-foreground">
+                {t("Current level:")} <span className="font-medium text-foreground">{t(currentLevel)}</span>
+              </span>
+            </div>
+            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="absolute inset-y-0 left-0 bg-gradient-primary transition-[width] duration-500 pointer-events-none"
+                style={{ width: `${masteryPct}%` }}
+              />
+              {/* Clickable Bloom segments overlay */}
+              <div className="absolute inset-0 flex">
+                {BLOOM_ORDER.map((l, i) => {
+                  const peakIdx = BLOOM_ORDER.indexOf(peakLevel);
+                  const canJump = i < peakIdx;
+                  const seg = (
+                    <button
+                      type="button"
+                      key={l}
+                      onClick={() => {
+                        if (canJump) {
+                          setScore(i);
+                          setStreak(0);
+                        }
+                      }}
+                      disabled={!canJump}
+                      aria-label={canJump ? `${t("Jump to")} ${t(l)}` : t(l)}
+                      className={cn(
+                        "flex-1 border-r border-background/70 last:border-r-0",
+                        canJump ? "cursor-pointer hover:bg-foreground/5" : "cursor-default",
+                      )}
+                    />
+                  );
+                  if (canJump) return seg;
+                  return (
+                    <Tooltip key={l}>
+                      <TooltipTrigger asChild>{seg}</TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">
+                        {t("Complete the current level to unlock")}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+              {BLOOM_ORDER.map((l) => (
+                <span
+                  key={l}
+                  className={cn(
+                    "transition-colors",
+                    l === currentLevel && "font-semibold text-primary",
+                  )}
+                >
+                  {l.slice(0, 4)}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        </TooltipProvider>
       </div>
 
       {/* Question card */}
