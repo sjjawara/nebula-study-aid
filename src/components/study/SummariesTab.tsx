@@ -398,7 +398,7 @@ export const SummariesTab = ({
             <div>
               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                 <Lightbulb className="h-3.5 w-3.5 text-primary" />
-                Study tip for {activeLevel}
+                Study Tips for {BLOOM_GERUND[activeLevel]}
               </p>
               <p className="text-sm leading-relaxed text-foreground/90">
                 {LEVEL_TIPS[activeLevel]}
@@ -407,7 +407,7 @@ export const SummariesTab = ({
 
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                Recommended tools
+                Recommended Tools for This Level
               </p>
               <div className="flex flex-wrap gap-2">
                 {LEVEL_TOOLS[activeLevel].map((t) => (
