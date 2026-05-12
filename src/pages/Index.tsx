@@ -469,7 +469,7 @@ const Index = () => {
                 />
               </TabsContent>
               <TabsContent value="mindmap" className="mt-6">
-                <MindMapTab lecture={lecture} />
+                <MindMapTab lecture={lecture} videoUrl={url} />
               </TabsContent>
             </Tabs>
             )}
