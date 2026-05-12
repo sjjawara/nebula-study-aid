@@ -3,6 +3,7 @@ import type { Lecture, Flashcard, BloomLevel, SearchMoment } from "@/lib/mockDat
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
+import { useT } from "@/lib/i18n";
 import {
   Dialog,
   DialogContent,
