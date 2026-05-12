@@ -434,6 +434,7 @@ const Index = () => {
               <TabsContent value="flashcards" className="mt-6">
                 <FlashcardsTab
                   lecture={displayLecture}
+                  videoUrl={url}
                   onQuizCard={(card) => {
                     setQuizSeed(card);
                     setActiveTab("quiz");
