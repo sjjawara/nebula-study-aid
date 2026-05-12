@@ -169,27 +169,60 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           </div>
           <BloomBadge level={card.bloom} />
         </div>
-        {/* Progress */}
-        <div className="mt-5 flex items-center gap-1.5">
-          {LEVELS.map((l, i) => (
-            <div
-              key={l}
-              className={cn(
-                "h-1.5 flex-1 rounded-full transition-all",
-                i < levelIdx && "bg-emerald-500",
-                i === levelIdx && !done && "bg-primary",
-                i === levelIdx && done && "bg-emerald-500",
-                i > levelIdx && "bg-muted",
-              )}
-            />
-          ))}
-        </div>
-        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{t("Level")} {levelIdx + 1} {t("of")} {LEVELS.length}</span>
-          <span className="inline-flex items-center gap-1">
+        {/* Counter */}
+        <div className="mt-5 flex items-center justify-between text-xs">
+          <span className="font-medium text-foreground">
+            {t("Question")} {done ? LEVELS.length : levelIdx + 1} {t("of")} {LEVELS.length}
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground">
             <TrendingUp className="h-3 w-3" /> {done ? t("Mastery achieved") : t(level)}
           </span>
         </div>
+        {/* Progress (clickable completed segments) */}
+        <TooltipProvider delayDuration={150}>
+          <div className="mt-2 flex items-center gap-1.5">
+            {LEVELS.map((l, i) => {
+              const isCompleted = i < levelIdx || done;
+              const isCurrent = i === levelIdx && !done;
+              const canJump = i < levelIdx && !done;
+              const segment = (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canJump) {
+                      setLevelIdx(i);
+                      setSubmitError(null);
+                      setUnderstandSubmitted(false);
+                      setAnalyzeSubmitted(false);
+                    }
+                  }}
+                  disabled={!canJump}
+                  aria-label={canJump ? `${t("Jump to")} ${t(l)}` : t(l)}
+                  className={cn(
+                    "h-1.5 w-full rounded-full transition-all",
+                    isCompleted && "bg-emerald-500",
+                    isCurrent && "bg-primary",
+                    !isCompleted && !isCurrent && "bg-muted",
+                    canJump ? "cursor-pointer hover:opacity-80" : "cursor-default",
+                  )}
+                />
+              );
+              if (canJump || isCurrent || isCompleted) {
+                return <div key={l} className="flex-1">{segment}</div>;
+              }
+              return (
+                <Tooltip key={l}>
+                  <TooltipTrigger asChild>
+                    <div className="flex-1">{segment}</div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    {t("Complete the current level to unlock")}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </TooltipProvider>
       </div>
 
       {!done && level === "Remember" && (
