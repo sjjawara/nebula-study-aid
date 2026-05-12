@@ -53,6 +53,55 @@ const Index = () => {
   const [elapsed, setElapsed] = useState(0);
   const [activeTab, setActiveTab] = useState("outline");
   const [quizSeed, setQuizSeed] = useState<Flashcard | null>(null);
+  const [language, setLanguage] = useState<Language>("English");
+  const [translations, setTranslations] = useState<Record<string, Lecture>>({});
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
+  const displayLecture: Lecture | null =
+    language === "English"
+      ? lecture
+      : translations[language] ?? lecture;
+
+  const handleLanguageChange = async (next: Language) => {
+    setLanguage(next);
+    setTranslateError(null);
+    if (next === "English" || !lecture || translations[next]) return;
+    setTranslating(true);
+    try {
+      const res = await fetch(TRANSLATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: JSON.stringify({
+            title: lecture.title,
+            outline: lecture.outline,
+            summaries: lecture.summaries,
+            flashcards: lecture.flashcards,
+            searchIndex: lecture.searchIndex,
+          }),
+          language: next,
+        }),
+      });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const payload = await res.json();
+      const raw = payload?.data ?? payload;
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      const translated: Lecture = {
+        title: parsed.title ?? lecture.title,
+        outline: parsed.outline ?? lecture.outline,
+        summaries: parsed.summaries ?? lecture.summaries,
+        flashcards: parsed.flashcards ?? lecture.flashcards,
+        searchIndex: parsed.searchIndex ?? parsed.search_index ?? lecture.searchIndex,
+      };
+      setTranslations((prev) => ({ ...prev, [next]: translated }));
+    } catch (err) {
+      setTranslateError(err instanceof Error ? err.message : "Translation failed.");
+      setLanguage("English");
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   useEffect(() => {
     if (stage !== "loading") return;
