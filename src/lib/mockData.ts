@@ -125,6 +125,12 @@ export const parseLecture = (data: ApiResponse): Lecture => ({
     answer: f.answer,
     bloom: normalizeBloom(f.bloom_level),
     timestamp: f.timestamp,
+    formula: f.formula,
+    steps: Array.isArray(f.steps) && f.steps.length ? f.steps.map(String) : undefined,
+    multiPath: typeof f.multi_path === "boolean" ? f.multi_path : undefined,
+    stepExplanations: Array.isArray(f.step_explanations) && f.step_explanations.length
+      ? f.step_explanations.map(String)
+      : undefined,
   })),
   searchIndex: (data.search_index ?? []).map((s) => ({
     timestamp: s.timestamp,
