@@ -75,7 +75,7 @@ export const OutlineTab = ({ lecture, videoUrl }: { lecture: Lecture; videoUrl?:
           {videoId ? (
             <button
               type="button"
-              onClick={() => openTimestamp(videoId, timestampToSeconds(item.timestamp))}
+              onClick={() => openYoutubeAt(videoId, item.timestamp)}
               className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 font-mono text-xs text-primary tabular-nums hover:bg-primary/20 transition-colors"
               aria-label={`Open YouTube at ${item.timestamp}`}
             >
