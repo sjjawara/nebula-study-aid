@@ -509,12 +509,12 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
               {editor.index !== null && (
                 <Button variant="ghost" onClick={deleteCurrent} className="text-destructive hover:text-destructive">
                   <Trash2 className="h-4 w-4" />
-                  Delete
+                  {t("Delete")}
                 </Button>
               )}
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={closeEditor}>Cancel</Button>
+              <Button variant="ghost" onClick={closeEditor}>{t("Cancel")}</Button>
               <Button
                 onClick={saveEditor}
                 disabled={
@@ -525,7 +525,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 }
                 className="bg-gradient-primary"
               >
-                {editor.index === null ? "Create" : "Save"}
+                {editor.index === null ? t("Create") : t("Save")}
               </Button>
             </div>
           </DialogFooter>
