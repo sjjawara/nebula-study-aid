@@ -18,11 +18,9 @@ export type Language =
 
 const TRANSLATE_URL = "https://nebulalearn-production.up.railway.app/translate";
 
-// Cache: language -> { english_string -> translated_string }
-const dictCache: Partial<Record<Language, Record<string, string>>> = {
-  English: {},
-};
-const inflightDict: Partial<Record<Language, Promise<Record<string, string>>>> = {};
+// Cache: `${language}::${dictionary-contents}` -> { english_string -> translated_string }
+const dictCache = new Map<string, Record<string, string>>();
+const inflightDict = new Map<string, Promise<Record<string, string>>>();
 
 // Cache for arbitrary string-array translations (e.g. key-takeaway sentences).
 // Key: `${language}::${joined-strings}`
@@ -101,40 +99,43 @@ interface ProviderProps {
 
 export const LanguageProvider = ({ language, dictionary, children }: ProviderProps) => {
   const dictKey = useMemo(() => dictionary.join("\u0001"), [dictionary]);
+  const cacheKey = useMemo(() => `${language}::${dictKey}`, [language, dictKey]);
   const [, force] = useState(0);
-  const [ready, setReady] = useState(language === "English" || !!dictCache[language]);
+  const [ready, setReady] = useState(language === "English" || dictCache.has(cacheKey));
 
   useEffect(() => {
     if (language === "English") {
       setReady(true);
       return;
     }
-    if (dictCache[language]) {
+    if (dictCache.has(cacheKey)) {
       setReady(true);
       return;
     }
     setReady(false);
     let cancelled = false;
-    if (!inflightDict[language]) {
-      inflightDict[language] = translateStrings(language, [...dictionary])
+    let request = inflightDict.get(cacheKey);
+    if (!request) {
+      request = translateStrings(language, [...dictionary])
         .then((translated) => {
           const map: Record<string, string> = {};
           dictionary.forEach((en, i) => {
             map[en] = translated[i] ?? en;
           });
-          dictCache[language] = map;
+          dictCache.set(cacheKey, map);
           return map;
         })
         .catch((err) => {
           console.error("[i18n] dictionary translation failed", err);
-          dictCache[language] = {}; // fall back to English everywhere
+          dictCache.set(cacheKey, {}); // fall back to English everywhere
           return {};
         })
         .finally(() => {
-          delete inflightDict[language];
+          inflightDict.delete(cacheKey);
         });
+      inflightDict.set(cacheKey, request);
     }
-    inflightDict[language]!.then(() => {
+    request.then(() => {
       if (cancelled) return;
       setReady(true);
       force((n) => n + 1);
@@ -142,15 +143,15 @@ export const LanguageProvider = ({ language, dictionary, children }: ProviderPro
     return () => {
       cancelled = true;
     };
-  }, [language, dictKey, dictionary]);
+  }, [cacheKey, dictionary, language]);
 
   const value = useMemo<LanguageContextValue>(
     () => ({
       language,
       ready,
-      t: (en: string) => dictCache[language]?.[en] ?? en,
+      t: (en: string) => dictCache.get(cacheKey)?.[en] ?? en,
     }),
-    [language, ready],
+    [cacheKey, language, ready],
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
