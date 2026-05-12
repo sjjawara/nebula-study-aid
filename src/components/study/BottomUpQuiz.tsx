@@ -116,27 +116,27 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           {correct === true && (
             <>
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span className="text-emerald-700">Correct</span>
+              <span className="text-emerald-700">{t("Correct")}</span>
             </>
           )}
           {correct === false && (
             <>
               <XCircle className="h-4 w-4 text-destructive" />
-              <span className="text-destructive">Not quite</span>
+              <span className="text-destructive">{t("Not quite")}</span>
             </>
           )}
           {correct === null && (
-            <span className="text-foreground">Answer recorded</span>
+            <span className="text-foreground">{t("Answer recorded")}</span>
           )}
         </p>
         <BloomBadge level={bloom} />
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="font-medium text-foreground">Why:</span> {why}
+        <span className="font-medium text-foreground">{t("Why:")}</span> {why}
       </p>
       {correct === false && correctAnswer && (
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Correct answer:</span> {correctAnswer}
+          <span className="font-medium text-foreground">{t("Correct answer:")}</span> {correctAnswer}
         </p>
       )}
     </div>
