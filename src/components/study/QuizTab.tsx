@@ -545,7 +545,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     onClick={() =>
                       setStepOrderingMode((v) => {
                         const next = !v;
-                        if (next) setFormulaMode(false);
+                        if (next) { setFormulaMode(false); setProofMode(false); }
                         return next;
                       })
                     }
