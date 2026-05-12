@@ -940,28 +940,28 @@ const NodePopover = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex flex-1 min-h-0 flex-col p-4">
         {!isCustom && explanation && (
-          <p className="text-xs leading-relaxed text-foreground/90 whitespace-pre-line">
+          <p className="shrink-0 max-h-[40%] overflow-y-auto text-xs leading-relaxed text-foreground/90 whitespace-pre-line">
             {explanation}
           </p>
         )}
 
-        <div className="mt-3">
-          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="mt-3 flex flex-1 min-h-0 flex-col">
+          <label className="shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Your notes
           </label>
           <Textarea
             value={note}
             onChange={(e) => onNoteChange(e.target.value)}
             placeholder="Add your thoughts, connections, or study notes…"
-            className={cn("mt-1 text-xs", maximized ? "min-h-[200px]" : "min-h-[80px]")}
+            className="mt-1 flex-1 min-h-[80px] resize-none text-xs"
           />
         </div>
 
         {timestamp && ytLink && (
-          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-            <span className="text-[11px] text-muted-foreground">Jump to in video</span>
+          <div className="mt-3 flex shrink-0 items-center justify-between border-t border-border pt-3">
+            <span className="text-[11px] text-muted-foreground">Jump to Video</span>
             <button
               type="button"
               onClick={() => window.open(ytLink, "_blank", "noopener,noreferrer")}
@@ -974,7 +974,7 @@ const NodePopover = ({
         )}
 
         {onDelete && (
-          <div className="mt-3 border-t border-border pt-3">
+          <div className="mt-3 shrink-0 border-t border-border pt-3">
             <button
               type="button"
               onClick={onDelete}
