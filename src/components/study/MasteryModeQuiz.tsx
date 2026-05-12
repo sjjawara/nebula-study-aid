@@ -25,6 +25,7 @@ import {
   pickDistractors,
   shuffle,
 } from "@/lib/quizUtils";
+import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
