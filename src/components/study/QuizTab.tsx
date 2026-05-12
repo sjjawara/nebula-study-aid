@@ -681,7 +681,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                             checked={checked}
                             onCheckedChange={() => toggleLevel(lvl)}
                           />
-                          <BloomBadge level={lvl} withInfo={false} className="border-0 px-1 py-0" />
+                          <BloomBadge level={lvl} withInfo={false} dotsPosition="after" className="border-0 px-1 py-0" />
                         </label>
                       );
                     })}

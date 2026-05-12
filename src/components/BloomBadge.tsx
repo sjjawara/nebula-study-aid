@@ -36,12 +36,21 @@ interface BloomBadgeProps {
   withInfo?: boolean;
   /** "filled" = colored pill (default). "dots" = minimal colored dots + label only. */
   variant?: "filled" | "dots";
+  /** Position of dots relative to label (dots variant only). Default: "before" */
+  dotsPosition?: "before" | "after";
 }
 
-export const BloomBadge = ({ level, className, withInfo = true, variant = "dots" }: BloomBadgeProps) => {
+export const BloomBadge = ({ level, className, withInfo = true, variant = "dots", dotsPosition = "before" }: BloomBadgeProps) => {
   if (variant === "dots") {
     const c = `hsl(var(--bloom-${level.toLowerCase()}))`;
     const cAlpha = (a: number) => `hsl(var(--bloom-${level.toLowerCase()}) / ${a})`;
+    const dots = (
+      <span className="inline-flex items-center gap-0.5">
+        {Array.from({ length: bloomDots[level] }).map((_, i) => (
+          <span key={i} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
+        ))}
+      </span>
+    );
     return (
       <span
         className={cn(
@@ -54,12 +63,9 @@ export const BloomBadge = ({ level, className, withInfo = true, variant = "dots"
           color: c,
         }}
       >
-        <span className="inline-flex items-center gap-0.5">
-          {Array.from({ length: bloomDots[level] }).map((_, i) => (
-            <span key={i} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
-          ))}
-        </span>
+        {dotsPosition === "before" && dots}
         {level}
+        {dotsPosition === "after" && dots}
         {withInfo && (
           <InfoTooltip
             label={`About the ${level} level`}
