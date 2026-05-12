@@ -442,7 +442,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                     {link ? (
                       <button
                         type="button"
-                        onClick={() => { openExternal(link); showPreview(m.topic, m.timestamp, link); }}
+                        onClick={() => openExternal(link)}
                         className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                       >
                         {card.timestamp}
