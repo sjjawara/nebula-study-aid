@@ -32,26 +32,42 @@ const LEVEL_TOOLS: Record<BloomLevel, ToolAction[]> = {
   Remember: [
     { label: "Open Flashcards", tab: "flashcards" },
     { label: "Read 90-sec summary", section: "summary", depth: "short" },
+    { label: "Browse Outline", tab: "outline" },
+    { label: "Search lecture moments", tab: "search" },
   ],
   Understand: [
     { label: "Read full summary", section: "summary", depth: "full" },
+    { label: "Read medium summary", section: "summary", depth: "medium" },
     { label: "Browse Outline", tab: "outline" },
+    { label: "Open Flashcards", tab: "flashcards" },
+    { label: "Open Mind Map", tab: "mindmap" },
   ],
   Apply: [
     { label: "Start Bottom Up quiz", tab: "quiz" },
     { label: "Jump to Outline examples", tab: "outline" },
+    { label: "Open Flashcards", tab: "flashcards" },
+    { label: "Read full summary", section: "summary", depth: "full" },
+    { label: "Search lecture moments", tab: "search" },
   ],
   Analyze: [
     { label: "Open Mind Map", tab: "mindmap" },
     { label: "Try Top Down quiz", tab: "quiz" },
+    { label: "Read full summary", section: "summary", depth: "full" },
+    { label: "Search lecture moments", tab: "search" },
+    { label: "Browse Outline", tab: "outline" },
   ],
   Evaluate: [
     { label: "Start Mastery Mode", tab: "quiz" },
     { label: "Search lecture moments", tab: "search" },
+    { label: "Open Mind Map", tab: "mindmap" },
+    { label: "Read full summary", section: "summary", depth: "full" },
   ],
   Create: [
     { label: "Open Mind Map", tab: "mindmap" },
     { label: "Start Mastery Mode", tab: "quiz" },
+    { label: "Try Top Down quiz", tab: "quiz" },
+    { label: "Read full summary", section: "summary", depth: "full" },
+    { label: "Search lecture moments", tab: "search" },
   ],
 };
 
