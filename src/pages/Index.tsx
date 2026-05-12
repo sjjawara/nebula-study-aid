@@ -463,6 +463,7 @@ const Index = () => {
                     setQuizSeed(card);
                     setActiveTab("quiz");
                   }}
+                  onUpdateFlashcards={updateFlashcards}
                 />
               </TabsContent>
               <TabsContent value="search" className="mt-6">
@@ -470,9 +471,7 @@ const Index = () => {
                   lecture={displayLecture}
                   videoUrl={url}
                   onSaveFlashcard={(card) =>
-                    setLecture((prev) =>
-                      prev ? { ...prev, flashcards: [...prev.flashcards, card] } : prev
-                    )
+                    updateFlashcards((cards) => [...cards, card])
                   }
                 />
               </TabsContent>
