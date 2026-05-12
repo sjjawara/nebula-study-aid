@@ -199,6 +199,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           card={card}
           onNext={next}
           onExit={exit}
+          onSelectFollowUp={launchSpecific}
         />
       ) : (
         <BottomUpQuiz
@@ -207,6 +208,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           card={card}
           onNext={next}
           onExit={exit}
+          onSelectFollowUp={launchSpecific}
         />
       )}
     </div>
