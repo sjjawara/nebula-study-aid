@@ -527,10 +527,10 @@ export const SummariesTab = ({
         <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-4">
           <header className="flex items-center gap-2">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Full Notes
+              {t("Full Notes")}
             </h3>
             <span className="text-xs text-muted-foreground">
-              Section-by-section breakdown of the lecture.
+              {t("Section-by-section breakdown of the lecture.")}
             </span>
           </header>
           <SummaryBody body={lecture.summaries.full} format="headers" />
