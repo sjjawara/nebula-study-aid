@@ -406,14 +406,17 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
 
     // Collect all descendants (children + deeper) and their offsets relative to the dragged node
     const descendants: { id: string; dx: number; dy: number }[] = [];
+    const lerpIds = new Set<string>();
     const draggedHierNode = nodesRef.current.find((n) => n.data.id === datum.id);
     if (draggedHierNode) {
+      const baseDepth = draggedHierNode.depth;
       const sub = draggedHierNode.descendants();
       for (const d of sub) {
         if (d.data.id === datum.id) continue;
         const cx = (d as unknown as { _x: number })._x;
         const cy = (d as unknown as { _y: number })._y;
         descendants.push({ id: d.data.id, dx: cx - baseX, dy: cy - baseY });
+        if (d.depth - baseDepth >= 2) lerpIds.add(d.data.id);
       }
     }
 
@@ -425,6 +428,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
       baseY,
       moved: false,
       descendants,
+      lerpIds,
     };
   };
 
