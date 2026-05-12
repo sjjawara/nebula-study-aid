@@ -160,6 +160,22 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     );
   }, [lecture.title]);
 
+  // When a special mode is toggled, reset the question count so the slider thumb
+  // isn't pegged at max (which makes the click target overflow the track).
+  useEffect(() => {
+    const modeMax = formulaMode
+      ? formulaCount
+      : stepOrderingMode
+      ? stepCardCount
+      : proofMode
+      ? proofCardCount
+      : lecture.flashcards.length;
+    if (!modeMax) return;
+    setCustomCount((prev) =>
+      Math.max(MIN_QUESTION_COUNT, Math.min(prev, Math.max(MIN_QUESTION_COUNT, Math.floor(modeMax / 2) || modeMax))),
+    );
+  }, [formulaMode, stepOrderingMode, proofMode, formulaCount, stepCardCount, proofCardCount, lecture.flashcards.length]);
+
   const filteredCardCount = useMemo(() => {
     return lecture.flashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
