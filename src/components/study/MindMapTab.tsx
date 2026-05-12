@@ -256,7 +256,18 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [selected, setSelected] = useState<TreeDatum | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const draggingRef = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number; moved: boolean } | null>(null);
+  const draggingRef = useRef<{
+    id: string;
+    startX: number;
+    startY: number;
+    baseX: number;
+    baseY: number;
+    moved: boolean;
+    descendants: { id: string; dx: number; dy: number }[];
+    lerpIds: Set<string>;
+  } | null>(null);
+  // Latest laid-out nodes (with positions) so pointer handlers can find descendants.
+  const nodesRef = useRef<d3.HierarchyNode<TreeDatum>[]>([]);
 
   // Load persisted state on lecture change
   useEffect(() => {
@@ -342,6 +353,9 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     };
   }, [treeData, positions]);
 
+  // Keep latest laid-out nodes available to pointer handlers.
+  nodesRef.current = nodes;
+
   useEffect(() => {
     if (!svgRef.current || !gRef.current) return;
     const svg = d3.select(svgRef.current);
@@ -390,6 +404,23 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     if (tool !== "select") return;
     e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
+
+    // Collect all descendants (children + deeper) and their offsets relative to the dragged node
+    const descendants: { id: string; dx: number; dy: number }[] = [];
+    const lerpIds = new Set<string>();
+    const draggedHierNode = nodesRef.current.find((n) => n.data.id === datum.id);
+    if (draggedHierNode) {
+      const baseDepth = draggedHierNode.depth;
+      const sub = draggedHierNode.descendants();
+      for (const d of sub) {
+        if (d.data.id === datum.id) continue;
+        const cx = (d as unknown as { _x: number })._x;
+        const cy = (d as unknown as { _y: number })._y;
+        descendants.push({ id: d.data.id, dx: cx - baseX, dy: cy - baseY });
+        if (d.depth - baseDepth >= 2) lerpIds.add(d.data.id);
+      }
+    }
+
     draggingRef.current = {
       id: datum.id,
       startX: e.clientX,
@@ -397,6 +428,8 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
       baseX,
       baseY,
       moved: false,
+      descendants,
+      lerpIds,
     };
   };
 
@@ -408,7 +441,15 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     if (!d.moved && Math.hypot(dx, dy) < 4) return;
     d.moved = true;
     const k = transformRef.current.k || 1;
-    setPositions((prev) => ({ ...prev, [d.id]: { x: d.baseX + dx / k, y: d.baseY + dy / k } }));
+    const newX = d.baseX + dx / k;
+    const newY = d.baseY + dy / k;
+    setPositions((prev) => {
+      const next = { ...prev, [d.id]: { x: newX, y: newY } };
+      for (const child of d.descendants) {
+        next[child.id] = { x: newX + child.dx, y: newY + child.dy };
+      }
+      return next;
+    });
   };
 
   const handleNodePointerUp = (e: React.PointerEvent<SVGGElement>) => {
@@ -642,6 +683,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                 const totalTextHeight = lines.length * fs + (lines.length - 1) * LINE_GAP;
                 const firstBaselineY = (h - totalTextHeight) / 2 + fs * 0.82;
                 const hasNote = !!notes[n.data.id]?.trim();
+                const shouldLerp = draggingRef.current?.lerpIds?.has(n.data.id);
                 return (
                   <g
                     key={n.data.id}
@@ -653,7 +695,11 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     onPointerUp={handleNodePointerUp}
                     onMouseEnter={() => setHoveredId(n.data.id)}
                     onMouseLeave={() => setHoveredId((cur) => (cur === n.data.id ? null : cur))}
-                    style={{ cursor: tool === "relabel" ? "pointer" : "grab", touchAction: "none" }}
+                    style={{
+                      cursor: tool === "relabel" ? "pointer" : "grab",
+                      touchAction: "none",
+                      transition: shouldLerp ? "transform 150ms ease-out" : undefined,
+                    }}
                   >
                     <rect
                       width={w}

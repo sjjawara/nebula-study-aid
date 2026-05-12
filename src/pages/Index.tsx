@@ -437,7 +437,7 @@ const Index = () => {
               <TabsList className="grid w-full grid-cols-6 bg-card border border-border h-12 p-1">
                 {(() => {
                   const triggerCls =
-                    "data-[state=active]:bg-[#818CF8] data-[state=active]:text-white data-[state=active]:shadow-glow";
+                    "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-glow";
                   return (
                     <>
                       <TabsTrigger value="outline" className={triggerCls}><T s="Outline" /></TabsTrigger>
