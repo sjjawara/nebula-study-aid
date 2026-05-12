@@ -51,7 +51,8 @@ const loadingSteps = [
 const API_URL = "https://nebulalearn-production.up.railway.app/process";
 const API_WITH_TRANSCRIPT_URL = "https://nebulalearn-production.up.railway.app/process-with-transcript";
 const SUPADATA_URL = "https://api.supadata.ai/v1/youtube/transcript";
-const SUPADATA_API_KEY = (import.meta as any).env?.VITE_SUPADATA_API_KEY as string | undefined;
+// TODO: move to environment variable / edge function before production
+const SUPADATA_API_KEY = "sd_edec8f6fedd695966f25f6c5283ca21e";
 
 type TranscriptItem = { text: string; offset: number; duration: number };
 
