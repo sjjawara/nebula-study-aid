@@ -400,6 +400,20 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     if (tool !== "select") return;
     e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
+
+    // Collect all descendants (children + deeper) and their offsets relative to the dragged node
+    const descendants: { id: string; dx: number; dy: number }[] = [];
+    const draggedHierNode = nodesRef.current.find((n) => n.data.id === datum.id);
+    if (draggedHierNode) {
+      const sub = draggedHierNode.descendants();
+      for (const d of sub) {
+        if (d.data.id === datum.id) continue;
+        const cx = (d as unknown as { _x: number })._x;
+        const cy = (d as unknown as { _y: number })._y;
+        descendants.push({ id: d.data.id, dx: cx - baseX, dy: cy - baseY });
+      }
+    }
+
     draggingRef.current = {
       id: datum.id,
       startX: e.clientX,
@@ -407,6 +421,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
       baseX,
       baseY,
       moved: false,
+      descendants,
     };
   };
 
@@ -418,7 +433,15 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     if (!d.moved && Math.hypot(dx, dy) < 4) return;
     d.moved = true;
     const k = transformRef.current.k || 1;
-    setPositions((prev) => ({ ...prev, [d.id]: { x: d.baseX + dx / k, y: d.baseY + dy / k } }));
+    const newX = d.baseX + dx / k;
+    const newY = d.baseY + dy / k;
+    setPositions((prev) => {
+      const next = { ...prev, [d.id]: { x: newX, y: newY } };
+      for (const child of d.descendants) {
+        next[child.id] = { x: newX + child.dx, y: newY + child.dy };
+      }
+      return next;
+    });
   };
 
   const handleNodePointerUp = (e: React.PointerEvent<SVGGElement>) => {
