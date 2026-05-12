@@ -475,23 +475,217 @@ export const SummariesTab = ({
         </section>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {depths.map((d) => (
-          <Button
-            key={d.id}
-            variant={depth === d.id ? "default" : "secondary"}
-            onClick={() => setDepth(d.id)}
-            className={cn(depth === d.id && "bg-gradient-primary")}
-          >
-            {d.label}
-          </Button>
-        ))}
-      </div>
-      <article className="rounded-xl border border-border bg-card p-6 shadow-card">
-        <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line">
-          {lecture.summaries[depth] || "No summary available."}
-        </p>
-      </article>
+      <SummarySection
+        id="summary-90s"
+        title="90 Seconds"
+        body={lecture.summaries.short}
+        format="paragraphs"
+      />
+      <SummarySection
+        id="summary-5min"
+        title="5 Minutes"
+        body={lecture.summaries.medium}
+        format="chunked"
+      />
+      <SummarySection
+        id="summary-full"
+        title="Full Summary"
+        body={lecture.summaries.full}
+        format="headers"
+      />
     </div>
+  );
+};
+
+// Suppress unused imports of `depths` and `depth` state.
+void depths;
+
+// --------- subcomponents & helpers below ---------
+
+const NAV_LINKS: { id: string; label: string; key: "profile" | "takeaways" | "any" }[] = [
+  { id: "lecture-profile", label: "Lecture Profile", key: "profile" },
+  { id: "key-takeaways", label: "Key Takeaways", key: "takeaways" },
+  { id: "summary-90s", label: "90 Seconds", key: "any" },
+  { id: "summary-5min", label: "5 Minutes", key: "any" },
+  { id: "summary-full", label: "Full Summary", key: "any" },
+];
+
+const SummariesNav = ({
+  hasProfile,
+  hasTakeaways,
+}: {
+  hasProfile: boolean;
+  hasTakeaways: boolean;
+}) => {
+  const links = NAV_LINKS.filter(
+    (l) =>
+      l.key === "any" ||
+      (l.key === "profile" && hasProfile) ||
+      (l.key === "takeaways" && hasTakeaways),
+  );
+  return (
+    <nav
+      aria-label="Summary sections"
+      className="sticky top-2 z-10 flex flex-wrap gap-1.5 rounded-full border border-border bg-background/80 p-1.5 shadow-sm backdrop-blur"
+    >
+      {links.map((l, i) => (
+        <a
+          key={l.id}
+          href={`#${l.id}`}
+          className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          {l.label}
+          {i < links.length - 1 && (
+            <span className="ml-1.5 text-border" aria-hidden>
+              {""}
+            </span>
+          )}
+        </a>
+      ))}
+    </nav>
+  );
+};
+
+// Split a string into sentences (rough but good-enough for prose summaries).
+const splitSentences = (text: string): string[] => {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (!cleaned) return [];
+  // Match ending punctuation followed by space + capital, or end.
+  const parts = cleaned.match(/[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$/g) ?? [cleaned];
+  return parts.map((s) => s.trim()).filter(Boolean);
+};
+
+// Group sentences into paragraphs of N (3-4) sentences each.
+const groupIntoParagraphs = (text: string, perParagraph = 4): string[] => {
+  // Honor double-newline paragraph breaks if present.
+  const explicit = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (explicit.length > 1) {
+    return explicit.flatMap((para) => {
+      const sentences = splitSentences(para);
+      const grouped: string[] = [];
+      for (let i = 0; i < sentences.length; i += perParagraph) {
+        grouped.push(sentences.slice(i, i + perParagraph).join(" "));
+      }
+      return grouped.length ? grouped : [para];
+    });
+  }
+  const sentences = splitSentences(text);
+  const grouped: string[] = [];
+  for (let i = 0; i < sentences.length; i += perParagraph) {
+    grouped.push(sentences.slice(i, i + perParagraph).join(" "));
+  }
+  return grouped.length ? grouped : [text];
+};
+
+// Detect lines that look like a section header.
+const looksLikeHeader = (line: string): boolean => {
+  const t = line.trim();
+  if (!t) return false;
+  if (t.length > 90) return false;
+  if (/^#{1,6}\s+/.test(t)) return true; // markdown
+  if (/^\*\*[^*]+\*\*:?$/.test(t)) return true; // **Bold:**
+  if (/^[A-Z0-9][A-Z0-9 ,&/\-]{3,}$/.test(t) && !/[.!?]$/.test(t)) return true; // ALL CAPS
+  if (/^\d+[.)]\s+\S/.test(t) && t.length < 80 && !/[.!?]$/.test(t)) return true; // 1. Header
+  if (/^[A-Z][^.!?]{3,80}:$/.test(t)) return true; // Trailing colon
+  return false;
+};
+
+const stripHeaderMarkers = (line: string): string =>
+  line
+    .replace(/^#{1,6}\s+/, "")
+    .replace(/^\*\*([^*]+)\*\*:?$/, "$1")
+    .replace(/:$/, "")
+    .trim();
+
+interface BlockNode {
+  type: "header" | "paragraph";
+  text: string;
+}
+
+const formatWithHeaders = (text: string): BlockNode[] => {
+  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const blocks: BlockNode[] = [];
+  let buffer: string[] = [];
+  const flush = () => {
+    if (!buffer.length) return;
+    const para = buffer.join(" ");
+    for (const chunk of groupIntoParagraphs(para, 4)) {
+      blocks.push({ type: "paragraph", text: chunk });
+    }
+    buffer = [];
+  };
+  for (const line of lines) {
+    if (looksLikeHeader(line)) {
+      flush();
+      blocks.push({ type: "header", text: stripHeaderMarkers(line) });
+    } else {
+      buffer.push(line);
+    }
+  }
+  flush();
+  // If we found no headers, fall back to chunked paragraphs.
+  if (!blocks.some((b) => b.type === "header")) {
+    return groupIntoParagraphs(text, 4).map((p) => ({ type: "paragraph", text: p }));
+  }
+  return blocks;
+};
+
+const SummarySection = ({
+  id,
+  title,
+  body,
+  format,
+}: {
+  id: string;
+  title: string;
+  body: string;
+  format: "paragraphs" | "chunked" | "headers";
+}) => {
+  const trimmed = (body ?? "").trim();
+  return (
+    <section
+      id={id}
+      className="scroll-mt-24 rounded-xl border border-border bg-card p-6 shadow-card"
+    >
+      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">
+        {title}
+      </h3>
+      {!trimmed ? (
+        <p className="text-sm text-muted-foreground">No summary available.</p>
+      ) : format === "paragraphs" ? (
+        <div className="space-y-3 text-base leading-relaxed text-foreground/90 whitespace-pre-line">
+          {trimmed.split(/\n\s*\n/).map((p, i) => (
+            <p key={i}>{p.trim()}</p>
+          ))}
+        </div>
+      ) : format === "chunked" ? (
+        <div className="space-y-4 text-base leading-relaxed text-foreground/90">
+          {groupIntoParagraphs(trimmed, 4).map((p, i, arr) => (
+            <div key={i}>
+              <p>{p}</p>
+              {i < arr.length - 1 && (
+                <div className="mt-4 h-px w-16 bg-border/70" aria-hidden />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3 text-base leading-relaxed text-foreground/90">
+          {formatWithHeaders(trimmed).map((b, i) =>
+            b.type === "header" ? (
+              <h4
+                key={i}
+                className="mt-5 text-base font-semibold tracking-tight text-foreground first:mt-0"
+              >
+                {b.text}
+              </h4>
+            ) : (
+              <p key={i}>{b.text}</p>
+            ),
+          )}
+        </div>
+      )}
+    </section>
   );
 };
