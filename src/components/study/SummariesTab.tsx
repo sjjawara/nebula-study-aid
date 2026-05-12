@@ -78,6 +78,9 @@ const BLOOM_GERUND: Record<BloomLevel, string> = {
   Create: "Creating",
 };
 
+const isBloomLevel = (value: unknown): value is BloomLevel =>
+  typeof value === "string" && BLOOM_ORDER.includes(value as BloomLevel);
+
 const profileFor = (
   dominant: BloomLevel,
   pct: Record<BloomLevel, number>,
@@ -145,10 +148,24 @@ export const SummariesTab = ({
   const { language, t } = useT();
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
   const [translatedTakeaways, setTranslatedTakeaways] = useState<string[] | null>(null);
-  const outline = Array.isArray(lecture?.outline) ? lecture.outline : [];
+  const outline = useMemo(
+    () =>
+      (Array.isArray(lecture?.outline) ? lecture.outline : []).map((item) => ({
+        ...item,
+        bloom: isBloomLevel(item?.bloom) ? item.bloom : "Understand",
+      })),
+    [lecture?.outline],
+  );
   const summaries = lecture?.summaries ?? { short: "", medium: "", full: "" };
   const sourceLecture = englishLecture ?? lecture;
-  const sourceOutline = Array.isArray(sourceLecture?.outline) ? sourceLecture.outline : [];
+  const sourceOutline = useMemo(
+    () =>
+      (Array.isArray(sourceLecture?.outline) ? sourceLecture.outline : []).map((item) => ({
+        ...item,
+        bloom: isBloomLevel(item?.bloom) ? item.bloom : "Understand",
+      })),
+    [sourceLecture?.outline],
+  );
   const sourceSearchIndex = Array.isArray(sourceLecture?.searchIndex) ? sourceLecture.searchIndex : [];
   const sourceFlashcards = Array.isArray(sourceLecture?.flashcards) ? sourceLecture.flashcards : [];
 
