@@ -22,6 +22,12 @@ export interface Flashcard {
   bloom: BloomLevel;
   timestamp?: string;
   formula?: string;
+  /** Ordered steps for "Step Sequence" cards. Presence marks the card as a step-ordering card. */
+  steps?: string[];
+  /** When true, multiple valid orderings exist; quiz validator should accept any order. */
+  multiPath?: boolean;
+  /** Optional per-step rationale, indexed alongside `steps`. */
+  stepExplanations?: string[];
 }
 
 export interface SearchMoment {
