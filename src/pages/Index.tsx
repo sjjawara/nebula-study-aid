@@ -248,7 +248,7 @@ const Index = () => {
             <div className="space-y-4">
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
                 Study smarter from any{" "}
-                <span className="bg-gradient-primary bg-clip-text text-transparent">YouTube lecture</span>
+                <span className="inline-block bg-gradient-primary bg-clip-text text-transparent leading-[1.15] pb-1">YouTube lecture</span>
               </h2>
               <p className="text-muted-foreground text-lg max-w-xl mx-auto">
                 Paste a link and we'll generate an outline, summaries, flashcards, and a searchable transcript — all classified by cognitive depth.
