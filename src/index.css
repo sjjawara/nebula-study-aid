@@ -41,8 +41,8 @@
     --bloom-remember: 234 89% 74%;   /* #818CF8 soft indigo */
     --bloom-understand: 199 92% 60%; /* #38BDF8 sky blue */
     --bloom-apply: 160 64% 52%;      /* #34D399 emerald */
-    --bloom-analyze: 43 96% 56%;     /* #FBBF24 amber */
-    --bloom-evaluate: 27 96% 61%;    /* #FB923C orange */
+    --bloom-analyze: 27 96% 61%;     /* #FB923C orange */
+    --bloom-evaluate: 43 96% 56%;    /* #FBBF24 amber */
     --bloom-create: 292 91% 73%;     /* #E879F9 fuchsia */
 
     --gradient-primary: linear-gradient(135deg, hsl(258 90% 66%), hsl(280 85% 60%));
