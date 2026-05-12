@@ -145,9 +145,10 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     return lecture.flashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
       customLevels.has(c.bloom) &&
-      (!formulaMode || !!c.formula?.trim()),
+      (!formulaMode || !!c.formula?.trim()) &&
+      (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode]);
+  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode, stepOrderingMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -173,10 +174,16 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
         (c, i) =>
           selectedCardKeys.has(cardKey(c, i)) &&
           customLevels.has(c.bloom) &&
-          (!formulaMode || !!c.formula?.trim()),
+          (!formulaMode || !!c.formula?.trim()) &&
+          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
       )
       .slice(0, customCount);
     if (!basePool.length) return;
+    if (stepOrderingMode) {
+      setStepOrderingCards(basePool);
+      setSessionKey((k) => k + 1);
+      return;
+    }
     const pool = formulaMode
       ? basePool.map((c, idx) => buildFormulaCard(c, idx))
       : basePool;
