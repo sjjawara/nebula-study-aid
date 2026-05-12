@@ -633,19 +633,41 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     {hasNote && (
                       <circle cx={w - 6} cy={6} r={4} fill="hsl(var(--primary))" style={{ pointerEvents: "none" }} />
                     )}
-                    {hoveredId === n.data.id && tool === "select" && (
+                    {tool === "select" && (
                       <g
-                        transform={`translate(${w + 4}, ${h / 2 - 11})`}
+                        transform={`translate(${w / 2 - 12}, ${h - 12})`}
                         onClick={(e) => {
                           e.stopPropagation();
                           addChild(n.data.id);
                         }}
                         onPointerDown={(e) => e.stopPropagation()}
-                        style={{ cursor: "pointer" }}
+                        onMouseEnter={(e) => {
+                          setHoveredId(n.data.id);
+                          (e.currentTarget as SVGGElement).style.opacity = "1";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as SVGGElement).style.opacity =
+                            hoveredId === n.data.id ? "1" : "0.35";
+                        }}
+                        style={{
+                          cursor: "pointer",
+                          opacity: hoveredId === n.data.id ? 1 : 0.35,
+                          transition: "opacity 150ms ease-out",
+                        }}
+                        aria-label="Add child concept"
                       >
-                        <circle cx={11} cy={11} r={11} fill="hsl(var(--primary))" />
-                        <line x1={6} y1={11} x2={16} y2={11} stroke="white" strokeWidth={2} strokeLinecap="round" />
-                        <line x1={11} y1={6} x2={11} y2={16} stroke="white" strokeWidth={2} strokeLinecap="round" />
+                        {/* invisible expanded hit area for easier targeting */}
+                        <circle cx={12} cy={12} r={16} fill="transparent" />
+                        <circle
+                          cx={12}
+                          cy={12}
+                          r={12}
+                          fill="hsl(var(--primary))"
+                          stroke="white"
+                          strokeWidth={1.5}
+                        />
+                        <line x1={6} y1={12} x2={18} y2={12} stroke="white" strokeWidth={2} strokeLinecap="round" />
+                        <line x1={12} y1={6} x2={12} y2={18} stroke="white" strokeWidth={2} strokeLinecap="round" />
                       </g>
                     )}
                   </g>
