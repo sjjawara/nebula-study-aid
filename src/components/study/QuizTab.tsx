@@ -16,7 +16,8 @@ import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 
 const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
-const QUESTION_COUNTS = [5, 10, 15, 20] as const;
+const DEFAULT_QUESTION_COUNT = 10;
+const MIN_QUESTION_COUNT = 1;
 
 const modeTooltip: Record<QuizMode, string> = {
   bottom: tooltipCopy.bottomUp,
