@@ -4,6 +4,7 @@ import { CognitiveLoad } from "@/components/CognitiveLoad";
 import { AlertTriangle, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { useT } from "@/lib/i18n";
 
 type LoadBucket = "low" | "medium" | "high";
 
@@ -19,7 +20,7 @@ const dotClass: Record<LoadBucket, string> = {
   high: "bg-red-500",
 };
 
-const labelFor: Record<LoadBucket, string> = {
+const labelKeyFor: Record<LoadBucket, string> = {
   low: "Low",
   medium: "Medium",
   high: "High",
