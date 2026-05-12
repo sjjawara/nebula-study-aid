@@ -561,10 +561,22 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)}><ZoomOut className="h-3.5 w-3.5" /></Button>
           <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)}><ZoomIn className="h-3.5 w-3.5" /></Button>
-          <Button variant="ghost" size="sm" onClick={reset}>
-            <RotateCcw className="h-3.5 w-3.5" />
-            Reset map
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <RotateCcw className="h-3.5 w-3.5" />
+                Reset
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={resetPositions}>Reset Positions</DropdownMenuItem>
+              <DropdownMenuItem onClick={resetNotes}>Reset Notes</DropdownMenuItem>
+              <DropdownMenuItem onClick={resetCustomNodes}>Reset Custom Nodes</DropdownMenuItem>
+              <DropdownMenuItem onClick={resetEverything} className="text-destructive focus:text-destructive">
+                Reset Everything
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button size="sm" onClick={exportPng} className="bg-gradient-primary">
             <Download className="h-3.5 w-3.5" />
             Save map
