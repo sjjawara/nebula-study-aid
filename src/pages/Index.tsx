@@ -8,7 +8,8 @@ import { OutlineTab } from "@/components/study/OutlineTab";
 import { SummariesTab } from "@/components/study/SummariesTab";
 import { FlashcardsTab } from "@/components/study/FlashcardsTab";
 import { SearchTab } from "@/components/study/SearchTab";
-import { TopDownMasteryQuiz } from "@/components/study/TopDownMasteryQuiz";
+import { QuizTab } from "@/components/study/QuizTab";
+import type { Flashcard } from "@/lib/mockData";
 
 type Stage = "input" | "loading" | "results" | "error";
 

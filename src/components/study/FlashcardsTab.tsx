@@ -1,10 +1,15 @@
 import { useState } from "react";
-import type { Lecture } from "@/lib/mockData";
+import type { Lecture, Flashcard } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
-import { ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, RotateCw, Sparkles } from "lucide-react";
 
-export const FlashcardsTab = ({ lecture }: { lecture: Lecture }) => {
+interface FlashcardsTabProps {
+  lecture: Lecture;
+  onQuizCard?: (card: Flashcard) => void;
+}
+
+export const FlashcardsTab = ({ lecture, onQuizCard }: FlashcardsTabProps) => {
   const [i, setI] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const total = lecture.flashcards.length;
@@ -22,9 +27,22 @@ export const FlashcardsTab = ({ lecture }: { lecture: Lecture }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
         <span>Card {i + 1} of {total}{card.timestamp ? ` · ${card.timestamp}` : ""}</span>
-        <BloomBadge level={card.bloom} />
+        <div className="flex items-center gap-2">
+          {onQuizCard && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onQuizCard(card)}
+              className="h-7 gap-1 text-xs"
+            >
+              <Sparkles className="h-3 w-3" />
+              Quiz me on this
+            </Button>
+          )}
+          <BloomBadge level={card.bloom} />
+        </div>
       </div>
 
       <button
