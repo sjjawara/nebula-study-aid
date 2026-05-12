@@ -687,10 +687,15 @@ interface NodePopoverProps {
   onNoteChange: (v: string) => void;
   onLabelChange: (v: string) => void;
   onDelete?: () => void;
+  containerRef: React.RefObject<HTMLDivElement>;
 }
 
-// Session-persistent popover size (resets on full reload, persists across opens).
-const popoverSize = { width: 320, height: 360 };
+// Session-persistent popover size + position (resets on full reload).
+const popoverState: {
+  width: number;
+  height: number;
+  position: { x: number; y: number } | null;
+} = { width: 320, height: 360, position: null };
 const MIN_W = 250;
 const MIN_H = 150;
 const MAX_W = 600;
@@ -707,16 +712,43 @@ const NodePopover = ({
   onNoteChange,
   onLabelChange,
   onDelete,
+  containerRef,
 }: NodePopoverProps) => {
   const isCustom = !!node.isCustom;
-  const [size, setSize] = useState({ width: popoverSize.width, height: popoverSize.height });
-  const dragState = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
+  const [size, setSize] = useState({ width: popoverState.width, height: popoverState.height });
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(popoverState.position);
+  const [maximized, setMaximized] = useState(false);
+  const resizeState = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
+  const moveState = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
+  const clampPosition = (x: number, y: number, w: number, h: number) => {
+    const c = containerRef.current;
+    if (!c) return { x, y };
+    const maxX = Math.max(0, c.clientWidth - w);
+    const maxY = Math.max(0, c.clientHeight - h);
+    return {
+      x: Math.min(maxX, Math.max(0, x)),
+      y: Math.min(maxY, Math.max(0, y)),
+    };
+  };
+
+  // Initialize default position (top-right) once container size is known.
+  useEffect(() => {
+    if (position || maximized) return;
+    const c = containerRef.current;
+    if (!c) return;
+    const x = Math.max(0, c.clientWidth - size.width - 16);
+    setPosition({ x, y: 16 });
+  }, [position, maximized, size.width, containerRef]);
+
+  // ---- Resize ----
   const onResizeDown = (e: React.PointerEvent) => {
+    if (maximized) return;
     e.preventDefault();
     e.stopPropagation();
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    dragState.current = {
+    resizeState.current = {
       startX: e.clientX,
       startY: e.clientY,
       startW: size.width,
@@ -725,39 +757,98 @@ const NodePopover = ({
   };
 
   const onResizeMove = (e: React.PointerEvent) => {
-    if (!dragState.current) return;
-    const dx = e.clientX - dragState.current.startX;
-    const dy = e.clientY - dragState.current.startY;
-    const width = Math.min(MAX_W, Math.max(MIN_W, dragState.current.startW + dx));
-    const height = Math.min(MAX_H, Math.max(MIN_H, dragState.current.startH + dy));
+    if (!resizeState.current) return;
+    const dx = e.clientX - resizeState.current.startX;
+    const dy = e.clientY - resizeState.current.startY;
+    const width = Math.min(MAX_W, Math.max(MIN_W, resizeState.current.startW + dx));
+    const height = Math.min(MAX_H, Math.max(MIN_H, resizeState.current.startH + dy));
     setSize({ width, height });
-    popoverSize.width = width;
-    popoverSize.height = height;
-  };
-
-  const onResizeUp = (e: React.PointerEvent) => {
-    dragState.current = null;
-    try {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      /* ignore */
+    popoverState.width = width;
+    popoverState.height = height;
+    if (position) {
+      const clamped = clampPosition(position.x, position.y, width, height);
+      if (clamped.x !== position.x || clamped.y !== position.y) {
+        setPosition(clamped);
+        popoverState.position = clamped;
+      }
     }
   };
 
+  const onResizeUp = (e: React.PointerEvent) => {
+    resizeState.current = null;
+    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+  };
+
+  // ---- Drag (header) ----
+  const onMoveDown = (e: React.PointerEvent) => {
+    if (maximized) return;
+    if ((e.target as HTMLElement).closest("button, input, textarea")) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    moveState.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      baseX: position?.x ?? 0,
+      baseY: position?.y ?? 0,
+    };
+  };
+
+  const onMoveMove = (e: React.PointerEvent) => {
+    if (!moveState.current) return;
+    const dx = e.clientX - moveState.current.startX;
+    const dy = e.clientY - moveState.current.startY;
+    const next = clampPosition(
+      moveState.current.baseX + dx,
+      moveState.current.baseY + dy,
+      size.width,
+      size.height,
+    );
+    setPosition(next);
+    popoverState.position = next;
+  };
+
+  const onMoveUp = (e: React.PointerEvent) => {
+    moveState.current = null;
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+  };
+
+  const toggleMaximize = () => setMaximized((m) => !m);
+
+  const containerStyle: React.CSSProperties = maximized
+    ? { left: 8, top: 8, right: 8, bottom: 8, width: "auto", height: "auto" }
+    : {
+        left: position?.x ?? undefined,
+        top: position?.y ?? undefined,
+        width: size.width,
+        height: size.height,
+      };
+
   return (
     <div
-      className="absolute right-4 top-4 z-10 max-w-[calc(100%-2rem)] flex flex-col rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur"
-      style={{ width: size.width, height: size.height }}
+      ref={popoverRef}
+      className="absolute z-10 flex flex-col rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur"
+      style={containerStyle}
     >
-     <div className="flex-1 overflow-y-auto p-4">
-      <div className="flex items-start justify-between gap-2">
+      {/* Header is the drag handle */}
+      <div
+        onPointerDown={onMoveDown}
+        onPointerMove={onMoveMove}
+        onPointerUp={onMoveUp}
+        onPointerCancel={onMoveUp}
+        className={cn(
+          "flex items-start justify-between gap-2 border-b border-border px-4 pt-4 pb-3 select-none",
+          maximized ? "cursor-default" : "cursor-grab active:cursor-grabbing",
+        )}
+        style={{ touchAction: "none" }}
+      >
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Sparkles className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1">
               {isCustom ? "Your concept" : node.kind === "root" ? "Lecture" : node.kind === "branch" ? "Topic" : "Concept"}
+              {!maximized && <Move className="h-2.5 w-2.5 opacity-50" />}
             </p>
             {isCustom ? (
               <Input
@@ -765,77 +856,95 @@ const NodePopover = ({
                 onChange={(e) => onLabelChange(e.target.value)}
                 className="mt-0.5 h-7 text-sm font-semibold"
                 placeholder="Concept name"
+                onPointerDown={(e) => e.stopPropagation()}
               />
             ) : (
               <h4 className="text-sm font-semibold leading-tight text-foreground truncate">{currentLabel}</h4>
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={toggleMaximize}
+            aria-label={maximized ? "Restore popover" : "Maximize popover"}
+            title={maximized ? "Restore" : "Maximize"}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4">
+        {!isCustom && explanation && (
+          <p className="text-xs leading-relaxed text-foreground/90 whitespace-pre-line">
+            {explanation}
+          </p>
+        )}
+
+        <div className="mt-3">
+          <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Your notes
+          </label>
+          <Textarea
+            value={note}
+            onChange={(e) => onNoteChange(e.target.value)}
+            placeholder="Add your thoughts, connections, or study notes…"
+            className={cn("mt-1 text-xs", maximized ? "min-h-[200px]" : "min-h-[80px]")}
+          />
+        </div>
+
+        {timestamp && ytLink && (
+          <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+            <span className="text-[11px] text-muted-foreground">Jump to in video</span>
+            <button
+              type="button"
+              onClick={() => window.open(ytLink, "_blank", "noopener,noreferrer")}
+              className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20"
+            >
+              {timestamp}
+              <ExternalLink className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+
+        {onDelete && (
+          <div className="mt-3 border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3 w-3" />
+              Delete concept
+            </button>
+          </div>
+        )}
+      </div>
+
+      {!maximized && (
+        <div
+          role="slider"
+          aria-label="Resize popover"
+          onPointerDown={onResizeDown}
+          onPointerMove={onResizeMove}
+          onPointerUp={onResizeUp}
+          onPointerCancel={onResizeUp}
+          className="absolute bottom-1 right-1 flex h-5 w-5 cursor-nwse-resize items-center justify-center rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
+          style={{ touchAction: "none" }}
         >
-          <X className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      {!isCustom && explanation && (
-        <p className="mt-3 text-xs leading-relaxed text-foreground/90">{explanation}</p>
-      )}
-
-      <div className="mt-3">
-        <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          Your notes
-        </label>
-        <Textarea
-          value={note}
-          onChange={(e) => onNoteChange(e.target.value)}
-          placeholder="Add your thoughts, connections, or study notes…"
-          className="mt-1 min-h-[80px] text-xs"
-        />
-      </div>
-
-      {timestamp && ytLink && (
-        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-          <span className="text-[11px] text-muted-foreground">Jump to in video</span>
-          <button
-            type="button"
-            onClick={() => window.open(ytLink, "_blank", "noopener,noreferrer")}
-            className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20"
-          >
-            {timestamp}
-            <ExternalLink className="h-3 w-3" />
-          </button>
+          <GripHorizontal className="h-3.5 w-3.5 -rotate-45" />
         </div>
       )}
-
-      {onDelete && (
-        <div className="mt-3 border-t border-border pt-3">
-          <button
-            type="button"
-            onClick={onDelete}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-          >
-            <Trash2 className="h-3 w-3" />
-            Delete concept
-          </button>
-        </div>
-      )}
-      </div>
-      <div
-        role="slider"
-        aria-label="Resize popover"
-        onPointerDown={onResizeDown}
-        onPointerMove={onResizeMove}
-        onPointerUp={onResizeUp}
-        onPointerCancel={onResizeUp}
-        className="absolute bottom-1 right-1 flex h-5 w-5 cursor-nwse-resize items-center justify-center rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
-        style={{ touchAction: "none" }}
-      >
-        <GripHorizontal className="h-3.5 w-3.5 -rotate-45" />
-      </div>
     </div>
   );
 };
