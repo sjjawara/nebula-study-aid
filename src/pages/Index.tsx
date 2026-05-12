@@ -202,14 +202,34 @@ const Index = () => {
       if (!supaRes.ok) {
         const body = await supaRes.text().catch(() => "");
         console.error("[Supadata] Error response:", supaRes.status, body);
-        throw new Error(`Transcript fetch failed (${supaRes.status}): ${body || supaRes.statusText}`);
+        const lower = body.toLowerCase();
+        const err: any = new Error(body || supaRes.statusText);
+        if (supaRes.status === 404 || lower.includes("not found") || lower.includes("video-not-found")) {
+          err.kind = "not-found";
+        } else if (lower.includes("private") || supaRes.status === 403) {
+          err.kind = "private";
+        } else if (lower.includes("unlisted")) {
+          err.kind = "unlisted";
+        } else if (
+          lower.includes("transcript") ||
+          lower.includes("caption") ||
+          lower.includes("subtitle") ||
+          lower.includes("no-captions")
+        ) {
+          err.kind = "no-captions";
+        } else {
+          err.kind = "generic";
+        }
+        throw err;
       }
       const supaPayload = await supaRes.json();
       const rawItems: TranscriptItem[] = Array.isArray(supaPayload)
         ? supaPayload
         : supaPayload?.content ?? supaPayload?.transcript ?? [];
       if (!Array.isArray(rawItems) || rawItems.length === 0) {
-        throw new Error("No transcript returned for this video.");
+        const err: any = new Error("No transcript returned for this video.");
+        err.kind = "no-captions";
+        throw err;
       }
       const formattedTranscript = formatTranscript(rawItems);
 
@@ -239,6 +259,8 @@ const Index = () => {
       setSessions(saveSession(parsedLecture, trimmedUrl));
       setStage("results");
     } catch (err) {
+      const kind = (err as any)?.kind ?? "generic";
+      setErrorKind(kind);
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setStage("error");
     }
