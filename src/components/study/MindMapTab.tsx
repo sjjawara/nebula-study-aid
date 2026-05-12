@@ -13,6 +13,7 @@ import {
   Sparkles,
   Plus,
   Trash2,
+  GripHorizontal,
 } from "lucide-react";
 import type { Lecture, SearchMoment } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
@@ -703,6 +704,13 @@ interface NodePopoverProps {
   onDelete?: () => void;
 }
 
+// Session-persistent popover size (resets on full reload, persists across opens).
+const popoverSize = { width: 320, height: 360 };
+const MIN_W = 250;
+const MIN_H = 150;
+const MAX_W = 600;
+const MAX_H = 400;
+
 const NodePopover = ({
   node,
   explanation,
@@ -716,8 +724,47 @@ const NodePopover = ({
   onDelete,
 }: NodePopoverProps) => {
   const isCustom = !!node.isCustom;
+  const [size, setSize] = useState({ width: popoverSize.width, height: popoverSize.height });
+  const dragState = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
+
+  const onResizeDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    dragState.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startW: size.width,
+      startH: size.height,
+    };
+  };
+
+  const onResizeMove = (e: React.PointerEvent) => {
+    if (!dragState.current) return;
+    const dx = e.clientX - dragState.current.startX;
+    const dy = e.clientY - dragState.current.startY;
+    const width = Math.min(MAX_W, Math.max(MIN_W, dragState.current.startW + dx));
+    const height = Math.min(MAX_H, Math.max(MIN_H, dragState.current.startH + dy));
+    setSize({ width, height });
+    popoverSize.width = width;
+    popoverSize.height = height;
+  };
+
+  const onResizeUp = (e: React.PointerEvent) => {
+    dragState.current = null;
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+  };
+
   return (
-    <div className="absolute right-4 top-4 z-10 w-80 max-w-[calc(100%-2rem)] rounded-2xl border border-border bg-card/95 p-4 shadow-xl backdrop-blur">
+    <div
+      className="absolute right-4 top-4 z-10 max-w-[calc(100%-2rem)] flex flex-col rounded-2xl border border-border bg-card/95 shadow-xl backdrop-blur"
+      style={{ width: size.width, height: size.height }}
+    >
+     <div className="flex-1 overflow-y-auto p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -791,6 +838,19 @@ const NodePopover = ({
           </button>
         </div>
       )}
+      </div>
+      <div
+        role="slider"
+        aria-label="Resize popover"
+        onPointerDown={onResizeDown}
+        onPointerMove={onResizeMove}
+        onPointerUp={onResizeUp}
+        onPointerCancel={onResizeUp}
+        className="absolute bottom-1 right-1 flex h-5 w-5 cursor-nwse-resize items-center justify-center rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
+        style={{ touchAction: "none" }}
+      >
+        <GripHorizontal className="h-3.5 w-3.5 -rotate-45" />
+      </div>
     </div>
   );
 };
