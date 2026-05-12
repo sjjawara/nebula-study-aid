@@ -15,36 +15,131 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
   const [depth, setDepth] = useState<typeof depths[number]["id"]>("short");
 
   const takeaways = useMemo(() => {
+    // Prioritize the highest-order chunks: Analyze + Evaluate first.
     const highOrder = lecture.outline.filter(
-      (o) => o.bloom === "Analyze" || o.bloom === "Evaluate"
+      (o) => o.bloom === "Analyze" || o.bloom === "Evaluate",
     );
-    // Fallback up the hierarchy if there aren't enough Analyze/Evaluate items
-    const pool = highOrder.length >= 5
-      ? highOrder
-      : [
-          ...highOrder,
-          ...lecture.outline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
-          ...lecture.outline.filter((o) => o.bloom === "Understand"),
-        ];
+    const pool =
+      highOrder.length >= 5
+        ? highOrder
+        : [
+            ...highOrder,
+            ...lecture.outline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
+            ...lecture.outline.filter((o) => o.bloom === "Understand"),
+          ];
+
+    // Helpers to find supporting context for each topic.
+    const tsToSeconds = (ts?: string) => {
+      if (!ts) return null;
+      const parts = ts.split(":").map((p) => parseInt(p, 10));
+      if (parts.some((n) => Number.isNaN(n))) return null;
+      return parts.reduce((acc, n) => acc * 60 + n, 0);
+    };
+
+    const tokenize = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 3);
+
+    const stopish = new Set([
+      "with",
+      "from",
+      "this",
+      "that",
+      "into",
+      "your",
+      "their",
+      "they",
+      "them",
+      "what",
+      "which",
+      "where",
+      "while",
+      "about",
+      "between",
+      "using",
+      "based",
+    ]);
+
+    const firstSentence = (text: string) => {
+      const cleaned = text.trim().replace(/\s+/g, " ");
+      const m = cleaned.match(/^(.{20,200}?[.!?])(\s|$)/);
+      return (m ? m[1] : cleaned).trim().replace(/[.!?]+$/, "");
+    };
+
+    const findContext = (topic: string, timestamp: string): string => {
+      const topicSeconds = tsToSeconds(timestamp);
+      const topicTokens = tokenize(topic).filter((t) => !stopish.has(t));
+
+      const score = (text: string, ts?: string) => {
+        if (!text) return -1;
+        const tokens = new Set(tokenize(text));
+        const overlap = topicTokens.reduce((n, t) => n + (tokens.has(t) ? 1 : 0), 0);
+        const candidateSeconds = tsToSeconds(ts);
+        const proximity =
+          topicSeconds !== null && candidateSeconds !== null
+            ? Math.max(0, 1 - Math.abs(topicSeconds - candidateSeconds) / 600)
+            : 0;
+        return overlap * 2 + proximity;
+      };
+
+      let best = { text: "", s: -1 };
+      for (const m of lecture.searchIndex) {
+        const txt = m.excerpt || "";
+        const s = score(txt, m.timestamp);
+        if (s > best.s) best = { text: txt, s };
+      }
+      for (const f of lecture.flashcards) {
+        const txt = f.answer || "";
+        const s = score(`${f.question} ${txt}`, f.timestamp);
+        if (s > best.s) best = { text: txt, s };
+      }
+      return best.text ? firstSentence(best.text) : "";
+    };
+
+    const lowerTopic = (topic: string) => {
+      const t = topic.trim().replace(/[.!?]+$/, "");
+      // Keep acronyms / proper-noun-ish words capitalized.
+      return /^[A-Z]{2,}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1);
+    };
+
+    const frame = (
+      topic: string,
+      bloom: string,
+      context: string,
+    ): string => {
+      const t = lowerTopic(topic);
+      const ctx = context ? ` — ${context}.` : ".";
+      if (bloom === "Evaluate") {
+        return `Be ready to defend why ${t} matters and when it changes the right answer${ctx}`;
+      }
+      if (bloom === "Analyze") {
+        return `Be ready to explain how the parts of ${t} fit together and why that structure matters${ctx}`;
+      }
+      if (bloom === "Apply" || bloom === "Create") {
+        return `Be ready to walk someone through using ${t} on a new problem and justify each move${ctx}`;
+      }
+      return `Be ready to explain ${t} in your own words and say why it matters${ctx}`;
+    };
 
     const seen = new Set<string>();
-    const items: { topic: string; timestamp: string; bloom: string }[] = [];
+    const items: { sentence: string; timestamp: string; bloom: string }[] = [];
     for (const o of pool) {
       const key = o.topic.trim().toLowerCase();
       if (!key || seen.has(key)) continue;
       seen.add(key);
-      items.push({ topic: o.topic, timestamp: o.timestamp, bloom: o.bloom });
+      const ctx = findContext(o.topic, o.timestamp);
+      items.push({
+        sentence: frame(o.topic, o.bloom, ctx),
+        timestamp: o.timestamp,
+        bloom: o.bloom,
+      });
       if (items.length >= 7) break;
     }
-    return items.slice(0, Math.max(5, Math.min(7, items.length)));
-  }, [lecture.outline]);
-
-  const renderTakeaway = (topic: string) => {
-    const trimmed = topic.trim().replace(/[.!?]+$/, "");
-    return /^(why|how|what|when|where|who)\b/i.test(trimmed)
-      ? `${trimmed}?`
-      : `${trimmed}.`;
-  };
+    return items;
+  }, [lecture.outline, lecture.searchIndex, lecture.flashcards]);
 
   return (
     <div className="space-y-6">
@@ -62,7 +157,7 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
               <li key={`${t.timestamp}-${i}`} className="flex gap-3 items-start">
                 <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm leading-relaxed text-foreground/90">
-                  {renderTakeaway(t.topic)}
+                  {t.sentence}
                 </p>
               </li>
             ))}
