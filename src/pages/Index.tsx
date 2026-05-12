@@ -24,6 +24,7 @@ import { FlashcardsTab } from "@/components/study/FlashcardsTab";
 import { SearchTab } from "@/components/study/SearchTab";
 import { QuizTab } from "@/components/study/QuizTab";
 import { MindMapTab } from "@/components/study/MindMapTab";
+import { LoadingScreen } from "@/components/study/LoadingScreen";
 import type { Flashcard } from "@/lib/mockData";
 import { loadFlashcards, saveFlashcards } from "@/lib/flashcardStore";
 
