@@ -460,7 +460,36 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     setSelected(null);
   };
 
-  const reset = () => {
+  const resetPositions = () => {
+    setPositions({});
+  };
+
+  const resetNotes = () => {
+    setNotes({});
+  };
+
+  const resetCustomNodes = () => {
+    setCustomNodes([]);
+    // Drop any positions/notes/labels keyed to custom node ids
+    setPositions((prev) => {
+      const next: Record<string, { x: number; y: number }> = {};
+      for (const k of Object.keys(prev)) if (!k.startsWith("c:")) next[k] = prev[k];
+      return next;
+    });
+    setNotes((prev) => {
+      const next: Record<string, string> = {};
+      for (const k of Object.keys(prev)) if (!k.startsWith("c:")) next[k] = prev[k];
+      return next;
+    });
+    setLabels((prev) => {
+      const next: Record<string, string> = {};
+      for (const k of Object.keys(prev)) if (!k.startsWith("c:")) next[k] = prev[k];
+      return next;
+    });
+    setSelected(null);
+  };
+
+  const resetEverything = () => {
     setLabels({});
     setNotes({});
     setCustomNodes([]);
