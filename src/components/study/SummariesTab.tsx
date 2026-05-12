@@ -470,10 +470,10 @@ export const SummariesTab = ({
               {t("Suggested Tools for This Lecture")}
             </p>
             <ul className="space-y-1.5">
-              {profile.tools.map((t, i) => (
+              {profile.tools.map((tool, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <span>{t}</span>
+                  <span>{t(tool)}</span>
                 </li>
               ))}
             </ul>
