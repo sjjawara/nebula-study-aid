@@ -283,6 +283,21 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   {card.formula}
                 </pre>
               )}
+              {flipped && card.steps?.length ? (
+                <ol className="w-full max-w-md space-y-1.5 text-left">
+                  {card.steps.map((s, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
+                        {idx + 1}
+                      </span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
             </div>
           </button>
 
