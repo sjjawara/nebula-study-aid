@@ -384,9 +384,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Defend your reasoning</p>
+              <p className="text-sm font-medium text-foreground">{t("Defend your reasoning")}</p>
               <p className="text-xs text-muted-foreground">
-                Why is this the correct explanation, and not an alternative?
+                {t("Why is this the correct explanation, and not an alternative?")}
               </p>
             </div>
             <BloomBadge level="Evaluate" />
@@ -394,7 +394,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <Textarea
             value={justification}
             onChange={(e) => setJustification(e.target.value)}
-            placeholder="Write your justification here..."
+            placeholder={t("Write your justification here...")}
             className="min-h-[140px] resize-none bg-background"
           />
           {submitError && <p className="text-xs text-destructive">{submitError}</p>}
@@ -407,11 +407,11 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Evaluating...
+                  {t("Evaluating...")}
                 </>
               ) : (
                 <>
-                  Submit & finish <ChevronRight className="h-4 w-4" />
+                  {t("Submit & finish")} <ChevronRight className="h-4 w-4" />
                 </>
               )}
             </Button>
