@@ -245,6 +245,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setMasteryActive(false);
     setCustomLecture(null);
     setCustomAnswered(0);
+    setStepOrderingCards(null);
   };
 
   const ModePill = ({
