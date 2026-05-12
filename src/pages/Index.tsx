@@ -435,12 +435,20 @@ const Index = () => {
             {!translating && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6 bg-card border border-border h-12 p-1">
-                <TabsTrigger value="outline"><T s="Outline" /></TabsTrigger>
-                <TabsTrigger value="summaries"><T s="Analysis" /></TabsTrigger>
-                <TabsTrigger value="flashcards"><T s="Flashcards" /></TabsTrigger>
-                <TabsTrigger value="search"><T s="Search" /></TabsTrigger>
-                <TabsTrigger value="quiz"><T s="Quiz" /></TabsTrigger>
-                <TabsTrigger value="mindmap"><T s="Mind Map" /></TabsTrigger>
+                {(() => {
+                  const triggerCls =
+                    "data-[state=active]:bg-[#818CF8] data-[state=active]:text-white data-[state=active]:shadow-glow";
+                  return (
+                    <>
+                      <TabsTrigger value="outline" className={triggerCls}><T s="Outline" /></TabsTrigger>
+                      <TabsTrigger value="summaries" className={triggerCls}><T s="Analysis" /></TabsTrigger>
+                      <TabsTrigger value="flashcards" className={triggerCls}><T s="Flashcards" /></TabsTrigger>
+                      <TabsTrigger value="search" className={triggerCls}><T s="Search" /></TabsTrigger>
+                      <TabsTrigger value="quiz" className={triggerCls}><T s="Quiz" /></TabsTrigger>
+                      <TabsTrigger value="mindmap" className={triggerCls}><T s="Mind Map" /></TabsTrigger>
+                    </>
+                  );
+                })()}
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
                 <OutlineTab lecture={displayLecture} videoUrl={url} />
