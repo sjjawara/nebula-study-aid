@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
+import { useT } from "@/lib/i18n";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
