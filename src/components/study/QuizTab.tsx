@@ -261,6 +261,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setCustomLecture(null);
     setCustomAnswered(0);
     setStepOrderingCards(null);
+    setProofCards(null);
   };
 
   const ModePill = ({
