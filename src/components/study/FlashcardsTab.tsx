@@ -22,21 +22,7 @@ interface FlashcardsTabProps {
 
 const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
 
-import { timestampToSeconds, extractVideoId, openYoutubeAt } from "@/lib/timestamp";
-
-const openTimestamp = (videoId: string, seconds: number) => {
-  // Kept for backward compatibility within this file; delegates to shared util.
-  openYoutubeAt(videoId, secondsToTimestamp(seconds));
-};
-
-const secondsToTimestamp = (s: number): string => {
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  return h > 0
-    ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
-    : `${m}:${String(sec).padStart(2, "0")}`;
-};
+import { extractVideoId, openYoutubeAt } from "@/lib/timestamp";
 
 export const TimestampBadge = ({
   videoId,
@@ -56,7 +42,7 @@ export const TimestampBadge = ({
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        openTimestamp(videoId, timestampToSeconds(timestamp));
+        openYoutubeAt(videoId, timestamp);
       }}
       className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 font-mono text-xs text-primary tabular-nums hover:bg-primary/20 transition-colors"
       aria-label={`Open YouTube at ${timestamp}`}
