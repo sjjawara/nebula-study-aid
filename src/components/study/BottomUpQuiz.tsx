@@ -188,9 +188,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Recall</p>
+              <p className="text-sm font-medium text-foreground">{t("Recall")}</p>
               <p className="text-xs text-muted-foreground">
-                Is the following claim correct?
+                {t("Is the following claim correct?")}
               </p>
             </div>
             <BloomBadge level="Remember" />
@@ -217,7 +217,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
                     showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
                   )}
                 >
-                  {o.label}
+                  {t(o.label)}
                 </button>
               );
             })}
@@ -236,7 +236,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={!tfCorrect}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
