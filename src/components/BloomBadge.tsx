@@ -38,7 +38,7 @@ interface BloomBadgeProps {
   variant?: "filled" | "dots";
 }
 
-export const BloomBadge = ({ level, className, withInfo = true, variant = "filled" }: BloomBadgeProps) => {
+export const BloomBadge = ({ level, className, withInfo = true, variant = "dots" }: BloomBadgeProps) => {
   if (variant === "dots") {
     const c = `hsl(var(--bloom-${level.toLowerCase()}))`;
     const cAlpha = (a: number) => `hsl(var(--bloom-${level.toLowerCase()}) / ${a})`;
