@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ListOrdered, RotateCw, Sparkles, Play, Pencil, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FlashcardFilters, useFlashcardFilters } from "./FlashcardFilters";
 import { useT } from "@/lib/i18n";
 
 interface FlashcardsTabProps {
