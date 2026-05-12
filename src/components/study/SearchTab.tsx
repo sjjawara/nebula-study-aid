@@ -327,12 +327,33 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                   isOpen ? "border-primary/60" : "border-border hover:border-primary/40"
                 }`}
               >
+                {videoId && m.timestamp ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const seconds = timestampToSeconds(m.timestamp);
+                      window.open(
+                        `https://www.youtube.com/watch?v=${videoId}&t=${seconds}s`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }}
+                    className="inline-flex items-center gap-1 self-start rounded-md bg-primary/10 px-2 py-1 font-mono text-xs text-primary tabular-nums hover:bg-primary/20 transition-colors shrink-0"
+                    aria-label={`Open YouTube at ${m.timestamp}`}
+                  >
+                    <Play className="h-3 w-3 fill-current" />
+                    {m.timestamp}
+                  </button>
+                ) : (
+                  <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
+                )}
                 <button
                   type="button"
                   onClick={() => setOpenIdx(isOpen ? null : idx)}
                   className="flex gap-4 flex-1 text-left"
                 >
-                  <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
+
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center justify-between gap-3">
                       {m.topic && <p className="text-sm font-medium text-foreground">{m.topic}</p>}
