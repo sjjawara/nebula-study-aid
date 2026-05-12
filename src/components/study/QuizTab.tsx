@@ -1,12 +1,19 @@
-import { useEffect, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge } from "lucide-react";
-import type { Lecture, Flashcard } from "@/lib/mockData";
+import { useEffect, useMemo, useState } from "react";
+import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown } from "lucide-react";
+import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { BloomBadge } from "@/components/BloomBadge";
 import { TopDownMasteryQuiz } from "./TopDownMasteryQuiz";
 import { BottomUpQuiz } from "./BottomUpQuiz";
 import { MasteryModeQuiz } from "./MasteryModeQuiz";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+
+const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
+const QUESTION_COUNTS = [5, 10, 15, 20] as const;
 
 const modeTooltip: Record<QuizMode, string> = {
   bottom: tooltipCopy.bottomUp,
