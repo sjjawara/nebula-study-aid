@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { buildYoutubeUrl } from "@/lib/timestamp";
+import { useT } from "@/lib/i18n";
 
 type Tool = "select" | "relabel";
 
@@ -374,10 +375,11 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lecture]);
 
+  const { t } = useT();
   const handleNodeClick = (datum: TreeDatum) => {
     if (draggingRef.current?.moved) return;
     if (tool === "relabel" && !datum.isCustom) {
-      const next = window.prompt("Rename this concept", datum.name);
+      const next = window.prompt(t("Rename this concept"), datum.name);
       if (next && next.trim()) setLabels((prev) => ({ ...prev, [datum.id]: next.trim() }));
       return;
     }
@@ -424,7 +426,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     setCustomNodes((prev) => [...prev, newNode]);
     // Open popover for editing after a tick (need tree to rebuild)
     setTimeout(() => {
-      setSelected({ id, name: "New concept", kind: "custom", isCustom: true });
+      setSelected({ id, name: t("New concept"), kind: "custom", isCustom: true });
     }, 0);
   };
 
@@ -530,10 +532,10 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-card/60 p-5 shadow-sm">
-        <p className="text-xs font-medium uppercase tracking-wider text-primary">Mind map</p>
-        <h3 className="mt-1 text-lg font-semibold text-foreground">Concept hierarchy for this lecture</h3>
+        <p className="text-xs font-medium uppercase tracking-wider text-primary">{t("Mind map")}</p>
+        <h3 className="mt-1 text-lg font-semibold text-foreground">{t("Concept hierarchy for this lecture")}</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          Drag the background to pan, scroll to zoom. Drag nodes to rearrange. Hover a node and click + to add your own.
+          {t("Drag the background to pan, scroll to zoom. Drag nodes to rearrange. Hover a node and click + to add your own.")}
         </p>
       </div>
 
@@ -546,7 +548,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
           )}
         >
           <MousePointer2 className="h-3.5 w-3.5" />
-          Explore
+          {t("Explore")}
         </button>
         <button
           onClick={() => setTool("relabel")}
@@ -556,7 +558,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
           )}
         >
           <Pencil className="h-3.5 w-3.5" />
-          Relabel
+          {t("Relabel")}
         </button>
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)}><ZoomOut className="h-3.5 w-3.5" /></Button>
@@ -565,21 +567,21 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
                 <RotateCcw className="h-3.5 w-3.5" />
-                Reset
+                {t("Reset")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={resetPositions}>Reset Positions</DropdownMenuItem>
-              <DropdownMenuItem onClick={resetNotes}>Reset Notes</DropdownMenuItem>
-              <DropdownMenuItem onClick={resetCustomNodes}>Reset Custom Nodes</DropdownMenuItem>
+              <DropdownMenuItem onClick={resetPositions}>{t("Reset Positions")}</DropdownMenuItem>
+              <DropdownMenuItem onClick={resetNotes}>{t("Reset Notes")}</DropdownMenuItem>
+              <DropdownMenuItem onClick={resetCustomNodes}>{t("Reset Custom Nodes")}</DropdownMenuItem>
               <DropdownMenuItem onClick={resetEverything} className="text-destructive focus:text-destructive">
-                Reset Everything
+                {t("Reset Everything")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size="sm" onClick={exportPng} className="bg-gradient-primary">
             <Download className="h-3.5 w-3.5" />
-            Save map
+            {t("Save map")}
           </Button>
         </div>
       </div>
