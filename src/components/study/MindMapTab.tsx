@@ -176,7 +176,7 @@ const explainNode = (
   }
   if (node.kind === "root") {
     return {
-      explanation: `${lecture.title} — this mind map breaks the lecture into its main topics (branches) and the supporting keywords (leaves) covered in each one. Click any topic or keyword to see what it means and jump to the moment it's discussed in the video.`,
+      explanation: `${lecture.title}:\n\nThis mind map breaks the lecture into its main topics (branches) and the supporting keywords (leaves) covered in each one. Click any topic or keyword to see what it means and jump to the moment it's discussed in the video.`,
     };
   }
   const idx = lecture.searchIndex;
@@ -184,9 +184,14 @@ const explainNode = (
     const m =
       idx.find((s) => s.timestamp === node.timestamp) ??
       idx.find((s) => s.topic && node.topic && s.topic === node.topic);
-    if (m && m.excerpt) return { explanation: m.excerpt, timestamp: m.timestamp ?? node.timestamp, matched: m };
+    if (m && m.excerpt)
+      return {
+        explanation: `Topic — "${node.name}":\n\n${m.excerpt}`,
+        timestamp: m.timestamp ?? node.timestamp,
+        matched: m,
+      };
     return {
-      explanation: `"${node.name}" is one of the main topics covered in this lecture. Open the timestamp below to hear how the instructor introduces and develops this idea in context.`,
+      explanation: `Topic — "${node.name}":\n\nOne of the main topics covered in this lecture. Open the timestamp below to hear how the instructor introduces and develops this idea in context.`,
       timestamp: node.timestamp,
     };
   }
@@ -212,13 +217,13 @@ const explainNode = (
   }
   if (best && best.excerpt) {
     return {
-      explanation: `In the context of "${node.topic ?? "this section"}", "${node.name}" comes up here: ${best.excerpt}`,
+      explanation: `In "${node.topic ?? "this section"}" — "${node.name}":\n\n${best.excerpt}`,
       timestamp: best.timestamp ?? node.timestamp,
       matched: best,
     };
   }
   return {
-    explanation: `"${node.name}" is a supporting concept under "${node.topic ?? "this topic"}". Jump to the timestamp below to hear it explained in the lecture.`,
+    explanation: `Under "${node.topic ?? "this topic"}" — "${node.name}":\n\nA supporting concept. Jump to the timestamp below to hear it explained in the lecture.`,
     timestamp: node.timestamp,
   };
 };
