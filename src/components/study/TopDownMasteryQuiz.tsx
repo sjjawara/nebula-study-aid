@@ -204,6 +204,43 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                   );
                 })}
               </div>
+              {feedbackMode === "immediate" && tfChoice !== null && (
+                <div
+                  className={cn(
+                    "rounded-xl border p-4 space-y-2",
+                    tfChoice === tf.correctValue
+                      ? "border-emerald-500/40 bg-emerald-500/5"
+                      : "border-destructive/40 bg-destructive/5",
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex items-center gap-2 text-sm font-semibold">
+                      {tfChoice === tf.correctValue ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <span className="text-emerald-700">Correct</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-4 w-4 text-destructive" />
+                          <span className="text-destructive">Not quite</span>
+                        </>
+                      )}
+                    </p>
+                    <BloomBadge level="Remember" />
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Why:</span>{" "}
+                    The lecture grounds the claim "{card.answer}". This Remember-level check confirms recognition.
+                  </p>
+                  {tfChoice !== tf.correctValue && (
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">Correct answer:</span>{" "}
+                      {tf.correctValue ? "True" : "False"}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </Section>
