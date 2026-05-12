@@ -26,6 +26,7 @@ import {
   shuffle,
 } from "@/lib/quizUtils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { useT } from "@/lib/i18n";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
@@ -84,6 +85,7 @@ const explanationFor = (record: Pick<AnswerRecord, "qType" | "correctAnswer" | "
 };
 
 export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }: Props) => {
+  const { t } = useT();
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [used, setUsed] = useState<Set<string>>(new Set());
@@ -283,17 +285,17 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-6 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-primary">Quiz complete</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-primary">{t("Quiz complete")}</p>
               <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-primary" />
-                {accuracy}% overall · peak level {peakLevel}
+                {accuracy}% {t("overall · peak level")} {t(peakLevel)}
               </h3>
-              <p className="text-sm text-muted-foreground">{overall}</p>
+              <p className="text-sm text-muted-foreground">{t(overall)}</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={onExit}>
                 <X className="h-4 w-4" />
-                Close
+                {t("Close")}
               </Button>
             </div>
           </div>
@@ -318,8 +320,8 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         {/* Per-Bloom breakdown */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-            Performance by Bloom's level
-            <InfoTooltip content={tooltipCopy.bloomTaxonomy} label="About Bloom's Taxonomy" />
+            {t("Performance by Bloom's level")}
+            <InfoTooltip content={tooltipCopy.bloomTaxonomy} label={t("About Bloom's Taxonomy")} />
           </h4>
           <div className="space-y-2.5">
             {perLevel.map((row) => (
@@ -349,18 +351,18 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
           <div className="rounded-2xl border border-amber-400/30 bg-amber-50/40 dark:bg-amber-500/5 p-5 shadow-sm">
             <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-amber-600" />
-              Study these topics
+              {t("Study these topics")}
             </h4>
             <ul className="space-y-2">
-              {studyTopics.slice(0, 6).map((t, i) => (
+              {studyTopics.slice(0, 6).map((tk, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm">
                   <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-[11px] font-semibold text-amber-700">
-                    {t.count}
+                    {tk.count}
                   </span>
                   <div className="flex-1">
-                    <p className="text-foreground font-medium">{t.topic}</p>
+                    <p className="text-foreground font-medium">{tk.topic}</p>
                     <p className="text-xs text-muted-foreground">
-                      Missed at {t.level} level{t.timestamp ? ` · ${t.timestamp}` : ""}
+                      {t("Missed at")} {t(tk.level)} {t("level")}{tk.timestamp ? ` · ${tk.timestamp}` : ""}
                     </p>
                   </div>
                 </li>
@@ -371,7 +373,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
 
         {/* All questions with feedback, organized by Bloom */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h4 className="text-sm font-semibold text-foreground mb-3">All questions & feedback</h4>
+          <h4 className="text-sm font-semibold text-foreground mb-3">{t("All questions & feedback")}</h4>
           <div className="space-y-5">
             {BLOOM_ORDER.map((lvl) => {
               const items = records.filter((r) => r.level === lvl);
@@ -379,8 +381,8 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
               return (
                 <section key={lvl} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <BloomBadge level={lvl} />
-                    <span className="text-xs text-muted-foreground">{items.length} question{items.length === 1 ? "" : "s"}</span>
+                  <BloomBadge level={lvl} />
+                    <span className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? t("question") : t("questions")}</span>
                   </div>
                   <div className="space-y-2">
                     {items.map((r, i) => (
@@ -402,11 +404,11 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                           <p className="text-sm text-foreground font-medium">{r.prompt}</p>
                         </div>
                         <p className="text-xs text-muted-foreground pl-6">
-                          <span className="font-medium text-foreground">Your answer:</span> {r.userAnswer || "—"}
+                          <span className="font-medium text-foreground">{t("Your answer:")}</span> {r.userAnswer || "—"}
                         </p>
                         {!r.correct && (
                           <p className="text-xs text-muted-foreground pl-6">
-                            <span className="font-medium text-foreground">Correct:</span> {r.correctAnswer}
+                            <span className="font-medium text-foreground">{t("Correct:")}</span> {r.correctAnswer}
                           </p>
                         )}
                         <p className="text-xs text-foreground/80 leading-relaxed pl-6">
@@ -424,7 +426,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         <div className="flex flex-wrap justify-end gap-2">
           {onExit && (
             <Button variant="ghost" onClick={onExit}>
-              Exit
+              {t("Exit")}
             </Button>
           )}
           <Button
@@ -441,7 +443,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
             className="bg-gradient-primary"
           >
             <RefreshCw className="h-4 w-4" />
-            Start a new run
+            {t("Start a new run")}
           </Button>
         </div>
       </div>
@@ -451,7 +453,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
   if (!card) {
     return (
       <div className="rounded-2xl border border-border bg-card p-10 text-center">
-        <p className="text-sm text-muted-foreground">Loading questions…</p>
+        <p className="text-sm text-muted-foreground">{t("Loading questions…")}</p>
       </div>
     );
   }
@@ -466,23 +468,23 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wider text-primary">
-              Mastery mode
+              {t("Mastery mode")}
             </p>
             <h3 className="text-lg font-semibold text-foreground">
-              Question {questionNum} · current level: {currentLevel}
+              {t("Question")} {questionNum} · {t("current level:")} {t(currentLevel)}
             </h3>
             <p className="text-xs text-muted-foreground">
-              3 in a row levels you up. One miss drops you back half a level.
+              {t("3 in a row levels you up. One miss drops you back half a level.")}
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <Flame className={cn("h-3.5 w-3.5", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
-              Streak {streak}
+              {t("Streak")} {streak}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5" />
-              {accuracy}% acc
+              {accuracy}% {t("acc")}
             </span>
             <Button
               variant="secondary"
@@ -491,12 +493,12 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
               onClick={() => setFinished(true)}
             >
               <Flag className="h-3.5 w-3.5" />
-              End quiz
+              {t("End quiz")}
             </Button>
             {onExit && (
               <Button variant="ghost" size="sm" onClick={onExit}>
                 <X className="h-4 w-4" />
-                Exit
+                {t("Exit")}
               </Button>
             )}
           </div>
@@ -505,7 +507,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         {feedbackMode === "end" && (
           <div className="mt-4 text-xs text-muted-foreground inline-flex items-center gap-1.5">
             <Sparkles className="h-3 w-3 text-primary" />
-            Answers will be reviewed in one summary at the end.
+            {t("Answers will be reviewed in one summary at the end.")}
           </div>
         )}
 
@@ -547,7 +549,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
             {qType === "tf" && tf ? (
               <>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  True or False
+                  {t("True or False")}
                 </p>
                 <h4 className="text-base font-semibold leading-snug text-foreground">
                   {tf.question}
@@ -566,7 +568,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
           <>
             <div className="rounded-lg border border-border bg-background p-4 text-sm text-foreground leading-relaxed">
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                Proposed answer
+                {t("Proposed answer")}
               </p>
               <p>{tf.statement}</p>
             </div>
@@ -590,7 +592,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                       wrongPick && "border-destructive/50 bg-destructive/5 text-destructive",
                     )}
                   >
-                    {o.label}
+                    {t(o.label)}
                   </button>
                 );
               })}
@@ -640,7 +642,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
             <Textarea
               value={openText}
               onChange={(e) => setOpenText(e.target.value)}
-              placeholder="Write your reasoning here..."
+              placeholder={t("Write your reasoning here...")}
               className="min-h-[140px] resize-none bg-background"
               disabled={answered}
             />
@@ -655,11 +657,11 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Evaluating…
+                      {t("Evaluating…")}
                     </>
                   ) : (
                     <>
-                      Submit <ChevronRight className="h-4 w-4" />
+                      {t("Submit")} <ChevronRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -682,33 +684,33 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                 {wasCorrect ? (
                   <>
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span className="text-emerald-700">Correct — mastery increased</span>
+                    <span className="text-emerald-700">{t("Correct — mastery increased")}</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="h-4 w-4 text-destructive" />
-                    <span className="text-destructive">Not quite — mastery dropped half a level</span>
+                    <span className="text-destructive">{t("Not quite — mastery dropped half a level")}</span>
                   </>
                 )}
               </p>
               <BloomBadge level={lastRecord.level} />
             </div>
             <div className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">Why:</span>{" "}
+              <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
               {explanationFor(lastRecord)}
             </div>
             {!wasCorrect && (
               <div className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Correct answer:</span> {lastRecord.correctAnswer}
+                <span className="font-medium text-foreground">{t("Correct answer:")}</span> {lastRecord.correctAnswer}
               </div>
             )}
             <p className="text-xs text-foreground/80 italic">
-              {encouragementFor(!!wasCorrect, accuracy, streak)}
+              {t(encouragementFor(!!wasCorrect, accuracy, streak))}
             </p>
             <div className="flex justify-end pt-1">
               <Button onClick={nextQuestion} className="bg-gradient-primary">
                 <RefreshCw className="h-4 w-4" />
-                Next question
+                {t("Next question")}
               </Button>
             </div>
           </div>
@@ -716,7 +718,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
 
         {answered && feedbackMode === "end" && (
           <p className="text-xs text-muted-foreground italic text-right">
-            Answer recorded. Loading next question…
+            {t("Answer recorded. Loading next question…")}
           </p>
         )}
       </div>

@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
+import { useT } from "@/lib/i18n";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
@@ -57,18 +58,20 @@ const Section = ({
   children: React.ReactNode;
   show: boolean;
   badge?: string;
-}) =>
-  show ? (
+}) => {
+  const { t } = useT();
+  return show ? (
     <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm">
       {badge && (
         <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
           <Unlock className="h-3 w-3" />
-          {badge}
+          {t(badge)}
         </div>
       )}
       {children}
     </div>
   ) : null;
+};
 
 
 interface Props {
@@ -81,6 +84,7 @@ interface Props {
 }
 
 export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
+  const { t } = useT();
   const distractors = useMemo(() => pickDistractors(lecture, card, 3), [lecture, card]);
 
   const mcOptions = useMemo(
@@ -150,13 +154,13 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                Top-down mastery
+                {t("Top-down mastery")}
               </p>
               <h3 className="text-xl font-semibold leading-snug text-foreground">
                 {card.question}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Start at the top. We scaffold down only if you ask.
+                {t("Start at the top. We scaffold down only if you ask.")}
               </p>
             </div>
             <BloomBadge level="Evaluate" />
@@ -170,7 +174,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    Foundational check — true or false?
+                    {t("Foundational check — true or false?")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {tf.question}
@@ -180,7 +184,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
               </div>
               <div className="rounded-lg border border-border bg-background p-3">
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                  Proposed answer
+                  {t("Proposed answer")}
                 </p>
                 <p className="text-sm text-foreground leading-relaxed">{tf.statement}</p>
               </div>
@@ -204,7 +208,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                         showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
                       )}
                     >
-                      {o.label}
+                      {t(o.label)}
                     </button>
                   );
                 })}
@@ -223,25 +227,25 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       {tfChoice === tf.correctValue ? (
                         <>
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                          <span className="text-emerald-700">Correct</span>
+                          <span className="text-emerald-700">{t("Correct")}</span>
                         </>
                       ) : (
                         <>
                           <XCircle className="h-4 w-4 text-destructive" />
-                          <span className="text-destructive">Not quite</span>
+                          <span className="text-destructive">{t("Not quite")}</span>
                         </>
                       )}
                     </p>
                     <BloomBadge level="Remember" />
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Why:</span>{" "}
+                    <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
                     The lecture grounds the claim "{card.answer}". This Remember-level check confirms recognition.
                   </p>
                   {tfChoice !== tf.correctValue && (
                     <p className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">Correct answer:</span>{" "}
-                      {tf.correctValue ? "True" : "False"}
+                      <span className="font-medium text-foreground">{t("Correct answer:")}</span>{" "}
+                      {tf.correctValue ? t("True") : t("False")}
                     </p>
                   )}
                 </div>
@@ -256,10 +260,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Narrow it down — which is the strongest answer?
+                  {t("Narrow it down — which is the strongest answer?")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Each option is a plausible read of the question. Pick the one that holds up under scrutiny.
+                  {t("Each option is a plausible read of the question. Pick the one that holds up under scrutiny.")}
                 </p>
               </div>
               <BloomBadge level="Apply" />
@@ -311,24 +315,24 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                     {mcChoice === card.answer ? (
                       <>
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        <span className="text-emerald-700">Correct</span>
+                        <span className="text-emerald-700">{t("Correct")}</span>
                       </>
                     ) : (
                       <>
                         <XCircle className="h-4 w-4 text-destructive" />
-                        <span className="text-destructive">Not quite</span>
+                        <span className="text-destructive">{t("Not quite")}</span>
                       </>
                     )}
                   </p>
                   <BloomBadge level="Apply" />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="font-medium text-foreground">Why:</span>{" "}
+                  <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
                   "{card.answer}" is grounded directly in the lecture; the other options are plausible-sounding distractors drawn from related material.
                 </p>
                 {mcChoice !== card.answer && (
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">Correct answer:</span> {card.answer}
+                    <span className="font-medium text-foreground">{t("Correct answer:")}</span> {card.answer}
                   </p>
                 )}
               </div>
@@ -336,7 +340,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             {stage === "l3" && (
               <div className="flex justify-end">
                 <Button variant="secondary" onClick={requestScaffold}>
-                  Show foundational check
+                  {t("Show foundational check")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -350,10 +354,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  What concepts are relevant here?
+                  {t("What concepts are relevant here?")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Free-write the ideas, terms, or relationships you'd need.
+                  {t("Free-write the ideas, terms, or relationships you'd need.")}
                 </p>
               </div>
               <BloomBadge level="Analyze" />
@@ -361,13 +365,13 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <Textarea
               value={brainstorm}
               onChange={(e) => setBrainstorm(e.target.value)}
-              placeholder="List the concepts that come to mind..."
+              placeholder={t("List the concepts that come to mind...")}
               className="min-h-[100px] resize-none bg-background"
             />
             {stage === "l4" && (
               <div className="flex justify-end">
                 <Button variant="secondary" onClick={requestScaffold}>
-                  Still stuck — show options
+                  {t("Still stuck — show options")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -381,10 +385,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Defend your reasoning
+                  {t("Defend your reasoning")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Why is this the correct explanation, and not an alternative? Justify it.
+                  {t("Why is this the correct explanation, and not an alternative? Justify it.")}
                 </p>
               </div>
               <BloomBadge level="Evaluate" />
@@ -392,7 +396,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <Textarea
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
-              placeholder="Write your justification here..."
+              placeholder={t("Write your justification here...")}
               className="min-h-[140px] resize-none bg-background"
             />
             {submitError && (
@@ -405,11 +409,11 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                     onClick={requestScaffold}
                     className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                   >
-                    I'm stuck, break it down for me
+                    {t("I'm stuck, break it down for me")}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  Struggling a bit longer improves retention.
+                  {t("Struggling a bit longer improves retention.")}
                 </TooltipContent>
               </Tooltip>
               <Button
@@ -420,11 +424,11 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Evaluating...
+                    {t("Evaluating...")}
                   </>
                 ) : (
                   <>
-                    Submit Justification
+                    {t("Submit Justification")}
                     <ChevronRight className="h-4 w-4" />
                   </>
                 )}
@@ -443,11 +447,11 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
               <div className="flex-1 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h4 className="text-base font-semibold text-foreground">
-                    Response evaluated
+                    {t("Response evaluated")}
                   </h4>
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                     <Sparkles className="h-3 w-3" />
-                    Learning outcome achieved
+                    {t("Learning outcome achieved")}
                   </span>
                   <BloomBadge level={demonstratedLevel} />
                 </div>
@@ -461,14 +465,14 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         {typeof feedback.score === "number" && (
                           <span>
-                            <span className="font-medium text-foreground">Score:</span>{" "}
+                            <span className="font-medium text-foreground">{t("Score:")}</span>{" "}
                             {feedback.score}
                           </span>
                         )}
                         {typeof feedback.bloom_level_demonstrated === "string" && (
                           <span>
                             <span className="font-medium text-foreground">
-                              Bloom level demonstrated:
+                              {t("Bloom level demonstrated:")}
                             </span>{" "}
                             {feedback.bloom_level_demonstrated}
                           </span>
@@ -479,7 +483,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       feedback.what_was_right.trim() && (
                         <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
                           <p className="text-xs font-semibold text-emerald-700">
-                            ✅ What you got right
+                            {t("✅ What you got right")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-foreground">
                             {feedback.what_was_right}
@@ -494,7 +498,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                         "none - fully correct" && (
                         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
                           <p className="text-xs font-semibold text-destructive">
-                            ❌ Where it breaks down
+                            {t("❌ Where it breaks down")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-foreground">
                             {feedback.what_was_wrong}
@@ -505,7 +509,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       feedback.what_to_improve.trim() && (
                         <div className="rounded-lg border border-border bg-card p-3">
                           <p className="text-xs font-semibold text-foreground">
-                            What to improve
+                            {t("What to improve")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                             {feedback.what_to_improve}
@@ -516,7 +520,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       feedback.learning_outcome.trim() && (
                         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
                           <p className="text-xs font-semibold text-primary">
-                            Learning outcome
+                            {t("Learning outcome")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-foreground">
                             {feedback.learning_outcome}
@@ -525,14 +529,14 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       )}
                     {typeof feedback.verdict === "string" && (
                       <p className="text-xs text-muted-foreground">
-                        Verdict: {feedback.verdict}
+                        {t("Verdict:")} {feedback.verdict}
                       </p>
                     )}
                   </div>
                 )}
                 <div className="rounded-lg border border-border bg-card p-4">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Correct explanation
+                    {t("Correct explanation")}
                   </p>
                   <p className="mt-1 text-sm text-foreground">{card.answer}</p>
                 </div>
@@ -541,13 +545,13 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex flex-wrap justify-end gap-2">
               {onExit && (
                 <Button variant="ghost" onClick={onExit}>
-                  Exit
+                  {t("Exit")}
                 </Button>
               )}
               {onNext && (
                 <Button onClick={onNext} className="bg-gradient-primary">
                   <RefreshCw className="h-4 w-4" />
-                  Next question
+                  {t("Next question")}
                 </Button>
               )}
             </div>
@@ -567,20 +571,19 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Lightbulb className="h-4 w-4 text-primary" />
-                Are you sure?
+                {t("Are you sure?")}
               </DialogTitle>
               <DialogDescription>
-                Research shows that productive struggle leads to better long-term memory.
-                Try a bit longer?
+                {t("Research shows that productive struggle leads to better long-term memory. Try a bit longer?")}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2 sm:justify-end">
               <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-                Keep trying
+                {t("Keep trying")}
               </Button>
               <Button onClick={advance} className="bg-gradient-primary">
                 <Lock className="h-4 w-4" />
-                Break it down
+                {t("Break it down")}
               </Button>
             </DialogFooter>
           </DialogContent>

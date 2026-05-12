@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { FollowUpQuestions } from "./FollowUpQuestions";
 import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { useT } from "@/lib/i18n";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
@@ -31,6 +32,7 @@ interface Props {
 }
 
 export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
+  const { t } = useT();
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
@@ -114,27 +116,27 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           {correct === true && (
             <>
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              <span className="text-emerald-700">Correct</span>
+              <span className="text-emerald-700">{t("Correct")}</span>
             </>
           )}
           {correct === false && (
             <>
               <XCircle className="h-4 w-4 text-destructive" />
-              <span className="text-destructive">Not quite</span>
+              <span className="text-destructive">{t("Not quite")}</span>
             </>
           )}
           {correct === null && (
-            <span className="text-foreground">Answer recorded</span>
+            <span className="text-foreground">{t("Answer recorded")}</span>
           )}
         </p>
         <BloomBadge level={bloom} />
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="font-medium text-foreground">Why:</span> {why}
+        <span className="font-medium text-foreground">{t("Why:")}</span> {why}
       </p>
       {correct === false && correctAnswer && (
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Correct answer:</span> {correctAnswer}
+          <span className="font-medium text-foreground">{t("Correct answer:")}</span> {correctAnswer}
         </p>
       )}
     </div>
@@ -147,14 +149,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-primary">
-              Bottom-up build
+              {t("Bottom-up build")}
             </p>
             <h3 className="text-xl font-semibold leading-snug text-foreground">
               {card.question}
             </h3>
             <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
-              Earn your way up Bloom's taxonomy, one level at a time.
-              <InfoTooltip content={tooltipCopy.bloomTaxonomy} label="About Bloom's Taxonomy" />
+              {t("Earn your way up Bloom's taxonomy, one level at a time.")}
+              <InfoTooltip content={tooltipCopy.bloomTaxonomy} label={t("About Bloom's Taxonomy")} />
             </p>
           </div>
           <BloomBadge level={card.bloom} />
@@ -175,9 +177,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           ))}
         </div>
         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Level {levelIdx + 1} of {LEVELS.length}</span>
+          <span>{t("Level")} {levelIdx + 1} {t("of")} {LEVELS.length}</span>
           <span className="inline-flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" /> {done ? "Mastery achieved" : level}
+            <TrendingUp className="h-3 w-3" /> {done ? t("Mastery achieved") : t(level)}
           </span>
         </div>
       </div>
@@ -186,9 +188,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Recall</p>
+              <p className="text-sm font-medium text-foreground">{t("Recall")}</p>
               <p className="text-xs text-muted-foreground">
-                Is the following claim correct?
+                {t("Is the following claim correct?")}
               </p>
             </div>
             <BloomBadge level="Remember" />
@@ -215,7 +217,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
                     showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
                   )}
                 >
-                  {o.label}
+                  {t(o.label)}
                 </button>
               );
             })}
@@ -234,7 +236,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={!tfCorrect}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -244,9 +246,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Explain in your own words</p>
+              <p className="text-sm font-medium text-foreground">{t("Explain in your own words")}</p>
               <p className="text-xs text-muted-foreground">
-                Briefly restate the key idea behind the answer.
+                {t("Briefly restate the key idea behind the answer.")}
               </p>
             </div>
             <BloomBadge level="Understand" />
@@ -254,7 +256,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <Textarea
             value={understandText}
             onChange={(e) => setUnderstandText(e.target.value)}
-            placeholder="In a sentence or two..."
+            placeholder={t("In a sentence or two...")}
             className="min-h-[90px] resize-none bg-background"
           />
           {showImmediate && understandText.trim().length >= 8 && (
@@ -270,7 +272,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={understandText.trim().length < 8}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -280,9 +282,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Pick the best answer</p>
+              <p className="text-sm font-medium text-foreground">{t("Pick the best answer")}</p>
               <p className="text-xs text-muted-foreground">
-                Apply what you know to choose the right option.
+                {t("Apply what you know to choose the right option.")}
               </p>
             </div>
             <BloomBadge level="Apply" />
@@ -334,7 +336,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={!mcCorrect}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -345,10 +347,10 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground">
-                Break it down
+                {t("Break it down")}
               </p>
               <p className="text-xs text-muted-foreground">
-                What underlying concepts and relationships make this answer correct?
+                {t("What underlying concepts and relationships make this answer correct?")}
               </p>
             </div>
             <BloomBadge level="Analyze" />
@@ -356,7 +358,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <Textarea
             value={analyzeText}
             onChange={(e) => setAnalyzeText(e.target.value)}
-            placeholder="List the parts and how they connect..."
+            placeholder={t("List the parts and how they connect...")}
             className="min-h-[110px] resize-none bg-background"
           />
           {showImmediate && analyzeText.trim().length >= 12 && (
@@ -372,7 +374,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={analyzeText.trim().length < 12}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -382,9 +384,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Defend your reasoning</p>
+              <p className="text-sm font-medium text-foreground">{t("Defend your reasoning")}</p>
               <p className="text-xs text-muted-foreground">
-                Why is this the correct explanation, and not an alternative?
+                {t("Why is this the correct explanation, and not an alternative?")}
               </p>
             </div>
             <BloomBadge level="Evaluate" />
@@ -392,7 +394,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <Textarea
             value={justification}
             onChange={(e) => setJustification(e.target.value)}
-            placeholder="Write your justification here..."
+            placeholder={t("Write your justification here...")}
             className="min-h-[140px] resize-none bg-background"
           />
           {submitError && <p className="text-xs text-destructive">{submitError}</p>}
@@ -405,11 +407,11 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Evaluating...
+                  {t("Evaluating...")}
                 </>
               ) : (
                 <>
-                  Submit & finish <ChevronRight className="h-4 w-4" />
+                  {t("Submit & finish")} <ChevronRight className="h-4 w-4" />
                 </>
               )}
             </Button>
@@ -426,11 +428,11 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h4 className="text-base font-semibold text-foreground">
-                  Mastery achieved
+                  {t("Mastery achieved")}
                 </h4>
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                   <Sparkles className="h-3 w-3" />
-                  All levels demonstrated
+                  {t("All levels demonstrated")}
                 </span>
                 <BloomBadge level="Evaluate" />
               </div>
@@ -439,7 +441,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               )}
               <div className="rounded-lg border border-border bg-card p-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Correct explanation
+                  {t("Correct explanation")}
                 </p>
                 <p className="mt-1 text-sm text-foreground">{card.answer}</p>
               </div>
@@ -448,13 +450,13 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <div className="flex flex-wrap justify-end gap-2">
             {onExit && (
               <Button variant="ghost" onClick={onExit}>
-                Exit
+                {t("Exit")}
               </Button>
             )}
             {onNext && (
               <Button onClick={onNext} className="bg-gradient-primary">
                 <RefreshCw className="h-4 w-4" />
-                Next question
+                {t("Next question")}
               </Button>
             )}
           </div>

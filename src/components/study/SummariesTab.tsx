@@ -400,7 +400,7 @@ export const SummariesTab = ({
               </span>
             </div>
             <p className="text-xs italic text-muted-foreground">
-              {bloomLevelDescriptions[activeLevel]}
+              {t(bloomLevelDescriptions[activeLevel])}
             </p>
 
             {topicsForLevel.length > 0 && (
@@ -507,7 +507,7 @@ export const SummariesTab = ({
         <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-4">
           <header className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Summary
+              {t("Summary")}
             </h3>
             <DepthToggle depth={summaryDepth} onChange={setSummaryDepth} />
           </header>
@@ -527,10 +527,10 @@ export const SummariesTab = ({
         <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-4">
           <header className="flex items-center gap-2">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Full Notes
+              {t("Full Notes")}
             </h3>
             <span className="text-xs text-muted-foreground">
-              Section-by-section breakdown of the lecture.
+              {t("Section-by-section breakdown of the lecture.")}
             </span>
           </header>
           <SummaryBody body={lecture.summaries.full} format="headers" />
@@ -595,33 +595,36 @@ const DepthToggle = ({
 }: {
   depth: SummaryDepth;
   onChange: (d: SummaryDepth) => void;
-}) => (
-  <div
-    role="tablist"
-    aria-label="Summary length"
-    className="inline-flex rounded-lg border border-border bg-background p-1 text-xs"
-  >
-    {DEPTH_OPTIONS.map((d) => {
-      const isActive = depth === d.id;
-      return (
-        <button
-          key={d.id}
-          role="tab"
-          aria-selected={isActive}
-          onClick={() => onChange(d.id)}
-          className={cn(
-            "rounded-md px-3 py-1.5 font-medium transition-colors",
-            isActive
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {d.label}
-        </button>
-      );
-    })}
-  </div>
-);
+}) => {
+  const { t } = useT();
+  return (
+    <div
+      role="tablist"
+      aria-label="Summary length"
+      className="inline-flex rounded-lg border border-border bg-background p-1 text-xs"
+    >
+      {DEPTH_OPTIONS.map((d) => {
+        const isActive = depth === d.id;
+        return (
+          <button
+            key={d.id}
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(d.id)}
+            className={cn(
+              "rounded-md px-3 py-1.5 font-medium transition-colors",
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t(d.label)}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 
 // --------- subcomponents & helpers below ---------
@@ -718,9 +721,10 @@ const SummaryBody = ({
   body: string;
   format: "paragraphs" | "chunked" | "headers";
 }) => {
+  const { t } = useT();
   const trimmed = (body ?? "").trim();
   if (!trimmed) {
-    return <p className="text-sm text-muted-foreground">No summary available.</p>;
+    return <p className="text-sm text-muted-foreground">{t("No summary available.")}</p>;
   }
   if (format === "paragraphs") {
     return (

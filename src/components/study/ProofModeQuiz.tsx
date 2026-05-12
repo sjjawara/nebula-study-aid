@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
 import { pickDistractors, shuffle } from "@/lib/quizUtils";
+import { useT } from "@/lib/i18n";
 
 export type ProofQuestionType =
   | "justify_step"
@@ -149,6 +150,7 @@ interface Props {
 }
 
 export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
+  const { t } = useT();
   const items = useMemo<ProofItem[]>(
     () => cards.map((c, i) => buildItem(lecture, c, TYPE_ROTATION[i % TYPE_ROTATION.length])),
     [cards, lecture],
@@ -179,11 +181,11 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-2 rounded-lg border border-bloom-evaluate/40 bg-bloom-evaluate/5 px-3 py-1.5 text-xs font-medium text-bloom-evaluate">
             <ScrollText className="h-3.5 w-3.5" />
-            Full Proof — annotated
+            {t("Full Proof — annotated")}
           </div>
           <Button variant="ghost" size="sm" onClick={onExit}>
             <X className="h-4 w-4" />
-            Exit
+            {t("Exit")}
           </Button>
         </div>
         <div className="space-y-4">
@@ -191,7 +193,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
             <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                  {typeLabel[it.type]} — Question {i + 1}
+                  {t(typeLabel[it.type])} — {t("Question")} {i + 1}
                 </p>
                 <BloomBadge level={it.card.bloom} />
               </div>
@@ -215,7 +217,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
                 ))}
               </ol>
               <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
-                <p className="mb-1 font-medium text-primary">Annotation</p>
+                <p className="mb-1 font-medium text-primary">{t("Annotation")}</p>
                 <p className="leading-relaxed">{it.explanation}</p>
               </div>
             </div>
@@ -224,7 +226,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         <div className="flex justify-end">
           <Button onClick={onExit} className="bg-gradient-primary">
             <Sparkles className="h-4 w-4" />
-            Done
+            {t("Done")}
           </Button>
         </div>
       </div>
@@ -236,18 +238,18 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
       <div className="flex items-center justify-between">
         <div className="inline-flex items-center gap-2 rounded-lg border border-bloom-evaluate/40 bg-bloom-evaluate/5 px-3 py-1.5 text-xs font-medium text-bloom-evaluate">
           <ScrollText className="h-3.5 w-3.5" />
-          Proof Mode — {idx + 1} / {items.length}
+          {t("Proof Mode —")} {idx + 1} / {items.length}
         </div>
         <Button variant="ghost" size="sm" onClick={onExit}>
           <X className="h-4 w-4" />
-          Exit
+          {t("Exit")}
         </Button>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-medium uppercase tracking-wider text-primary">
-            {typeLabel[item.type]}
+            {t(typeLabel[item.type])}
           </p>
           <BloomBadge level={item.card.bloom} />
         </div>
@@ -256,7 +258,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         {item.type === "proof_strategy" && (
           <div className="rounded-xl border border-bloom-evaluate/30 bg-bloom-evaluate/5 p-5">
             <p className="text-[11px] font-medium uppercase tracking-wider text-bloom-evaluate">
-              Theorem
+              {t("Theorem")}
             </p>
             <p className="mt-1.5 text-base font-semibold leading-snug text-foreground">
               {item.theorem}
@@ -286,7 +288,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         {(item.type === "justify_step" || item.type === "what_comes_next") && (
           <div className="rounded-lg border border-border bg-background p-4">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Theorem
+              {t("Theorem")}
             </p>
             <p className="mt-1 text-sm font-medium text-foreground">{item.theorem}</p>
             {item.steps.length > 0 && (
@@ -301,7 +303,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
           </div>
         )}
 
-        <p className="text-sm font-medium text-foreground">{item.prompt}</p>
+        <p className="text-sm font-medium text-foreground">{t(item.prompt)}</p>
 
         <div className="grid gap-2">
           {item.options.map((opt) => {
@@ -354,30 +356,30 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
               {chosen === item.correct ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span className="text-emerald-700">Correct</span>
+                  <span className="text-emerald-700">{t("Correct")}</span>
                 </>
               ) : (
                 <>
                   <XCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-destructive">Not quite</span>
+                  <span className="text-destructive">{t("Not quite")}</span>
                 </>
               )}
             </div>
             {chosen !== item.correct && (
               <p className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Correct answer:</span>{" "}
+                <span className="font-medium text-foreground">{t("Correct answer:")}</span>{" "}
                 {item.correct}
               </p>
             )}
             <p className="text-xs text-foreground/90 leading-relaxed">
-              <span className="font-medium">Explanation:</span> {item.explanation}
+              <span className="font-medium">{t("Explanation:")}</span> {item.explanation}
             </p>
           </div>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <p className="text-xs text-muted-foreground">
-            {answers.filter((a) => a !== null).length} / {items.length} answered
+            {answers.filter((a) => a !== null).length} / {items.length} {t("answered")}
           </p>
           <div className="flex gap-2">
             {!isLast && (
@@ -386,14 +388,14 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
                 disabled={!answered}
                 className="bg-gradient-primary"
               >
-                Next
+                {t("Next")}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
             {isLast && allDone && (
               <Button onClick={() => setRevealProof(true)} className="bg-gradient-primary">
                 <BookOpen className="h-4 w-4" />
-                Show me the full proof
+                {t("Show me the full proof")}
               </Button>
             )}
           </div>

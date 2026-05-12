@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import type { BloomLevel } from "@/lib/mockData";
 
 export const bloomLevelDescriptions: Record<BloomLevel, string> = {
@@ -63,6 +64,8 @@ export const InfoTooltip = ({
   iconClassName,
   side = "top",
 }: InfoTooltipProps) => {
+  const { t } = useT();
+  const translatedContent = typeof content === "string" ? t(content) : content;
   return (
     <Popover>
       <Tooltip>
@@ -82,11 +85,11 @@ export const InfoTooltip = ({
           </TooltipTrigger>
         </PopoverTrigger>
         <TooltipContent side={side} className="max-w-xs text-xs leading-relaxed">
-          {content}
+          {translatedContent}
         </TooltipContent>
       </Tooltip>
       <PopoverContent side={side} className="max-w-xs text-xs leading-relaxed">
-        {content}
+        {translatedContent}
       </PopoverContent>
     </Popover>
   );
