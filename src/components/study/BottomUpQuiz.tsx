@@ -32,17 +32,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
-  const distractors = useMemo(() => {
-    const others = lecture.flashcards
-      .filter((f) => f.answer !== card.answer)
-      .map((f) => f.answer);
-    return shuffle(others).slice(0, 3);
-  }, [lecture, card]);
+  const distractors = useMemo(() => pickDistractors(lecture, card, 3), [lecture, card]);
 
   const mcOptions = useMemo(
     () => shuffle([card.answer, ...distractors]),
     [card, distractors],
   );
+
+  const tf = useMemo(() => buildTrueFalseStatement(lecture, card), [lecture, card]);
 
   // Per-level state
   const [tfChoice, setTfChoice] = useState<boolean | null>(null);
