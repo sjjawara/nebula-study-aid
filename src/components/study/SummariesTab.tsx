@@ -611,50 +611,6 @@ const DepthToggle = ({
 
 // --------- subcomponents & helpers below ---------
 
-const NAV_LINKS: { id: string; label: string; key: "profile" | "takeaways" | "any" }[] = [
-  { id: "lecture-profile", label: "Lecture Profile", key: "profile" },
-  { id: "key-takeaways", label: "Key Takeaways", key: "takeaways" },
-  { id: "summary-90s", label: "90 Seconds", key: "any" },
-  { id: "summary-5min", label: "5 Minutes", key: "any" },
-  { id: "summary-full", label: "Full Summary", key: "any" },
-];
-
-const SummariesNav = ({
-  hasProfile,
-  hasTakeaways,
-}: {
-  hasProfile: boolean;
-  hasTakeaways: boolean;
-}) => {
-  const links = NAV_LINKS.filter(
-    (l) =>
-      l.key === "any" ||
-      (l.key === "profile" && hasProfile) ||
-      (l.key === "takeaways" && hasTakeaways),
-  );
-  return (
-    <nav
-      aria-label="Summary sections"
-      className="sticky top-2 z-10 flex flex-wrap gap-1.5 rounded-full border border-border bg-background/80 p-1.5 shadow-sm backdrop-blur"
-    >
-      {links.map((l, i) => (
-        <a
-          key={l.id}
-          href={`#${l.id}`}
-          className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          {l.label}
-          {i < links.length - 1 && (
-            <span className="ml-1.5 text-border" aria-hidden>
-              {""}
-            </span>
-          )}
-        </a>
-      ))}
-    </nav>
-  );
-};
-
 // Split a string into sentences (rough but good-enough for prose summaries).
 const splitSentences = (text: string): string[] => {
   const cleaned = text.replace(/\s+/g, " ").trim();
