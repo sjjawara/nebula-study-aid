@@ -9,6 +9,7 @@ import { SummariesTab } from "@/components/study/SummariesTab";
 import { FlashcardsTab } from "@/components/study/FlashcardsTab";
 import { SearchTab } from "@/components/study/SearchTab";
 import { QuizTab } from "@/components/study/QuizTab";
+import { MindMapTab } from "@/components/study/MindMapTab";
 import type { Flashcard } from "@/lib/mockData";
 
 type Stage = "input" | "loading" | "results" | "error";
