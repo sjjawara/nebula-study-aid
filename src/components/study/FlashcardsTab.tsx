@@ -22,30 +22,20 @@ interface FlashcardsTabProps {
 
 const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
 
-const timestampToSeconds = (ts: string): number => {
-  const parts = ts.split(":").map((p) => parseInt(p, 10) || 0);
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  return parts[0] || 0;
-};
-
-const extractVideoId = (videoUrl: string): string | null => {
-  try {
-    const u = new URL(videoUrl);
-    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1) || null;
-    const v = u.searchParams.get("v");
-    if (v) return v;
-    const m = u.pathname.match(/\/(?:embed|shorts|v)\/([^/?#]+)/);
-    if (m) return m[1];
-    return null;
-  } catch {
-    return null;
-  }
-};
+import { timestampToSeconds, extractVideoId, openYoutubeAt } from "@/lib/timestamp";
 
 const openTimestamp = (videoId: string, seconds: number) => {
-  const url = `https://www.youtube.com/watch?v=${videoId}&t=${seconds}s`;
-  window.open(url, "_blank", "noopener,noreferrer");
+  // Kept for backward compatibility within this file; delegates to shared util.
+  openYoutubeAt(videoId, secondsToTimestamp(seconds));
+};
+
+const secondsToTimestamp = (s: number): string => {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+    : `${m}:${String(sec).padStart(2, "0")}`;
 };
 
 export const TimestampBadge = ({
