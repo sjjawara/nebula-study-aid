@@ -26,6 +26,7 @@ import {
   pickDistractors,
   shuffle,
 } from "@/lib/quizUtils";
+import { GoDeeperCard } from "./GoDeeperCard";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 
