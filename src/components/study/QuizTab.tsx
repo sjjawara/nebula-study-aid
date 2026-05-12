@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { BloomBadge } from "@/components/BloomBadge";
 import { TopDownMasteryQuiz } from "./TopDownMasteryQuiz";
 import { BottomUpQuiz } from "./BottomUpQuiz";
@@ -15,7 +16,10 @@ import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 
-const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
+// Quiz-assessable Bloom levels. "Create" is intentionally excluded — it
+// requires extended project work and cannot be evaluated in a quiz.
+const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate"];
+const DISABLED_BLOOM_LEVELS: BloomLevel[] = ["Create"];
 const DEFAULT_QUESTION_COUNT = 10;
 const MIN_QUESTION_COUNT = 1;
 
@@ -779,6 +783,29 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                         </label>
                       );
                     })}
+                    {DISABLED_BLOOM_LEVELS.map((lvl) => (
+                      <Tooltip key={lvl}>
+                        <TooltipTrigger asChild>
+                          <span
+                            aria-disabled="true"
+                            className="flex cursor-not-allowed items-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-2.5 py-1.5 text-xs opacity-50"
+                          >
+                            <Checkbox checked={false} disabled />
+                            <BloomBadge
+                              level={lvl}
+                              withInfo={false}
+                              dotsPosition="after"
+                              className="border-0 px-1 py-0 grayscale"
+                            />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs text-xs">
+                          {t(
+                            "Create-level thinking requires extended project work and cannot be assessed in quiz format. Use the Mind Map to explore connections instead.",
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                   </div>
                 </div>
 

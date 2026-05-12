@@ -26,6 +26,7 @@ import {
   pickDistractors,
   shuffle,
 } from "@/lib/quizUtils";
+import { GoDeeperCard } from "./GoDeeperCard";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 
@@ -426,6 +427,8 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
             })}
           </div>
         </div>
+
+        {peakLevel === "Evaluate" && <GoDeeperCard />}
 
         <div className="flex flex-wrap justify-end gap-2">
           {onExit && (
