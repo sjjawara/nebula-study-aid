@@ -157,7 +157,7 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
               <li key={`${t.timestamp}-${i}`} className="flex gap-3 items-start">
                 <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm leading-relaxed text-foreground/90">
-                  {renderTakeaway(t.topic)}
+                  {t.sentence}
                 </p>
               </li>
             ))}
