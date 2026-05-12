@@ -256,9 +256,12 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 </Button>
               )}
               {card.formula && <FormulaBadge />}
+              {card.steps?.length ? <StepSequenceBadge /> : null}
               <BloomBadge level={card.bloom} />
             </div>
           </div>
+
+          {/* (front of card body unchanged below)
 
           <button
             onClick={() => setFlipped((f) => !f)}
