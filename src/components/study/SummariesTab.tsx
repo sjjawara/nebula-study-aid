@@ -54,6 +54,7 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
               Key Takeaways
             </h3>
+            <InfoTooltip content={tooltipCopy.keyTakeaways} label="About Key Takeaways" />
           </header>
           <ul className="space-y-2.5">
             {takeaways.map((t, i) => (
