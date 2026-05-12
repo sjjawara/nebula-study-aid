@@ -571,20 +571,19 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Lightbulb className="h-4 w-4 text-primary" />
-                Are you sure?
+                {t("Are you sure?")}
               </DialogTitle>
               <DialogDescription>
-                Research shows that productive struggle leads to better long-term memory.
-                Try a bit longer?
+                {t("Research shows that productive struggle leads to better long-term memory. Try a bit longer?")}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="gap-2 sm:justify-end">
               <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
-                Keep trying
+                {t("Keep trying")}
               </Button>
               <Button onClick={advance} className="bg-gradient-primary">
                 <Lock className="h-4 w-4" />
-                Break it down
+                {t("Break it down")}
               </Button>
             </DialogFooter>
           </DialogContent>
