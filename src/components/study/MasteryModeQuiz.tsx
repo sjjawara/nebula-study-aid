@@ -28,6 +28,7 @@ import {
 } from "@/lib/quizUtils";
 import { GoDeeperCard } from "./GoDeeperCard";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
