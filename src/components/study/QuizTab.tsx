@@ -65,6 +65,7 @@ const pickRandom = (lecture: Lecture, exclude?: Flashcard): Flashcard | null => 
 
 export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [mode, setMode] = useState<QuizMode>("bottom");
+  const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>("immediate");
   const [card, setCard] = useState<Flashcard | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
   const [masteryActive, setMasteryActive] = useState(false);
