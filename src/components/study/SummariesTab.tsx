@@ -3,6 +3,7 @@ import type { Lecture } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Sparkles, CheckCircle2 } from "lucide-react";
+import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 
 const depths = [
   { id: "short", label: "90 seconds" },
