@@ -109,8 +109,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
         >
           <Icon className="h-4 w-4" />
         </span>
-        <span className="space-y-0.5">
-          <span className="block text-sm font-semibold text-foreground">{title}</span>
+        <span className="space-y-0.5 flex-1 min-w-0">
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            {title}
+            <InfoTooltip content={modeTooltip[value]} label={`About ${title}`} />
+          </span>
           <span className="block text-xs text-muted-foreground">{desc}</span>
         </span>
       </button>
