@@ -363,6 +363,23 @@ export const UI_STRINGS = [
   "No step-sequence flashcards available. Add one in the Flashcards tab to use Step Ordering mode.",
   "Back",
   "About Key Takeaways",
+
+  // ===== Summary depth toggle =====
+  "90 Seconds",
+  "5 Minutes",
+  "Full",
+  "No summary available.",
+
+  // ===== Misc additional quiz copy =====
+  "About feedback timing",
+  "About Bloom's Taxonomy",
+  "About cognitive load",
+  "Feedback:",
+  "Immediate",
+  "End of Quiz",
+  "Next question",
+  "Could not evaluate response.",
+  "Request failed",
 ] as const;
 
 export type UIString = (typeof UI_STRINGS)[number];
