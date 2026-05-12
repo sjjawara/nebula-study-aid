@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
+import { FollowUpQuestions } from "./FollowUpQuestions";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
