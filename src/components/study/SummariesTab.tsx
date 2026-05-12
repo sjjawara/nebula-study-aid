@@ -174,12 +174,13 @@ export const SummariesTab = ({
       Remember: 0, Understand: 0, Apply: 0, Analyze: 0, Evaluate: 0, Create: 0,
     };
     for (const o of outline) counts[o.bloom] = (counts[o.bloom] ?? 0) + 1;
-    const total = outline.length || 1;
+    const total = outline.length;
+    const pctBase = total || 1;
     const pct: Record<BloomLevel, number> = {
       Remember: 0, Understand: 0, Apply: 0, Analyze: 0, Evaluate: 0, Create: 0,
     };
     (Object.keys(counts) as BloomLevel[]).forEach((k) => {
-      pct[k] = Math.round((counts[k] / total) * 100);
+      pct[k] = Math.round((counts[k] / pctBase) * 100);
     });
     const dominant = (Object.entries(counts) as [BloomLevel, number][])
       .sort((a, b) => b[1] - a[1])[0][0];
@@ -464,7 +465,7 @@ export const SummariesTab = ({
                 {t("Recommended Tools for This Level")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {LEVEL_TOOLS[activeLevel].map((tool) => {
+                {(LEVEL_TOOLS[activeLevel] ?? []).map((tool) => {
                   const isInternal = "section" in tool;
                   return (
                     <Button
