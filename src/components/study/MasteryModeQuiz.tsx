@@ -478,7 +478,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
               {t("Question")} {questionNum} · {t("current level:")} {t(currentLevel)}
             </h3>
             <p className="text-xs text-muted-foreground">
-              {t("3 in a row levels you up. One miss drops you back half a level.")}
+              {t("{n} in a row levels you up. One miss drops you back half a level.").replace("{n}", String(questionsPerLevel))}
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
