@@ -22,35 +22,11 @@ interface SearchTabProps {
   onSaveFlashcard?: (card: Flashcard) => void;
 }
 
-const timestampToSeconds = (ts: string): number => {
-  const parts = ts.split(":").map((p) => parseInt(p, 10) || 0);
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  return parts[0] || 0;
-};
+import { extractVideoId, openYoutubeAt, buildYoutubeUrl } from "@/lib/timestamp";
 
-const extractVideoId = (videoUrl: string): string | null => {
-  try {
-    const u = new URL(videoUrl);
-    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1) || null;
-    const v = u.searchParams.get("v");
-    if (v) return v;
-    const m = u.pathname.match(/\/(?:embed|shorts|v)\/([^/?#]+)/);
-    if (m) return m[1];
-    return null;
-  } catch {
-    return null;
-  }
-};
+const buildYoutubeLink = (videoUrl: string | undefined, ts: string): string | null =>
+  buildYoutubeUrl(videoUrl, ts);
 
-const buildYoutubeLink = (videoUrl: string | undefined, ts: string): string | null => {
-  if (!videoUrl) return null;
-  const seconds = timestampToSeconds(ts);
-  const id = extractVideoId(videoUrl);
-  if (id) return `https://www.youtube.com/watch?v=${id}&t=${seconds}s`;
-  const sep = videoUrl.includes("?") ? "&" : "?";
-  return `${videoUrl}${sep}t=${seconds}s`;
-};
 
 const openExternal = (url: string) => {
   window.open(url, "_blank", "noopener,noreferrer");
