@@ -59,6 +59,7 @@ export const buildYoutubeUrl = (
 ): string | null => {
   if (!timestamp) return null;
   const seconds = timestampToSeconds(timestamp);
+  console.log("Opening YouTube at seconds:", seconds, "from timestamp:", timestamp);
   if (videoUrl) {
     const id = extractVideoId(videoUrl);
     if (id) return `https://www.youtube.com/watch?v=${id}&t=${seconds}s`;
@@ -75,6 +76,7 @@ export const openYoutubeAt = (
 ) => {
   if (!videoUrlOrId || !timestamp) return;
   const seconds = timestampToSeconds(timestamp);
+  console.log("Opening YouTube at seconds:", seconds, "from timestamp:", timestamp);
   const id =
     videoUrlOrId.startsWith("http") || videoUrlOrId.includes("/")
       ? extractVideoId(videoUrlOrId)
