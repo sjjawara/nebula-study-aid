@@ -80,6 +80,60 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [sessionKey, setSessionKey] = useState(0);
   const [masteryActive, setMasteryActive] = useState(false);
 
+  // ----- Advanced Customization state -----
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customCount, setCustomCount] = useState<number>(10);
+  const [customLevels, setCustomLevels] = useState<Set<BloomLevel>>(
+    () => new Set<BloomLevel>(BLOOM_LEVELS),
+  );
+  const [selectedCardKeys, setSelectedCardKeys] = useState<Set<string>>(() => new Set());
+  const [customLecture, setCustomLecture] = useState<Lecture | null>(null);
+  const [customAnswered, setCustomAnswered] = useState(0);
+
+  // Stable keys for flashcards (question text is the natural id here)
+  const cardKey = (c: Flashcard, i: number) => `${i}::${c.question}`;
+
+  // Initialize selected cards on first render / when the lecture changes.
+  useEffect(() => {
+    setSelectedCardKeys(new Set(lecture.flashcards.map((c, i) => cardKey(c, i))));
+  }, [lecture.title]);
+
+  const filteredCardCount = useMemo(() => {
+    return lecture.flashcards.filter((c, i) =>
+      selectedCardKeys.has(cardKey(c, i)) && customLevels.has(c.bloom),
+    ).length;
+  }, [lecture.flashcards, selectedCardKeys, customLevels]);
+
+  const toggleCard = (key: string) => {
+    setSelectedCardKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleLevel = (lvl: BloomLevel) => {
+    setCustomLevels((prev) => {
+      const next = new Set(prev);
+      if (next.has(lvl)) next.delete(lvl);
+      else next.add(lvl);
+      return next;
+    });
+  };
+
+  const startCustomQuiz = () => {
+    const pool = lecture.flashcards
+      .filter((c, i) => selectedCardKeys.has(cardKey(c, i)) && customLevels.has(c.bloom))
+      .slice(0, customCount);
+    if (!pool.length) return;
+    const customL: Lecture = { ...lecture, flashcards: pool };
+    setCustomLecture(customL);
+    setCustomAnswered(1);
+    setCard(pool[0]);
+    setSessionKey((k) => k + 1);
+  };
+
   useEffect(() => {
     if (initialCard) {
       setCard(initialCard);
