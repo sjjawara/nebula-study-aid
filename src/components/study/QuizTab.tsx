@@ -16,7 +16,8 @@ import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 
 const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
-const QUESTION_COUNTS = [5, 10, 15, 20] as const;
+const DEFAULT_QUESTION_COUNT = 10;
+const MIN_QUESTION_COUNT = 1;
 
 const modeTooltip: Record<QuizMode, string> = {
   bottom: tooltipCopy.bottomUp,
@@ -119,7 +120,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
   // ----- Advanced Customization state -----
   const [customOpen, setCustomOpen] = useState(false);
-  const [customCount, setCustomCount] = useState<number>(10);
+  const [customCount, setCustomCount] = useState<number>(
+    Math.max(MIN_QUESTION_COUNT, Math.min(DEFAULT_QUESTION_COUNT, lecture.flashcards.length || DEFAULT_QUESTION_COUNT)),
+  );
   const [customLevels, setCustomLevels] = useState<Set<BloomLevel>>(
     () => new Set<BloomLevel>(BLOOM_LEVELS),
   );
@@ -152,6 +155,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   // Initialize selected cards on first render / when the lecture changes.
   useEffect(() => {
     setSelectedCardKeys(new Set(lecture.flashcards.map((c, i) => cardKey(c, i))));
+    setCustomCount(
+      Math.max(MIN_QUESTION_COUNT, Math.min(DEFAULT_QUESTION_COUNT, lecture.flashcards.length || DEFAULT_QUESTION_COUNT)),
+    );
   }, [lecture.title]);
 
   const filteredCardCount = useMemo(() => {
@@ -639,26 +645,42 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 )}
 
                 {/* Question count */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      {t("Question amount")}
-                    </p>
-                    <span className="text-sm font-semibold text-foreground">{customCount}</span>
-                  </div>
-                  <Slider
-                    min={0}
-                    max={QUESTION_COUNTS.length - 1}
-                    step={1}
-                    value={[QUESTION_COUNTS.indexOf(customCount as 5 | 10 | 15 | 20)]}
-                    onValueChange={(v) => setCustomCount(QUESTION_COUNTS[v[0] ?? 1])}
-                  />
-                  <div className="flex justify-between text-[11px] text-muted-foreground">
-                    {QUESTION_COUNTS.map((n) => (
-                      <span key={n}>{n}</span>
-                    ))}
-                  </div>
-                </div>
+                {(() => {
+                  const totalCards = lecture.flashcards.length;
+                  const sliderMax = Math.max(MIN_QUESTION_COUNT, totalCards);
+                  const sliderValue = Math.max(MIN_QUESTION_COUNT, Math.min(customCount, sliderMax));
+                  // Show 4 evenly-spaced tick labels
+                  const ticks = Array.from(new Set([
+                    MIN_QUESTION_COUNT,
+                    Math.max(MIN_QUESTION_COUNT, Math.round(sliderMax / 3)),
+                    Math.max(MIN_QUESTION_COUNT, Math.round((2 * sliderMax) / 3)),
+                    sliderMax,
+                  ])).sort((a, b) => a - b);
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          {t("Question amount")}
+                        </p>
+                        <span className="text-sm font-semibold text-foreground">
+                          {sliderValue} / {totalCards}
+                        </span>
+                      </div>
+                      <Slider
+                        min={MIN_QUESTION_COUNT}
+                        max={sliderMax}
+                        step={1}
+                        value={[sliderValue]}
+                        onValueChange={(v) => setCustomCount(v[0] ?? MIN_QUESTION_COUNT)}
+                      />
+                      <div className="flex justify-between text-[11px] text-muted-foreground">
+                        {ticks.map((n) => (
+                          <span key={n}>{n}</span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Bloom level filter */}
                 <div className="space-y-2">
