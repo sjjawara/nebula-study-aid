@@ -370,10 +370,6 @@ const Index = () => {
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{displayLecture.title}</h2>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" size="sm" onClick={processAnother}>
-                  <RotateCcw className="h-4 w-4" />
-                  <T s="Process another lecture" />
-                </Button>
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <Select
                   value={language}
