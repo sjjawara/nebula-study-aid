@@ -344,14 +344,14 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           <div className="inline-flex rounded-lg border border-border bg-card p-1 text-xs">
             <span className="rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground">
               <Gauge className="mr-1 inline h-3 w-3" />
-              Mastery Mode
+              {t("Mastery Mode")}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
             <Button variant="ghost" size="sm" onClick={exit}>
               <X className="h-4 w-4" />
-              Exit
+              {t("Exit")}
             </Button>
           </div>
         </div>
