@@ -120,7 +120,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
   // ----- Advanced Customization state -----
   const [customOpen, setCustomOpen] = useState(false);
-  const [customCount, setCustomCount] = useState<number>(10);
+  const [customCount, setCustomCount] = useState<number>(
+    Math.max(MIN_QUESTION_COUNT, Math.min(DEFAULT_QUESTION_COUNT, lecture.flashcards.length || DEFAULT_QUESTION_COUNT)),
+  );
   const [customLevels, setCustomLevels] = useState<Set<BloomLevel>>(
     () => new Set<BloomLevel>(BLOOM_LEVELS),
   );
