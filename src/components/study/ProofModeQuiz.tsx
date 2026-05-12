@@ -356,30 +356,30 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
               {chosen === item.correct ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span className="text-emerald-700">Correct</span>
+                  <span className="text-emerald-700">{t("Correct")}</span>
                 </>
               ) : (
                 <>
                   <XCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-destructive">Not quite</span>
+                  <span className="text-destructive">{t("Not quite")}</span>
                 </>
               )}
             </div>
             {chosen !== item.correct && (
               <p className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Correct answer:</span>{" "}
+                <span className="font-medium text-foreground">{t("Correct answer:")}</span>{" "}
                 {item.correct}
               </p>
             )}
             <p className="text-xs text-foreground/90 leading-relaxed">
-              <span className="font-medium">Explanation:</span> {item.explanation}
+              <span className="font-medium">{t("Explanation:")}</span> {item.explanation}
             </p>
           </div>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <p className="text-xs text-muted-foreground">
-            {answers.filter((a) => a !== null).length} / {items.length} answered
+            {answers.filter((a) => a !== null).length} / {items.length} {t("answered")}
           </p>
           <div className="flex gap-2">
             {!isLast && (
@@ -388,14 +388,14 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
                 disabled={!answered}
                 className="bg-gradient-primary"
               >
-                Next
+                {t("Next")}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             )}
             {isLast && allDone && (
               <Button onClick={() => setRevealProof(true)} className="bg-gradient-primary">
                 <BookOpen className="h-4 w-4" />
-                Show me the full proof
+                {t("Show me the full proof")}
               </Button>
             )}
           </div>
