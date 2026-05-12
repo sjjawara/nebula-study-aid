@@ -661,11 +661,11 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      {t("Evaluating…")}
+                      {t("Reviewing your response...")}
                     </>
                   ) : (
                     <>
-                      {t("Submit")} <ChevronRight className="h-4 w-4" />
+                      {t("Submit Answer")} <ChevronRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
