@@ -308,12 +308,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const seconds = timestampToSeconds(m.timestamp);
-                      window.open(
-                        `https://www.youtube.com/watch?v=${videoId}&t=${seconds}s`,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
+                      openYoutubeAt(videoId, m.timestamp);
                     }}
                     className="inline-flex items-center gap-1 self-start rounded-md bg-primary/10 px-2 py-1 font-mono text-xs text-primary tabular-nums hover:bg-primary/20 transition-colors shrink-0"
                     aria-label={`Open YouTube at ${m.timestamp}`}
