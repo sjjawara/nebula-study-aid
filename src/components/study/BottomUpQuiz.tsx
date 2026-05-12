@@ -14,19 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
 import { FollowUpQuestions } from "./FollowUpQuestions";
-
-const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
-
-const LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate"];
-
-const shuffle = <T,>(arr: T[]): T[] => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
+import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
 
 interface Props {
   lecture: Lecture;
