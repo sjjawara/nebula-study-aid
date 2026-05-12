@@ -131,7 +131,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         </div>
       </div>
 
-      {!done && level === "Remember" && (
+      {!done && level === "Remember" && (() => {
+        const tfAnswered = tfChoice !== null;
+        return (
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
