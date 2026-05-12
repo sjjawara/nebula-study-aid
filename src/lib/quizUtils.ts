@@ -183,24 +183,22 @@ export const pickDistractors = (
 export const buildTrueFalseStatement = (
   lecture: Lecture,
   card: Flashcard,
-): { question: string; statement: string; correctValue: boolean } => {
+): { question: string; statement: string; correctValue: boolean } | null => {
   const correctIsAtomic = isSingleClaim(card.answer);
 
-  // Try to source a single-claim distractor that contextually fits the question.
+  // Source a single, atomic, falsifiable distractor that fits the question.
   const distractors = pickDistractors(lecture, card, 6).filter(isSingleClaim);
+  const falseClaim = distractors[0];
 
-  const showTrue = correctIsAtomic ? Math.random() < 0.5 : false;
+  // Need at least one valid concrete claim to build a TF question.
+  if (!correctIsAtomic && !falseClaim) return null;
 
-  if (showTrue) {
+  // If we can do both, randomize. Otherwise use whichever side is valid.
+  const useTrue = correctIsAtomic && (!falseClaim || Math.random() < 0.5);
+  if (useTrue) {
     return { question: card.question, statement: card.answer, correctValue: true };
   }
-
-  const fallback = distractors[0];
-  if (fallback) {
-    return { question: card.question, statement: fallback, correctValue: false };
-  }
-  // No good false statement available — fall back to truthful presentation.
-  return { question: card.question, statement: card.answer, correctValue: true };
+  return { question: card.question, statement: falseClaim, correctValue: false };
 };
 
 export const BLOOM_ORDER: BloomLevel[] = [
