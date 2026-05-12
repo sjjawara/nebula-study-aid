@@ -61,6 +61,27 @@ const isTopicList = (text: string): boolean => {
 const wordCount = (text: string): number =>
   text.trim().split(/\s+/).filter(Boolean).length;
 
+/**
+ * True if the text is a concrete, falsifiable claim — a real sentence with a
+ * verb that asserts something specific about a concept (e.g. "In Python, the
+ * modulo operator returns the quotient of a division"). Fragments, topic
+ * lists, and vague phrasings are rejected.
+ */
+export const isFalsifiableClaim = (text: string): boolean => {
+  const t = text.trim();
+  if (!t) return false;
+  // Must be sentence-like in length (at least 6 words, at most ~35).
+  const words = wordCount(t);
+  if (words < 6 || words > 40) return false;
+  // Must contain an actual verb / predicate so it makes an assertion.
+  const hasPredicate = /\b(is|are|was|were|be|been|being|do|does|did|has|have|had|can|cannot|can't|could|should|must|will|would|may|might|returns?|requires?|produces?|computes?|describes?|defines?|equals?|represents?|means?|maps?|allows?|enables?|prevents?|causes?|happens?|occurs?|stores?|holds?|points? to|behaves?|differs?|implements?|inherits?|raises?|throws?|evaluates?|matches?|contains?|includes?|excludes?)\b/i.test(t);
+  if (!hasPredicate) return false;
+  // Reject question-shaped strings — TF claims must be assertions, not questions.
+  if (/\?\s*$/.test(t)) return false;
+  if (/^(what|why|how|when|where|which|who|is |are |does |do |can |should )/i.test(t)) return false;
+  return true;
+};
+
 /** True if a string reads as a single, atomic claim (good for True/False). */
 export const isSingleClaim = (text: string): boolean => {
   const t = text.trim();
@@ -74,6 +95,8 @@ export const isSingleClaim = (text: string): boolean => {
   // Multiple coordinating " and " clauses → likely compound
   const ands = (t.match(/\b and \b/gi) || []).length;
   if (ands >= 2) return false;
+  // Must read as a real, falsifiable assertion.
+  if (!isFalsifiableClaim(t)) return false;
   return true;
 };
 
