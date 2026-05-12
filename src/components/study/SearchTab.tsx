@@ -52,18 +52,8 @@ const buildYoutubeLink = (videoUrl: string | undefined, ts: string): string | nu
   return `${videoUrl}${sep}t=${seconds}s`;
 };
 
-const openExternal = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
-  e.preventDefault();
-  e.stopPropagation();
-  // Use top-level window to escape iframe sandboxing in preview environments
-  const w = window.open(url, "_blank", "noopener,noreferrer");
-  if (!w) {
-    try {
-      window.top?.location.assign(url);
-    } catch {
-      window.location.href = url;
-    }
-  }
+const openExternal = (url: string) => {
+  window.open(url, "_blank", "noopener,noreferrer");
 };
 
 const tokenize = (s: string): string[] =>
