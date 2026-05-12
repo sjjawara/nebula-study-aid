@@ -15,6 +15,7 @@ import { StepOrderingQuiz } from "./StepOrderingQuiz";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
+import { FlashcardFilters, useFlashcardFilters } from "./FlashcardFilters";
 
 // Quiz-assessable Bloom levels. "Create" is intentionally excluded — it
 // requires extended project work and cannot be evaluated in a quiz.
