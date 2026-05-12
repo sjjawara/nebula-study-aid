@@ -374,22 +374,29 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             onChange={(e) => setAnalyzeText(e.target.value)}
             placeholder={t("List the parts and how they connect...")}
             className="min-h-[110px] resize-none bg-background"
+            disabled={analyzeSubmitted}
           />
-          {showImmediate && analyzeText.trim().length >= 12 && (
+          {showImmediate && analyzeSubmitted && (
             <FeedbackPanel
               correct={null}
               bloom="Analyze"
               why={`A strong Analyze response identifies the parts and how they connect. The grounding answer: ${card.answer}`}
             />
           )}
-          <div className="flex justify-end">
-            <Button
-              onClick={advance}
-              disabled={analyzeText.trim().length < 12}
-              className="bg-gradient-primary"
-            >
-              {t("Next level")} <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-end gap-2">
+            {!analyzeSubmitted ? (
+              <Button
+                onClick={() => setAnalyzeSubmitted(true)}
+                disabled={analyzeText.trim().length < 12}
+                className="bg-gradient-primary"
+              >
+                {t("Submit Answer")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={advance} className="bg-gradient-primary">
+                {t("Next level")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       )}
