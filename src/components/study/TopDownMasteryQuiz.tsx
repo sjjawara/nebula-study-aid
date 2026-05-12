@@ -326,8 +326,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                   <BloomBadge level="Apply" />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
-                  "{card.answer}" is grounded directly in the lecture; the other options are plausible-sounding distractors drawn from related material.
+                  {cleanExplanation(`"${card.answer}" is grounded directly in the lecture; the other options are plausible-sounding distractors drawn from related material.`, card.answer)}
                 </p>
                 {mcChoice !== card.answer && (
                   <p className="text-xs text-muted-foreground">
