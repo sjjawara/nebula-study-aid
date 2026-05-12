@@ -1,74 +1,114 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { toPng } from "html-to-image";
-import { Pencil, Download, RotateCcw, MousePointer2, ZoomIn, ZoomOut, X, ExternalLink, Sparkles } from "lucide-react";
+import {
+  Pencil,
+  Download,
+  RotateCcw,
+  MousePointer2,
+  ZoomIn,
+  ZoomOut,
+  X,
+  ExternalLink,
+  Sparkles,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import type { Lecture, SearchMoment } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 type Tool = "select" | "relabel";
 
+interface CustomNode {
+  id: string;
+  parentId: string;
+  label: string;
+}
+
+interface PersistedState {
+  labels: Record<string, string>;
+  notes: Record<string, string>;
+  customNodes: CustomNode[];
+  positions: Record<string, { x: number; y: number }>;
+}
+
 interface TreeDatum {
   id: string;
   name: string;
-  kind: "root" | "branch" | "leaf";
-  // Source data for AI explanation lookup
+  kind: "root" | "branch" | "leaf" | "custom";
   topic?: string;
   timestamp?: string;
   keyword?: string;
+  isCustom?: boolean;
   children?: TreeDatum[];
 }
 
 const NODE_PAD_X = 16;
 const NODE_PAD_Y = 12;
-const FONT_BY_KIND = { root: 15, branch: 13, leaf: 11 } as const;
+const FONT_BY_KIND = { root: 15, branch: 13, leaf: 11, custom: 12 } as const;
 const MAX_NODE_WIDTH = 220;
 const LINE_GAP = 4;
 
-// Estimate text width (chars * avg glyph width)
 const estimateLineWidth = (text: string, fontSize: number) =>
   Math.max(40, text.length * (fontSize * 0.58));
 
-// Wrap a label into up to 2 lines that fit within MAX_NODE_WIDTH
 const wrapLabel = (text: string, fontSize: number): string[] => {
   const maxLineWidth = MAX_NODE_WIDTH - NODE_PAD_X * 2;
   if (estimateLineWidth(text, fontSize) <= maxLineWidth) return [text];
-
   const words = text.split(/\s+/);
   const lines: string[] = [];
   let current = "";
-
   for (const w of words) {
     const candidate = current ? `${current} ${w}` : w;
-    if (estimateLineWidth(candidate, fontSize) <= maxLineWidth) {
-      current = candidate;
-    } else {
+    if (estimateLineWidth(candidate, fontSize) <= maxLineWidth) current = candidate;
+    else {
       if (current) lines.push(current);
       current = w;
-      if (lines.length === 1) break; // start filling 2nd line below
+      if (lines.length === 1) break;
     }
   }
   if (current) lines.push(current);
-
-  // Pack remaining words onto line 2; if overflow, ellipsize line 2.
   if (lines.length === 1) return lines;
-  // Re-pack 2nd line including any words we may have skipped
   const usedFirst = lines[0].split(/\s+/).length;
   const rest = words.slice(usedFirst).join(" ");
   let line2 = rest;
-  while (line2 && estimateLineWidth(line2 + "…", fontSize) > maxLineWidth) {
-    line2 = line2.slice(0, -1);
-  }
+  while (line2 && estimateLineWidth(line2 + "…", fontSize) > maxLineWidth) line2 = line2.slice(0, -1);
   if (line2 !== rest) line2 = line2.trimEnd() + "…";
   return [lines[0], line2 || rest];
 };
 
-const buildTree = (lecture: Lecture, labelOverrides: Record<string, string>): TreeDatum => {
+const buildTree = (
+  lecture: Lecture,
+  labelOverrides: Record<string, string>,
+  customNodes: CustomNode[],
+): TreeDatum => {
   const labelOf = (id: string, fallback: string) => labelOverrides[id] ?? fallback;
+
+  const customByParent = new Map<string, CustomNode[]>();
+  for (const c of customNodes) {
+    const arr = customByParent.get(c.parentId) ?? [];
+    arr.push(c);
+    customByParent.set(c.parentId, arr);
+  }
+
+  const attachCustom = (parentId: string, parentTopic?: string, parentTs?: string): TreeDatum[] => {
+    const list = customByParent.get(parentId) ?? [];
+    return list.map((c) => ({
+      id: c.id,
+      name: labelOf(c.id, c.label),
+      kind: "custom",
+      isCustom: true,
+      topic: parentTopic,
+      timestamp: parentTs,
+      children: attachCustom(c.id, parentTopic, parentTs),
+    }));
+  };
 
   const branches: TreeDatum[] = lecture.outline.map((o, i) => {
     const branchId = `b:${o.timestamp}-${i}`;
-
     const keywordPool = new Set<string>();
     for (const m of lecture.searchIndex) {
       if (m.timestamp === o.timestamp || (m.topic && m.topic === o.topic)) {
@@ -77,7 +117,6 @@ const buildTree = (lecture: Lecture, labelOverrides: Record<string, string>): Tr
         }
       }
     }
-
     const leaves: TreeDatum[] = Array.from(keywordPool)
       .filter((k) => k.toLowerCase() !== o.topic.toLowerCase())
       .slice(0, 5)
@@ -90,24 +129,28 @@ const buildTree = (lecture: Lecture, labelOverrides: Record<string, string>): Tr
           keyword: k,
           topic: o.topic,
           timestamp: o.timestamp,
+          children: attachCustom(id, o.topic, o.timestamp),
         };
       });
-
+    const branchCustomChildren = attachCustom(branchId, o.topic, o.timestamp);
     return {
       id: branchId,
       name: labelOf(branchId, o.topic),
       kind: "branch",
       topic: o.topic,
       timestamp: o.timestamp,
-      children: leaves.length ? leaves : undefined,
+      children: [...leaves, ...branchCustomChildren].length
+        ? [...leaves, ...branchCustomChildren]
+        : undefined,
     };
   });
 
+  const rootCustom = attachCustom("root");
   return {
     id: "root",
     name: labelOf("root", lecture.title),
     kind: "root",
-    children: branches,
+    children: [...branches, ...rootCustom],
   };
 };
 
@@ -144,45 +187,37 @@ const buildYoutubeLink = (videoUrl: string | undefined, ts: string | undefined):
 const tokenize = (s: string): string[] =>
   s.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter((w) => w.length > 2);
 
-// Find best matching SearchMoment for a node and produce a 2-3 sentence plain explanation.
 const explainNode = (
   node: TreeDatum,
   lecture: Lecture,
 ): { explanation: string; timestamp?: string; matched?: SearchMoment } => {
+  if (node.isCustom) {
+    return { explanation: "", timestamp: node.timestamp };
+  }
   if (node.kind === "root") {
     return {
       explanation: `${lecture.title} — this mind map breaks the lecture into its main topics (branches) and the supporting keywords (leaves) covered in each one. Click any topic or keyword to see what it means and jump to the moment it's discussed in the video.`,
     };
   }
-
   const idx = lecture.searchIndex;
-
-  // Branch: match by timestamp/topic exactly
   if (node.kind === "branch") {
     const m =
       idx.find((s) => s.timestamp === node.timestamp) ??
       idx.find((s) => s.topic && node.topic && s.topic === node.topic);
-    if (m && m.excerpt) {
-      return { explanation: m.excerpt, timestamp: m.timestamp ?? node.timestamp, matched: m };
-    }
+    if (m && m.excerpt) return { explanation: m.excerpt, timestamp: m.timestamp ?? node.timestamp, matched: m };
     return {
       explanation: `"${node.name}" is one of the main topics covered in this lecture. Open the timestamp below to hear how the instructor introduces and develops this idea in context.`,
       timestamp: node.timestamp,
     };
   }
-
-  // Leaf: try keyword match within the parent topic's moments first
   const kw = (node.keyword ?? node.name).toLowerCase();
   const tokens = tokenize(kw);
-
   const candidates = idx.filter((s) => {
     if (node.timestamp && s.timestamp === node.timestamp) return true;
     if (node.topic && s.topic === node.topic) return true;
     return false;
   });
-
   const pool = candidates.length ? candidates : idx;
-
   let best: SearchMoment | undefined;
   let bestScore = -1;
   for (const s of pool) {
@@ -195,7 +230,6 @@ const explainNode = (
       best = s;
     }
   }
-
   if (best && best.excerpt) {
     return {
       explanation: `In the context of "${node.topic ?? "this section"}", "${node.name}" comes up here: ${best.excerpt}`,
@@ -203,12 +237,13 @@ const explainNode = (
       matched: best,
     };
   }
-
   return {
     explanation: `"${node.name}" is a supporting concept under "${node.topic ?? "this topic"}". Jump to the timestamp below to hear it explained in the lecture.`,
     timestamp: node.timestamp,
   };
 };
+
+const storageKey = (lecture: Lecture) => `mindmap:${lecture.title}`;
 
 interface MindMapTabProps {
   lecture: Lecture;
@@ -220,19 +255,51 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const transformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
 
   const [tool, setTool] = useState<Tool>("select");
   const [labels, setLabels] = useState<Record<string, string>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [customNodes, setCustomNodes] = useState<CustomNode[]>([]);
+  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [selected, setSelected] = useState<TreeDatum | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const draggingRef = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number; moved: boolean } | null>(null);
 
+  // Load persisted state on lecture change
   useEffect(() => {
-    setLabels({});
     setSelected(null);
+    try {
+      const raw = localStorage.getItem(storageKey(lecture));
+      if (raw) {
+        const parsed: PersistedState = JSON.parse(raw);
+        setLabels(parsed.labels ?? {});
+        setNotes(parsed.notes ?? {});
+        setCustomNodes(parsed.customNodes ?? []);
+        setPositions(parsed.positions ?? {});
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    setLabels({});
+    setNotes({});
+    setCustomNodes([]);
+    setPositions({});
   }, [lecture]);
 
-  const treeData = useMemo(() => buildTree(lecture, labels), [lecture, labels]);
+  // Persist state
+  useEffect(() => {
+    try {
+      const data: PersistedState = { labels, notes, customNodes, positions };
+      localStorage.setItem(storageKey(lecture), JSON.stringify(data));
+    } catch {
+      /* ignore */
+    }
+  }, [lecture, labels, notes, customNodes, positions]);
 
-  // Pre-wrap labels per node id
+  const treeData = useMemo(() => buildTree(lecture, labels, customNodes), [lecture, labels, customNodes]);
+
   const wrappedById = useMemo(() => {
     const map = new Map<string, string[]>();
     const walk = (n: TreeDatum) => {
@@ -243,7 +310,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     return map;
   }, [treeData]);
 
-  const rectFor = (n: d3.HierarchyNode<TreeDatum>) => {
+  const rectFor = (n: { data: TreeDatum }) => {
     const fs = FONT_BY_KIND[n.data.kind];
     const lines = wrappedById.get(n.data.id) ?? [n.data.name];
     const widest = Math.max(...lines.map((l) => estimateLineWidth(l, fs)));
@@ -255,17 +322,10 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
 
   const { nodes, links, width, height } = useMemo(() => {
     const root = d3.hierarchy<TreeDatum>(treeData);
-
-    const layout = d3
-      .tree<TreeDatum>()
-      .nodeSize([56, 280])
-      .separation((a, b) => (a.parent === b.parent ? 1 : 1.4));
-
+    const layout = d3.tree<TreeDatum>().nodeSize([56, 280]).separation((a, b) => (a.parent === b.parent ? 1 : 1.4));
     layout(root);
-
     const allNodes = root.descendants();
     const allLinks = root.links();
-
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const n of allNodes) {
       if (n.x < minX) minX = n.x;
@@ -278,63 +338,149 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     for (const n of allNodes) {
       const ox = n.y - minY + padX;
       const oy = n.x - minX + padY;
-      (n as unknown as { _x: number })._x = ox;
-      (n as unknown as { _y: number })._y = oy;
+      const override = positions[n.data.id];
+      (n as unknown as { _x: number })._x = override ? override.x : ox;
+      (n as unknown as { _y: number })._y = override ? override.y : oy;
     }
-
     return {
       nodes: allNodes,
       links: allLinks,
       width: Math.max(800, maxY - minY + padX * 2 + 260),
       height: Math.max(420, maxX - minX + padY * 2 + 60),
     };
-  }, [treeData]);
+  }, [treeData, positions]);
 
   useEffect(() => {
     if (!svgRef.current || !gRef.current) return;
     const svg = d3.select(svgRef.current);
     const g = d3.select(gRef.current);
-
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.4, 2.5])
+      .scaleExtent([0.3, 2.5])
+      .filter((event) => {
+        // Allow wheel always; allow drag only on background (not nodes)
+        if (event.type === "wheel") return true;
+        const target = event.target as Element | null;
+        if (target && target.closest("[data-node]")) return false;
+        return !event.button;
+      })
       .on("zoom", (event) => {
+        transformRef.current = event.transform;
         g.attr("transform", event.transform.toString());
       });
     zoomRef.current = zoom;
     svg.call(zoom);
-
     if (containerRef.current) {
       const cw = containerRef.current.clientWidth;
       const initialX = Math.max(20, (cw - width) / 2);
-      svg.call(zoom.transform, d3.zoomIdentity.translate(initialX > 0 ? initialX : 20, 20).scale(0.9));
+      const t = d3.zoomIdentity.translate(initialX > 0 ? initialX : 20, 20).scale(0.9);
+      svg.call(zoom.transform, t);
+      transformRef.current = t;
     }
-
     return () => {
       svg.on(".zoom", null);
     };
-  }, [width, height]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lecture]);
 
   const handleNodeClick = (datum: TreeDatum) => {
-    if (tool === "relabel") {
+    if (draggingRef.current?.moved) return;
+    if (tool === "relabel" && !datum.isCustom) {
       const next = window.prompt("Rename this concept", datum.name);
-      if (next && next.trim()) {
-        setLabels((prev) => ({ ...prev, [datum.id]: next.trim() }));
-      }
+      if (next && next.trim()) setLabels((prev) => ({ ...prev, [datum.id]: next.trim() }));
       return;
     }
     setSelected(datum);
   };
 
-  const reset = () => setLabels({});
+  const handleNodePointerDown = (e: React.PointerEvent<SVGGElement>, datum: TreeDatum, baseX: number, baseY: number) => {
+    if (tool !== "select") return;
+    e.stopPropagation();
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    draggingRef.current = {
+      id: datum.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      baseX,
+      baseY,
+      moved: false,
+    };
+  };
+
+  const handleNodePointerMove = (e: React.PointerEvent<SVGGElement>) => {
+    const d = draggingRef.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.moved && Math.hypot(dx, dy) < 4) return;
+    d.moved = true;
+    const k = transformRef.current.k || 1;
+    setPositions((prev) => ({ ...prev, [d.id]: { x: d.baseX + dx / k, y: d.baseY + dy / k } }));
+  };
+
+  const handleNodePointerUp = (e: React.PointerEvent<SVGGElement>) => {
+    const d = draggingRef.current;
+    if (d) {
+      try { (e.currentTarget as Element).releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+    }
+    // Keep moved flag briefly so click handler can read it, then clear
+    setTimeout(() => { draggingRef.current = null; }, 0);
+  };
+
+  const addChild = (parentId: string) => {
+    const id = `c:${Date.now()}:${Math.random().toString(36).slice(2, 7)}`;
+    const newNode: CustomNode = { id, parentId, label: "New concept" };
+    setCustomNodes((prev) => [...prev, newNode]);
+    // Open popover for editing after a tick (need tree to rebuild)
+    setTimeout(() => {
+      setSelected({ id, name: "New concept", kind: "custom", isCustom: true });
+    }, 0);
+  };
+
+  const deleteCustomNode = (id: string) => {
+    // Recursively delete this node and any custom descendants
+    const toDelete = new Set<string>([id]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const c of customNodes) {
+        if (toDelete.has(c.parentId) && !toDelete.has(c.id)) {
+          toDelete.add(c.id);
+          changed = true;
+        }
+      }
+    }
+    setCustomNodes((prev) => prev.filter((c) => !toDelete.has(c.id)));
+    setNotes((prev) => {
+      const next = { ...prev };
+      for (const idd of toDelete) delete next[idd];
+      return next;
+    });
+    setLabels((prev) => {
+      const next = { ...prev };
+      for (const idd of toDelete) delete next[idd];
+      return next;
+    });
+    setPositions((prev) => {
+      const next = { ...prev };
+      for (const idd of toDelete) delete next[idd];
+      return next;
+    });
+    setSelected(null);
+  };
+
+  const reset = () => {
+    setLabels({});
+    setNotes({});
+    setCustomNodes([]);
+    setPositions({});
+    setSelected(null);
+  };
 
   const exportPng = async () => {
     if (!containerRef.current) return;
     try {
-      const dataUrl = await toPng(containerRef.current, {
-        backgroundColor: "#ffffff",
-        pixelRatio: 2,
-      });
+      const dataUrl = await toPng(containerRef.current, { backgroundColor: "#ffffff", pixelRatio: 2 });
       const a = document.createElement("a");
       a.href = dataUrl;
       a.download = `${lecture.title.replace(/\s+/g, "-").toLowerCase()}-mindmap.png`;
@@ -352,27 +498,22 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   if (!lecture.outline.length) {
     return (
       <div className="rounded-2xl border border-border bg-card p-10 text-center">
-        <p className="text-sm text-muted-foreground">
-          No outline topics available to build a map.
-        </p>
+        <p className="text-sm text-muted-foreground">No outline topics available to build a map.</p>
       </div>
     );
   }
 
-  const explanation = selected ? explainNode(selected, lecture) : null;
-  const ytLink = explanation ? buildYoutubeLink(videoUrl, explanation.timestamp) : null;
+  const explanation = selected && !selected.isCustom ? explainNode(selected, lecture) : null;
+  const popoverTimestamp = explanation?.timestamp ?? selected?.timestamp;
+  const ytLink = buildYoutubeLink(videoUrl, popoverTimestamp);
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-card/60 p-5 shadow-sm">
-        <p className="text-xs font-medium uppercase tracking-wider text-primary">
-          Mind map
-        </p>
-        <h3 className="mt-1 text-lg font-semibold text-foreground">
-          Concept hierarchy for this lecture
-        </h3>
+        <p className="text-xs font-medium uppercase tracking-wider text-primary">Mind map</p>
+        <h3 className="mt-1 text-lg font-semibold text-foreground">Concept hierarchy for this lecture</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          Drag to pan, scroll to zoom. Click any node for a plain-language explanation and a jump-to link in the video.
+          Drag the background to pan, scroll to zoom. Drag nodes to rearrange. Hover a node and click + to add your own.
         </p>
       </div>
 
@@ -381,9 +522,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
           onClick={() => setTool("select")}
           className={cn(
             "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-            tool === "select"
-              ? "border-primary/50 bg-primary/10 text-primary shadow-sm"
-              : "border-border bg-card text-foreground hover:border-primary/30",
+            tool === "select" ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card text-foreground hover:border-primary/30",
           )}
         >
           <MousePointer2 className="h-3.5 w-3.5" />
@@ -393,36 +532,24 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
           onClick={() => setTool("relabel")}
           className={cn(
             "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-            tool === "relabel"
-              ? "border-primary/50 bg-primary/10 text-primary shadow-sm"
-              : "border-border bg-card text-foreground hover:border-primary/30",
+            tool === "relabel" ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card text-foreground hover:border-primary/30",
           )}
         >
           <Pencil className="h-3.5 w-3.5" />
           Relabel
         </button>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)}>
-            <ZoomOut className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)}>
-            <ZoomIn className="h-3.5 w-3.5" />
-          </Button>
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)}><ZoomOut className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)}><ZoomIn className="h-3.5 w-3.5" /></Button>
           <Button variant="ghost" size="sm" onClick={reset}>
             <RotateCcw className="h-3.5 w-3.5" />
-            Reset labels
+            Reset map
           </Button>
           <Button size="sm" onClick={exportPng} className="bg-gradient-primary">
             <Download className="h-3.5 w-3.5" />
             Save map
           </Button>
         </div>
-      </div>
-
-      <div className="px-1 text-xs text-muted-foreground">
-        {tool === "relabel"
-          ? "Click any node to rename it to your own term."
-          : "Click any node for an AI explanation. Drag the canvas to pan."}
       </div>
 
       <div
@@ -452,7 +579,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                 const x1 = tx - tRect.w / 2;
                 const midX = (x0 + x1) / 2;
                 const d = `M${x0},${sy} C${midX},${sy} ${midX},${ty} ${x1},${ty}`;
-                return <path key={i} d={d} />;
+                return <path key={i} d={d} strokeDasharray={t.data.isCustom ? "4 3" : undefined} />;
               })}
             </g>
 
@@ -462,26 +589,37 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                 const y = (n as unknown as { _y: number })._y;
                 const { w, h, fs, lines } = rectFor(n);
                 const isSelected = selected?.id === n.data.id;
-                const fill =
-                  n.data.kind === "root"
-                    ? "#f1f5f9"
-                    : n.data.kind === "branch"
-                    ? "#f8fafc"
-                    : "#ffffff";
+                const isCustom = n.data.isCustom;
+                const fill = isCustom
+                  ? "hsl(var(--primary) / 0.08)"
+                  : n.data.kind === "root"
+                  ? "#f1f5f9"
+                  : n.data.kind === "branch"
+                  ? "#f8fafc"
+                  : "#ffffff";
                 const stroke = isSelected
+                  ? "hsl(var(--primary))"
+                  : isCustom
                   ? "hsl(var(--primary))"
                   : n.data.kind === "root"
                   ? "#94a3b8"
                   : "#cbd5e1";
-                const strokeWidth = isSelected ? 2 : n.data.kind === "root" ? 1.5 : 1;
+                const strokeWidth = isSelected ? 2 : isCustom ? 1.4 : n.data.kind === "root" ? 1.5 : 1;
                 const totalTextHeight = lines.length * fs + (lines.length - 1) * LINE_GAP;
                 const firstBaselineY = (h - totalTextHeight) / 2 + fs * 0.82;
+                const hasNote = !!notes[n.data.id]?.trim();
                 return (
                   <g
                     key={n.data.id}
+                    data-node
                     transform={`translate(${x - w / 2},${y - h / 2})`}
                     onClick={() => handleNodeClick(n.data)}
-                    style={{ cursor: "pointer" }}
+                    onPointerDown={(e) => handleNodePointerDown(e, n.data, x, y)}
+                    onPointerMove={handleNodePointerMove}
+                    onPointerUp={handleNodePointerUp}
+                    onMouseEnter={() => setHoveredId(n.data.id)}
+                    onMouseLeave={() => setHoveredId((cur) => (cur === n.data.id ? null : cur))}
+                    style={{ cursor: tool === "relabel" ? "pointer" : "grab", touchAction: "none" }}
                   >
                     <rect
                       width={w}
@@ -491,6 +629,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                       fill={fill}
                       stroke={stroke}
                       strokeWidth={strokeWidth}
+                      strokeDasharray={isCustom ? "4 3" : undefined}
                     />
                     <text
                       x={w / 2}
@@ -501,15 +640,29 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                       style={{ pointerEvents: "none", fontFamily: "inherit" }}
                     >
                       {lines.map((line, i) => (
-                        <tspan
-                          key={i}
-                          x={w / 2}
-                          y={firstBaselineY + i * (fs + LINE_GAP)}
-                        >
+                        <tspan key={i} x={w / 2} y={firstBaselineY + i * (fs + LINE_GAP)}>
                           {line}
                         </tspan>
                       ))}
                     </text>
+                    {hasNote && (
+                      <circle cx={w - 6} cy={6} r={4} fill="hsl(var(--primary))" style={{ pointerEvents: "none" }} />
+                    )}
+                    {hoveredId === n.data.id && tool === "select" && (
+                      <g
+                        transform={`translate(${w + 4}, ${h / 2 - 11})`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addChild(n.data.id);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <circle cx={11} cy={11} r={11} fill="hsl(var(--primary))" />
+                        <line x1={6} y1={11} x2={16} y2={11} stroke="white" strokeWidth={2} strokeLinecap="round" />
+                        <line x1={11} y1={6} x2={11} y2={16} stroke="white" strokeWidth={2} strokeLinecap="round" />
+                      </g>
+                    )}
                   </g>
                 );
               })}
@@ -517,54 +670,127 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
           </g>
         </svg>
 
-        {selected && explanation && (
-          <div className="absolute right-4 top-4 z-10 w-80 max-w-[calc(100%-2rem)] rounded-2xl border border-border bg-card/95 p-4 shadow-xl backdrop-blur">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Sparkles className="h-3.5 w-3.5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                    {selected.kind === "root" ? "Lecture" : selected.kind === "branch" ? "Topic" : "Concept"}
-                  </p>
-                  <h4 className="text-sm font-semibold leading-tight text-foreground">
-                    {selected.name}
-                  </h4>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                aria-label="Close"
-                className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <p className="mt-3 text-xs leading-relaxed text-foreground/90">
-              {explanation.explanation}
-            </p>
-            {explanation.timestamp && (
-              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                <span className="text-[11px] text-muted-foreground">Jump to in video</span>
-                {ytLink ? (
-                  <button
-                    type="button"
-                    onClick={() => window.open(ytLink, "_blank", "noopener,noreferrer")}
-                    className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20"
-                  >
-                    {explanation.timestamp}
-                    <ExternalLink className="h-3 w-3" />
-                  </button>
-                ) : (
-                  <span className="text-xs font-medium text-foreground">{explanation.timestamp}</span>
-                )}
-              </div>
-            )}
-          </div>
+        {selected && (
+          <NodePopover
+            key={selected.id}
+            node={selected}
+            explanation={explanation?.explanation ?? ""}
+            timestamp={popoverTimestamp}
+            ytLink={ytLink}
+            note={notes[selected.id] ?? ""}
+            currentLabel={labels[selected.id] ?? selected.name}
+            onClose={() => setSelected(null)}
+            onNoteChange={(v) => setNotes((prev) => ({ ...prev, [selected.id]: v }))}
+            onLabelChange={(v) => setLabels((prev) => ({ ...prev, [selected.id]: v }))}
+            onDelete={selected.isCustom ? () => deleteCustomNode(selected.id) : undefined}
+          />
         )}
       </div>
+    </div>
+  );
+};
+
+interface NodePopoverProps {
+  node: TreeDatum;
+  explanation: string;
+  timestamp?: string;
+  ytLink: string | null;
+  note: string;
+  currentLabel: string;
+  onClose: () => void;
+  onNoteChange: (v: string) => void;
+  onLabelChange: (v: string) => void;
+  onDelete?: () => void;
+}
+
+const NodePopover = ({
+  node,
+  explanation,
+  timestamp,
+  ytLink,
+  note,
+  currentLabel,
+  onClose,
+  onNoteChange,
+  onLabelChange,
+  onDelete,
+}: NodePopoverProps) => {
+  const isCustom = !!node.isCustom;
+  return (
+    <div className="absolute right-4 top-4 z-10 w-80 max-w-[calc(100%-2rem)] rounded-2xl border border-border bg-card/95 p-4 shadow-xl backdrop-blur">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {isCustom ? "Your concept" : node.kind === "root" ? "Lecture" : node.kind === "branch" ? "Topic" : "Concept"}
+            </p>
+            {isCustom ? (
+              <Input
+                value={currentLabel}
+                onChange={(e) => onLabelChange(e.target.value)}
+                className="mt-0.5 h-7 text-sm font-semibold"
+                placeholder="Concept name"
+              />
+            ) : (
+              <h4 className="text-sm font-semibold leading-tight text-foreground truncate">{currentLabel}</h4>
+            )}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {!isCustom && explanation && (
+        <p className="mt-3 text-xs leading-relaxed text-foreground/90">{explanation}</p>
+      )}
+
+      <div className="mt-3">
+        <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          Your notes
+        </label>
+        <Textarea
+          value={note}
+          onChange={(e) => onNoteChange(e.target.value)}
+          placeholder="Add your thoughts, connections, or study notes…"
+          className="mt-1 min-h-[80px] text-xs"
+        />
+      </div>
+
+      {timestamp && ytLink && (
+        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+          <span className="text-[11px] text-muted-foreground">Jump to in video</span>
+          <button
+            type="button"
+            onClick={() => window.open(ytLink, "_blank", "noopener,noreferrer")}
+            className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20"
+          >
+            {timestamp}
+            <ExternalLink className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+
+      {onDelete && (
+        <div className="mt-3 border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={onDelete}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-3 w-3" />
+            Delete concept
+          </button>
+        </div>
+      )}
     </div>
   );
 };
