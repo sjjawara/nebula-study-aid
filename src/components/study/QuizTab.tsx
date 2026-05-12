@@ -169,12 +169,20 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
               Mastery Mode
             </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={exit}>
-            <X className="h-4 w-4" />
-            Exit
-          </Button>
+          <div className="flex items-center gap-2">
+            <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
+            <Button variant="ghost" size="sm" onClick={exit}>
+              <X className="h-4 w-4" />
+              Exit
+            </Button>
+          </div>
         </div>
-        <MasteryModeQuiz key={`mastery-${sessionKey}`} lecture={lecture} onExit={exit} />
+        <MasteryModeQuiz
+          key={`mastery-${sessionKey}`}
+          lecture={lecture}
+          onExit={exit}
+          feedbackMode={feedbackMode}
+        />
       </div>
     );
   }
