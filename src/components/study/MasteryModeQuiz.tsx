@@ -381,8 +381,8 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
               return (
                 <section key={lvl} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <BloomBadge level={lvl} />
-                    <span className="text-xs text-muted-foreground">{items.length} question{items.length === 1 ? "" : "s"}</span>
+                  <BloomBadge level={lvl} />
+                    <span className="text-xs text-muted-foreground">{items.length} {items.length === 1 ? t("question") : t("questions")}</span>
                   </div>
                   <div className="space-y-2">
                     {items.map((r, i) => (
@@ -404,11 +404,11 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                           <p className="text-sm text-foreground font-medium">{r.prompt}</p>
                         </div>
                         <p className="text-xs text-muted-foreground pl-6">
-                          <span className="font-medium text-foreground">Your answer:</span> {r.userAnswer || "—"}
+                          <span className="font-medium text-foreground">{t("Your answer:")}</span> {r.userAnswer || "—"}
                         </p>
                         {!r.correct && (
                           <p className="text-xs text-muted-foreground pl-6">
-                            <span className="font-medium text-foreground">Correct:</span> {r.correctAnswer}
+                            <span className="font-medium text-foreground">{t("Correct:")}</span> {r.correctAnswer}
                           </p>
                         )}
                         <p className="text-xs text-foreground/80 leading-relaxed pl-6">
