@@ -180,12 +180,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const filteredCardCount = useMemo(() => {
     return lecture.flashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
-      customLevels.has(c.bloom) &&
       (!formulaMode || !!c.formula?.trim()) &&
       (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
       (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode, stepOrderingMode, proofMode]);
+  }, [lecture.flashcards, selectedCardKeys, formulaMode, stepOrderingMode, proofMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
