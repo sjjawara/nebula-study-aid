@@ -447,11 +447,11 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
               <div className="flex-1 space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h4 className="text-base font-semibold text-foreground">
-                    Response evaluated
+                    {t("Response evaluated")}
                   </h4>
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                     <Sparkles className="h-3 w-3" />
-                    Learning outcome achieved
+                    {t("Learning outcome achieved")}
                   </span>
                   <BloomBadge level={demonstratedLevel} />
                 </div>
@@ -465,14 +465,14 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                         {typeof feedback.score === "number" && (
                           <span>
-                            <span className="font-medium text-foreground">Score:</span>{" "}
+                            <span className="font-medium text-foreground">{t("Score:")}</span>{" "}
                             {feedback.score}
                           </span>
                         )}
                         {typeof feedback.bloom_level_demonstrated === "string" && (
                           <span>
                             <span className="font-medium text-foreground">
-                              Bloom level demonstrated:
+                              {t("Bloom level demonstrated:")}
                             </span>{" "}
                             {feedback.bloom_level_demonstrated}
                           </span>
@@ -483,7 +483,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       feedback.what_was_right.trim() && (
                         <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
                           <p className="text-xs font-semibold text-emerald-700">
-                            ✅ What you got right
+                            {t("✅ What you got right")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-foreground">
                             {feedback.what_was_right}
@@ -498,7 +498,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                         "none - fully correct" && (
                         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
                           <p className="text-xs font-semibold text-destructive">
-                            ❌ Where it breaks down
+                            {t("❌ Where it breaks down")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-foreground">
                             {feedback.what_was_wrong}
@@ -509,7 +509,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       feedback.what_to_improve.trim() && (
                         <div className="rounded-lg border border-border bg-card p-3">
                           <p className="text-xs font-semibold text-foreground">
-                            What to improve
+                            {t("What to improve")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
                             {feedback.what_to_improve}
@@ -520,7 +520,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       feedback.learning_outcome.trim() && (
                         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
                           <p className="text-xs font-semibold text-primary">
-                            Learning outcome
+                            {t("Learning outcome")}
                           </p>
                           <p className="mt-1 text-sm leading-relaxed text-foreground">
                             {feedback.learning_outcome}
@@ -529,14 +529,14 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       )}
                     {typeof feedback.verdict === "string" && (
                       <p className="text-xs text-muted-foreground">
-                        Verdict: {feedback.verdict}
+                        {t("Verdict:")} {feedback.verdict}
                       </p>
                     )}
                   </div>
                 )}
                 <div className="rounded-lg border border-border bg-card p-4">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Correct explanation
+                    {t("Correct explanation")}
                   </p>
                   <p className="mt-1 text-sm text-foreground">{card.answer}</p>
                 </div>
@@ -545,13 +545,13 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex flex-wrap justify-end gap-2">
               {onExit && (
                 <Button variant="ghost" onClick={onExit}>
-                  Exit
+                  {t("Exit")}
                 </Button>
               )}
               {onNext && (
                 <Button onClick={onNext} className="bg-gradient-primary">
                   <RefreshCw className="h-4 w-4" />
-                  Next question
+                  {t("Next question")}
                 </Button>
               )}
             </div>
