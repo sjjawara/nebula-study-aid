@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Lecture, BloomLevel } from "@/lib/mockData";
-import { bloomColor } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
