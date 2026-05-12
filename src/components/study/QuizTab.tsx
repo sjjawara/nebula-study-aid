@@ -563,6 +563,80 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                   </button>
                 </div>
 
+                {/* Proof Mode */}
+                {proofEligible ? (
+                  <div
+                    className={cn(
+                      "flex items-start justify-between gap-3 rounded-xl border p-3 transition-colors",
+                      proofMode
+                        ? "border-bloom-evaluate/50 bg-bloom-evaluate/5"
+                        : "border-border bg-background",
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={cn(
+                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                          proofMode
+                            ? "bg-bloom-evaluate text-background"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        <ScrollText className="h-4 w-4" />
+                      </span>
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-semibold text-foreground">Proof Mode</p>
+                        <p className="text-xs text-muted-foreground">
+                          Multiple-choice proof drills: justify a step, predict the next line,
+                          spot the flaw, or pick the right strategy. Always shows the full
+                          explanation, plus the annotated proof at the end.
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {proofCardCount} Analyze/Evaluate card{proofCardCount === 1 ? "" : "s"} in this deck.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={proofMode}
+                      onClick={() =>
+                        setProofMode((v) => {
+                          const next = !v;
+                          if (next) {
+                            setFormulaMode(false);
+                            setStepOrderingMode(false);
+                          }
+                          return next;
+                        })
+                      }
+                      className={cn(
+                        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                        proofMode ? "bg-bloom-evaluate" : "bg-muted",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
+                          proofMode ? "translate-x-5" : "translate-x-0.5",
+                        )}
+                      />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3 rounded-xl border border-dashed border-border bg-background/40 p-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <ScrollText className="h-4 w-4" />
+                    </span>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">Proof Mode</p>
+                      <p className="text-xs text-muted-foreground">
+                        This lecture does not contain proof-based content.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Question count */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
