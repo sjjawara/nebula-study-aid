@@ -332,7 +332,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                           )}
                           title={`Relevance ${(m.score * 100).toFixed(0)}%`}
                         >
-                          <span className="relative h-1 w-10 overflow-hidden rounded-full bg-current/20">
+                          <span className="relative h-1 w-10 overflow-hidden rounded-full bg-foreground/10">
                             <span
                               className="absolute inset-y-0 left-0 rounded-full bg-current"
                               style={{ width: `${Math.round(m.score * 100)}%` }}
