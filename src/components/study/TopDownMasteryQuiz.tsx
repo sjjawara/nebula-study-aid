@@ -292,6 +292,42 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                 );
               })}
             </div>
+            {feedbackMode === "immediate" && mcChoice !== null && (
+              <div
+                className={cn(
+                  "rounded-xl border p-4 space-y-2",
+                  mcChoice === card.answer
+                    ? "border-emerald-500/40 bg-emerald-500/5"
+                    : "border-destructive/40 bg-destructive/5",
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="flex items-center gap-2 text-sm font-semibold">
+                    {mcChoice === card.answer ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span className="text-emerald-700">Correct</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4 text-destructive" />
+                        <span className="text-destructive">Not quite</span>
+                      </>
+                    )}
+                  </p>
+                  <BloomBadge level="Apply" />
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="font-medium text-foreground">Why:</span>{" "}
+                  "{card.answer}" is grounded directly in the lecture; the other options are plausible-sounding distractors drawn from related material.
+                </p>
+                {mcChoice !== card.answer && (
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Correct answer:</span> {card.answer}
+                  </p>
+                )}
+              </div>
+            )}
             {stage === "l3" && (
               <div className="flex justify-end">
                 <Button variant="secondary" onClick={requestScaffold}>
