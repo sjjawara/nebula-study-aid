@@ -84,6 +84,7 @@ interface Props {
 }
 
 export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
+  const { t } = useT();
   const distractors = useMemo(() => pickDistractors(lecture, card, 3), [lecture, card]);
 
   const mcOptions = useMemo(
