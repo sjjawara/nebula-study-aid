@@ -58,18 +58,20 @@ const Section = ({
   children: React.ReactNode;
   show: boolean;
   badge?: string;
-}) =>
-  show ? (
+}) => {
+  const { t } = useT();
+  return show ? (
     <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm">
       {badge && (
         <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
           <Unlock className="h-3 w-3" />
-          {badge}
+          {t(badge)}
         </div>
       )}
       {children}
     </div>
   ) : null;
+};
 
 
 interface Props {
