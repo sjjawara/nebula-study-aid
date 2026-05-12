@@ -40,6 +40,16 @@ const LANGUAGES: readonly Language[] = [
   "Hindi",
 ] as const;
 
+const LANGUAGE_NATIVE_NAMES: Record<Language, string> = {
+  English: "English",
+  Spanish: "Español",
+  French: "Français",
+  Mandarin: "中文",
+  Arabic: "العربية",
+  Portuguese: "Português",
+  Hindi: "हिन्दी",
+};
+
 const TRANSLATE_URL = "https://nebulalearn-production.up.railway.app/translate";
 
 
@@ -393,12 +403,12 @@ const Index = () => {
                   disabled={translating}
                 >
                   <SelectTrigger className="h-9 w-[140px] bg-card">
-                    <SelectValue />
+                    <SelectValue>{LANGUAGE_NATIVE_NAMES[language]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {LANGUAGES.map((l) => (
                       <SelectItem key={l} value={l}>
-                        {l}
+                        {LANGUAGE_NATIVE_NAMES[l]}
                       </SelectItem>
                     ))}
                   </SelectContent>
