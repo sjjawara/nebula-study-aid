@@ -595,33 +595,36 @@ const DepthToggle = ({
 }: {
   depth: SummaryDepth;
   onChange: (d: SummaryDepth) => void;
-}) => (
-  <div
-    role="tablist"
-    aria-label="Summary length"
-    className="inline-flex rounded-lg border border-border bg-background p-1 text-xs"
-  >
-    {DEPTH_OPTIONS.map((d) => {
-      const isActive = depth === d.id;
-      return (
-        <button
-          key={d.id}
-          role="tab"
-          aria-selected={isActive}
-          onClick={() => onChange(d.id)}
-          className={cn(
-            "rounded-md px-3 py-1.5 font-medium transition-colors",
-            isActive
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {d.label}
-        </button>
-      );
-    })}
-  </div>
-);
+}) => {
+  const { t } = useT();
+  return (
+    <div
+      role="tablist"
+      aria-label="Summary length"
+      className="inline-flex rounded-lg border border-border bg-background p-1 text-xs"
+    >
+      {DEPTH_OPTIONS.map((d) => {
+        const isActive = depth === d.id;
+        return (
+          <button
+            key={d.id}
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(d.id)}
+            className={cn(
+              "rounded-md px-3 py-1.5 font-medium transition-colors",
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t(d.label)}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 
 // --------- subcomponents & helpers below ---------
