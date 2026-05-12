@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import {
   BLOOM_ORDER,
   buildTrueFalseStatement,
+  cleanExplanation,
   pickCardForLevel,
   pickDistractors,
   shuffle,
