@@ -252,7 +252,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Ask a question or search lecture content..."
+          placeholder={t("Ask a question or search lecture content...")}
           className="pl-10 h-12 bg-card"
         />
         {aiLoading && (
