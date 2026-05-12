@@ -454,7 +454,7 @@ export const SummariesTab = ({
       )}
 
       {takeaways.length > 0 && (
-        <section className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-card">
+        <section id="key-takeaways" className="scroll-mt-24 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-card">
           <header className="mb-4 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
