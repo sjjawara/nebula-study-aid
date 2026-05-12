@@ -64,6 +64,8 @@ const Index = () => {
   const [translations, setTranslations] = useState<Record<string, Lecture>>({});
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<StoredSession[]>(() => loadSessions());
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const displayLecture: Lecture | null =
     language === "English"
