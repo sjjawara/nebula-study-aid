@@ -416,7 +416,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
                           </p>
                         )}
                         <p className="text-xs text-foreground/80 leading-relaxed pl-6">
-                          {explanationFor(r)}
+                          {cleanExplanation(explanationFor(r), r.correctAnswer)}
                         </p>
                       </div>
                     ))}
