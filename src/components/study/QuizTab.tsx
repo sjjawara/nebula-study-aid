@@ -720,10 +720,43 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                   );
                 })()}
 
-                {/* Bloom level filter */}
+                {/* Questions per topic */}
                 <div className="space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {t("Bloom's levels to include")}
+                    {t("Questions per topic")}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground -mt-1">
+                    {t("How many questions to ask before moving on. In Mastery Mode, this is also the number of consecutive correct answers required to level up.")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3, 5].map((n) => {
+                      const active = questionsPerTopic === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setQuestionsPerTopic(n)}
+                          className={cn(
+                            "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                            active
+                              ? "border-primary/50 bg-primary text-primary-foreground"
+                              : "border-border bg-background text-foreground hover:border-primary/30",
+                          )}
+                        >
+                          {n}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Bloom level — target levels for question generation */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {t("Test me at these levels")}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground -mt-1">
+                    {t("Questions will be generated at these cognitive levels, regardless of the source flashcard's original level.")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {BLOOM_LEVELS.map((lvl) => {
