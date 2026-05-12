@@ -40,7 +40,7 @@ interface Props {
 export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
   const [tipIdx, setTipIdx] = useState(0);
   const [fade, setFade] = useState(true);
-  const restartRef = useRef(0);
+  const [restartKey, setRestartKey] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -51,7 +51,7 @@ export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
       }, 350);
     }, 10000);
     return () => clearInterval(id);
-  }, [restartRef.current]);
+  }, [restartKey]);
 
   const goToTip = (next: number) => {
     const target = ((next % tips.length) + tips.length) % tips.length;
@@ -60,8 +60,7 @@ export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
       setTipIdx(target);
       setFade(true);
     }, 200);
-    // restart auto-rotate timer
-    restartRef.current += 1;
+    setRestartKey((k) => k + 1);
   };
 
   // Pyramid lights up progressively while Agent 2 (stepIndex === 1) runs,
