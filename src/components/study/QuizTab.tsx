@@ -6,6 +6,13 @@ import { TopDownMasteryQuiz } from "./TopDownMasteryQuiz";
 import { BottomUpQuiz } from "./BottomUpQuiz";
 import { MasteryModeQuiz } from "./MasteryModeQuiz";
 import { cn } from "@/lib/utils";
+import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+
+const modeTooltip: Record<QuizMode, string> = {
+  bottom: tooltipCopy.bottomUp,
+  top: tooltipCopy.topDown,
+  mastery: tooltipCopy.masteryMode,
+};
 
 export type QuizMode = "bottom" | "top" | "mastery";
 
