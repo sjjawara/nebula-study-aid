@@ -158,6 +158,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
       answer: a,
       bloom: editor.bloom,
       timestamp: editor.timestamp.trim() || undefined,
+      formula: editor.formula.trim() || undefined,
     };
     onUpdateFlashcards((cards) => {
       if (editor.index === null) {
