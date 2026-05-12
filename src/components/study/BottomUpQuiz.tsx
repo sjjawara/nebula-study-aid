@@ -27,9 +27,10 @@ interface Props {
   onNext?: () => void;
   onExit?: () => void;
   onSelectFollowUp?: (c: Flashcard) => void;
+  feedbackMode?: "immediate" | "end";
 }
 
-export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
+export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
@@ -87,6 +88,57 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
 
   const tfCorrect = tfChoice !== null && tfChoice === tf.correctValue;
   const mcCorrect = mcChoice === card.answer;
+  const showImmediate = feedbackMode === "immediate";
+
+  const FeedbackPanel = ({
+    correct,
+    bloom,
+    why,
+    correctAnswer,
+  }: {
+    correct: boolean | null;
+    bloom: BloomLevel;
+    why: string;
+    correctAnswer?: string;
+  }) => (
+    <div
+      className={cn(
+        "rounded-xl border p-4 space-y-2 animate-fade-in",
+        correct === true && "border-emerald-500/40 bg-emerald-500/5",
+        correct === false && "border-destructive/40 bg-destructive/5",
+        correct === null && "border-border bg-muted/30",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-semibold">
+          {correct === true && (
+            <>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <span className="text-emerald-700">Correct</span>
+            </>
+          )}
+          {correct === false && (
+            <>
+              <XCircle className="h-4 w-4 text-destructive" />
+              <span className="text-destructive">Not quite</span>
+            </>
+          )}
+          {correct === null && (
+            <span className="text-foreground">Answer recorded</span>
+          )}
+        </p>
+        <BloomBadge level={bloom} />
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        <span className="font-medium text-foreground">Why:</span> {why}
+      </p>
+      {correct === false && correctAnswer && (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Correct answer:</span> {correctAnswer}
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-5">
@@ -168,6 +220,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
               );
             })}
           </div>
+          {showImmediate && tfChoice !== null && (
+            <FeedbackPanel
+              correct={tfCorrect}
+              bloom="Remember"
+              why={`The lecture establishes that "${card.answer}". This Remember-level check confirms you can recall and recognize the basic claim.`}
+              correctAnswer={tf.correctValue ? "True" : "False"}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}
@@ -197,6 +257,13 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
             placeholder="In a sentence or two..."
             className="min-h-[90px] resize-none bg-background"
           />
+          {showImmediate && understandText.trim().length >= 8 && (
+            <FeedbackPanel
+              correct={null}
+              bloom="Understand"
+              why={`A strong Understand-level explanation restates the idea in your own words. The reference idea: ${card.answer}`}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}
@@ -253,6 +320,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
               );
             })}
           </div>
+          {showImmediate && mcChoice !== null && (
+            <FeedbackPanel
+              correct={mcCorrect}
+              bloom="Apply"
+              why={`"${card.answer}" is the strongest answer because it's the option grounded in the lecture. The distractors are plausible-sounding misconceptions drawn from related material.`}
+              correctAnswer={card.answer}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}
@@ -284,6 +359,13 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
             placeholder="List the parts and how they connect..."
             className="min-h-[110px] resize-none bg-background"
           />
+          {showImmediate && analyzeText.trim().length >= 12 && (
+            <FeedbackPanel
+              correct={null}
+              bloom="Analyze"
+              why={`A strong Analyze response identifies the parts and how they connect. The grounding answer: ${card.answer}`}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}

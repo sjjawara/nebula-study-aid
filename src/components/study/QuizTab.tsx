@@ -15,12 +15,39 @@ const modeTooltip: Record<QuizMode, string> = {
 };
 
 export type QuizMode = "bottom" | "top" | "mastery";
+export type FeedbackMode = "immediate" | "end";
 
 interface Props {
   lecture: Lecture;
   initialCard?: Flashcard | null;
   onConsumedInitial?: () => void;
 }
+
+const FeedbackModeToggle = ({
+  mode,
+  onChange,
+}: {
+  mode: FeedbackMode;
+  onChange: (m: FeedbackMode) => void;
+}) => (
+  <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background p-1 text-xs">
+    <span className="px-2 text-muted-foreground">Feedback:</span>
+    {(["immediate", "end"] as FeedbackMode[]).map((m) => (
+      <button
+        key={m}
+        onClick={() => onChange(m)}
+        className={cn(
+          "rounded-md px-3 py-1 font-medium transition-colors",
+          mode === m
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        {m === "immediate" ? "Immediate" : "End of Quiz"}
+      </button>
+    ))}
+  </div>
+);
 
 const pickHardest = (lecture: Lecture): Flashcard | null => {
   if (!lecture.flashcards.length) return null;
@@ -38,6 +65,7 @@ const pickRandom = (lecture: Lecture, exclude?: Flashcard): Flashcard | null => 
 
 export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [mode, setMode] = useState<QuizMode>("bottom");
+  const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>("immediate");
   const [card, setCard] = useState<Flashcard | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
   const [masteryActive, setMasteryActive] = useState(false);
@@ -141,12 +169,20 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
               Mastery Mode
             </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={exit}>
-            <X className="h-4 w-4" />
-            Exit
-          </Button>
+          <div className="flex items-center gap-2">
+            <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
+            <Button variant="ghost" size="sm" onClick={exit}>
+              <X className="h-4 w-4" />
+              Exit
+            </Button>
+          </div>
         </div>
-        <MasteryModeQuiz key={`mastery-${sessionKey}`} lecture={lecture} onExit={exit} />
+        <MasteryModeQuiz
+          key={`mastery-${sessionKey}`}
+          lecture={lecture}
+          onExit={exit}
+          feedbackMode={feedbackMode}
+        />
       </div>
     );
   }
@@ -189,6 +225,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             <Sparkles className="h-5 w-5" />
           </div>
           <h4 className="text-base font-semibold text-foreground">Ready when you are</h4>
+          <div className="flex justify-center">
+            <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
+          </div>
           <p className="text-sm text-muted-foreground">
             {mode === "mastery"
               ? "Mastery Mode adapts to you — start at Remember and climb."
@@ -249,10 +288,13 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             Mastery
           </button>
         </div>
-        <Button variant="ghost" size="sm" onClick={exit}>
-          <X className="h-4 w-4" />
-          Exit
-        </Button>
+        <div className="flex items-center gap-2">
+          <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
+          <Button variant="ghost" size="sm" onClick={exit}>
+            <X className="h-4 w-4" />
+            Exit
+          </Button>
+        </div>
       </div>
 
       {mode === "top" ? (
@@ -263,6 +305,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           onNext={next}
           onExit={exit}
           onSelectFollowUp={launchSpecific}
+          feedbackMode={feedbackMode}
         />
       ) : (
         <BottomUpQuiz
@@ -272,6 +315,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           onNext={next}
           onExit={exit}
           onSelectFollowUp={launchSpecific}
+          feedbackMode={feedbackMode}
         />
       )}
     </div>

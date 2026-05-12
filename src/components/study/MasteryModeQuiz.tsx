@@ -32,10 +32,11 @@ const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-respons
 interface Props {
   lecture: Lecture;
   onExit?: () => void;
+  feedbackMode?: FeedbackMode;
 }
 
 type QType = "tf" | "mcq" | "open";
-type FeedbackMode = "immediate" | "end";
+export type FeedbackMode = "immediate" | "end";
 
 const typeForLevel = (l: BloomLevel): QType => {
   if (l === "Remember") return "tf";
@@ -82,8 +83,7 @@ const explanationFor = (record: Pick<AnswerRecord, "qType" | "correctAnswer" | "
   return `A complete answer would land on: ${record.correctAnswer}.`;
 };
 
-export const MasteryModeQuiz = ({ lecture, onExit }: Props) => {
-  const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>("immediate");
+export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }: Props) => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [used, setUsed] = useState<Set<string>>(new Set());
@@ -502,32 +502,12 @@ export const MasteryModeQuiz = ({ lecture, onExit }: Props) => {
           </div>
         </div>
 
-        {/* Feedback mode toggle */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background p-1 text-xs">
-            <span className="px-2 text-muted-foreground">Feedback:</span>
-            {(["immediate", "end"] as FeedbackMode[]).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setFeedbackMode(mode)}
-                className={cn(
-                  "rounded-md px-3 py-1 font-medium transition-colors",
-                  feedbackMode === mode
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {mode === "immediate" ? "Immediate" : "End of Quiz"}
-              </button>
-            ))}
+        {feedbackMode === "end" && (
+          <div className="mt-4 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-primary" />
+            Answers will be reviewed in one summary at the end.
           </div>
-          {feedbackMode === "end" && (
-            <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3 text-primary" />
-              Answers will be reviewed in one summary at the end.
-            </span>
-          )}
-        </div>
+        )}
 
         {/* Mastery bar */}
         <div className="mt-5 space-y-2">
