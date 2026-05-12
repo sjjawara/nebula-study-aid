@@ -559,19 +559,33 @@ export const MasteryModeQuiz = ({ lecture, onExit }: Props) => {
       {/* Question card */}
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
         <div className="flex items-start justify-between gap-3">
-          <h4 className="text-base font-semibold leading-snug text-foreground">
-            {qType === "tf"
-              ? "Is the following statement correct?"
-              : card.question}
-          </h4>
+          <div className="space-y-1.5">
+            {qType === "tf" && tf ? (
+              <>
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  True or False
+                </p>
+                <h4 className="text-base font-semibold leading-snug text-foreground">
+                  {tf.question}
+                </h4>
+              </>
+            ) : (
+              <h4 className="text-base font-semibold leading-snug text-foreground">
+                {card.question}
+              </h4>
+            )}
+          </div>
           <BloomBadge level={currentLevel} />
         </div>
 
         {qType === "tf" && tf && (
           <>
-            <p className="rounded-lg border border-border bg-background p-4 text-sm text-foreground leading-relaxed">
-              {tf.statement}
-            </p>
+            <div className="rounded-lg border border-border bg-background p-4 text-sm text-foreground leading-relaxed">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
+                Proposed answer
+              </p>
+              <p>{tf.statement}</p>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "True", value: true },
