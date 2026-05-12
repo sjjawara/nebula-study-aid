@@ -137,6 +137,16 @@ export const SummariesTab = ({
     return { counts, pct, dominant, total, recommendation, tools };
   }, [lecture.outline]);
 
+  useEffect(() => {
+    setSelectedLevel((prev) => prev ?? profile.dominant);
+  }, [profile.dominant]);
+
+  const activeLevel: BloomLevel = selectedLevel ?? profile.dominant;
+  const topicsForLevel = useMemo(
+    () => lecture.outline.filter((o) => o.bloom === activeLevel),
+    [lecture.outline, activeLevel],
+  );
+
   const takeaways = useMemo(() => {
     // Prioritize the highest-order chunks: Analyze + Evaluate first.
     const highOrder = lecture.outline.filter(
