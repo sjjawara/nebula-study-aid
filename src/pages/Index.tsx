@@ -453,13 +453,13 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="quiz" className="mt-6">
                 <QuizTab
-                  lecture={lecture}
+                  lecture={displayLecture}
                   initialCard={quizSeed}
                   onConsumedInitial={() => setQuizSeed(null)}
                 />
               </TabsContent>
               <TabsContent value="mindmap" className="mt-6">
-                <MindMapTab lecture={lecture} videoUrl={url} />
+                <MindMapTab lecture={displayLecture} videoUrl={url} />
               </TabsContent>
             </Tabs>
             )}
