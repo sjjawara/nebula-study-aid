@@ -318,7 +318,30 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                 >
                   <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
                   <div className="space-y-1 flex-1">
-                    {m.topic && <p className="text-sm font-medium text-foreground">{m.topic}</p>}
+                    <div className="flex items-center justify-between gap-3">
+                      {m.topic && <p className="text-sm font-medium text-foreground">{m.topic}</p>}
+                      {typeof m.score === "number" && (
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                            m.score >= 0.75
+                              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700"
+                              : m.score >= 0.45
+                              ? "border-primary/40 bg-primary/10 text-primary"
+                              : "border-border bg-muted text-muted-foreground",
+                          )}
+                          title={`Relevance ${(m.score * 100).toFixed(0)}%`}
+                        >
+                          <span className="relative h-1 w-10 overflow-hidden rounded-full bg-current/20">
+                            <span
+                              className="absolute inset-y-0 left-0 rounded-full bg-current"
+                              style={{ width: `${Math.round(m.score * 100)}%` }}
+                            />
+                          </span>
+                          {Math.round(m.score * 100)}%
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-foreground/80 leading-relaxed">{m.excerpt}</p>
                   </div>
                   <Sparkles className={`h-4 w-4 shrink-0 mt-0.5 transition-colors ${isOpen ? "text-primary" : "text-muted-foreground"}`} />
