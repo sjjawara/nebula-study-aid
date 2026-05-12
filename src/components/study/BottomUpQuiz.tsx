@@ -265,22 +265,29 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             onChange={(e) => setUnderstandText(e.target.value)}
             placeholder={t("In a sentence or two...")}
             className="min-h-[90px] resize-none bg-background"
+            disabled={understandSubmitted}
           />
-          {showImmediate && understandText.trim().length >= 8 && (
+          {showImmediate && understandSubmitted && (
             <FeedbackPanel
               correct={null}
               bloom="Understand"
               why={`A strong Understand-level explanation restates the idea in your own words. The reference idea: ${card.answer}`}
             />
           )}
-          <div className="flex justify-end">
-            <Button
-              onClick={advance}
-              disabled={understandText.trim().length < 8}
-              className="bg-gradient-primary"
-            >
-              {t("Next level")} <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-end gap-2">
+            {!understandSubmitted ? (
+              <Button
+                onClick={() => setUnderstandSubmitted(true)}
+                disabled={understandText.trim().length < 8}
+                className="bg-gradient-primary"
+              >
+                {t("Submit Answer")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={advance} className="bg-gradient-primary">
+                {t("Next level")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       )}
