@@ -384,6 +384,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
           </div>
         </div>
       )}
+
+      {done && onSelectFollowUp && (
+        <FollowUpQuestions
+          lecture={lecture}
+          current={{ ...card, bloom: "Evaluate" }}
+          onSelect={onSelectFollowUp}
+        />
+      )}
     </div>
   );
 };
