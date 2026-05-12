@@ -1,5 +1,57 @@
 import type { Flashcard, Lecture, BloomLevel } from "./mockData";
 
+const STOP_WORDS = new Set([
+  "the","a","an","is","are","was","were","of","to","in","on","for","and","or",
+  "by","with","as","at","be","that","this","these","those","it","its","from",
+  "which","what","who","how","why","when","where","do","does","did","can","will",
+  "would","should","could","than","then","into","about","over","under","between",
+  "you","your","we","they","i","not","no","but","so","if","also","other","such",
+]);
+
+const tokenize = (s: string): string[] =>
+  s.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter(Boolean);
+
+const contentTokens = (s: string): string[] =>
+  tokenize(s).filter((t) => t.length > 2 && !STOP_WORDS.has(t));
+
+/** True if the question stem leaks the answer (contains it, or shares most of its content tokens). */
+export const questionLeaksAnswer = (question: string, answer: string): boolean => {
+  const q = question.toLowerCase();
+  const a = answer.trim().toLowerCase();
+  if (!a) return false;
+  if (a.length >= 6 && q.includes(a)) return true;
+  const ansTokens = contentTokens(answer);
+  if (ansTokens.length === 0) return false;
+  const qTokens = new Set(contentTokens(question));
+  const overlap = ansTokens.filter((t) => qTokens.has(t)).length;
+  // If most of the answer's keywords already appear in the stem, it's a giveaway.
+  return ansTokens.length >= 3 && overlap / ansTokens.length >= 0.7;
+};
+
+/** True if a string reads as a single, atomic claim (good for True/False). */
+export const isSingleClaim = (text: string): boolean => {
+  const t = text.trim();
+  if (!t) return false;
+  if (t.length > 220) return false;
+  if (/[;:]|\b(and also|as well as|whereas|however)\b/i.test(t)) return false;
+  // More than two sentences = compound
+  const sentences = t.split(/(?<=[.!?])\s+/).filter(Boolean);
+  if (sentences.length > 2) return false;
+  // Multiple coordinating " and " clauses → likely compound
+  const ands = (t.match(/\b and \b/gi) || []).length;
+  if (ands >= 2) return false;
+  return true;
+};
+
+/** A flashcard is "clean" if the stem doesn't leak the answer and both sides are non-trivial. */
+export const isCleanFlashcard = (card: Flashcard): boolean => {
+  const q = card.question?.trim() ?? "";
+  const a = card.answer?.trim() ?? "";
+  if (q.length < 8 || a.length < 2) return false;
+  if (questionLeaksAnswer(q, a)) return false;
+  return true;
+};
+
 export const shuffle = <T,>(arr: T[]): T[] => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
