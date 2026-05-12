@@ -231,6 +231,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
               )}
+              {card.formula && <FormulaBadge />}
               <BloomBadge level={card.bloom} />
             </div>
           </div>
@@ -248,10 +249,15 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 <TimestampBadge videoId={videoId} timestamp={card.timestamp} />
               </div>
             )}
-            <div className="flex h-full min-h-[220px] items-center justify-center">
+            <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-4">
               <p className="text-xl leading-relaxed text-center text-foreground">
                 {flipped ? card.answer : card.question}
               </p>
+              {card.formula && (
+                <pre className="max-w-full overflow-x-auto rounded-lg border border-border bg-muted/40 px-4 py-3 font-mono text-lg text-foreground whitespace-pre-wrap text-center">
+                  {card.formula}
+                </pre>
+              )}
             </div>
           </button>
 
