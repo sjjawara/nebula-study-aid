@@ -406,7 +406,7 @@ export const SummariesTab = ({
             {topicsForLevel.length > 0 && (
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Topics at this level
+                  {t("Topics at this level")}
                 </p>
                 <ul className="space-y-1">
                   {topicsForLevel.map((o, i) => (
@@ -427,27 +427,27 @@ export const SummariesTab = ({
             <div>
               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                 <Lightbulb className="h-3.5 w-3.5 text-primary" />
-                Study Tips for {BLOOM_GERUND[activeLevel]}
+                {t("Study Tips for")} {t(BLOOM_GERUND[activeLevel])}
               </p>
               <p className="text-sm leading-relaxed text-foreground/90">
-                {LEVEL_TIPS[activeLevel]}
+                {t(LEVEL_TIPS[activeLevel])}
               </p>
             </div>
 
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                Recommended Tools for This Level
+                {t("Recommended Tools for This Level")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {LEVEL_TOOLS[activeLevel].map((t) => (
+                {LEVEL_TOOLS[activeLevel].map((tool) => (
                   <Button
-                    key={t.label}
+                    key={tool.label}
                     size="sm"
                     variant="secondary"
-                    onClick={() => onNavigate?.(t.tab)}
+                    onClick={() => onNavigate?.(tool.tab)}
                     disabled={!onNavigate}
                   >
-                    {t.label}
+                    {t(tool.label)}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 ))}
@@ -457,17 +457,17 @@ export const SummariesTab = ({
 
           <div className="rounded-lg border border-border bg-background/60 p-4">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-              How to study this lecture
+              {t("How to study this lecture")}
             </p>
             <p className="text-sm leading-relaxed text-foreground/90">
-              {profile.recommendation}
+              {t(profile.recommendation)}
             </p>
           </div>
 
           <div>
             <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
               <Lightbulb className="h-3.5 w-3.5 text-primary" />
-              Suggested Tools for This Lecture
+              {t("Suggested Tools for This Lecture")}
             </p>
             <ul className="space-y-1.5">
               {profile.tools.map((t, i) => (
