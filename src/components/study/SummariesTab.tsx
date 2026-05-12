@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Lecture, BloomLevel } from "@/lib/mockData";
-import { bloomColor } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
@@ -51,13 +50,28 @@ const LEVEL_TOOLS: Record<BloomLevel, { label: string; tab: StudyTabId }[]> = {
   ],
 };
 
-const depths = [
-  { id: "short", label: "90 seconds" },
-  { id: "medium", label: "5 minutes" },
-  { id: "full", label: "Full summary" },
-] as const;
+// (Summary depth is now exposed as anchored sections instead of a toggle.)
 
 const BLOOM_ORDER: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
+
+// Full-saturation Bloom backgrounds (no opacity dimming)
+const BLOOM_SOLID_BG: Record<BloomLevel, string> = {
+  Remember: "bg-bloom-remember",
+  Understand: "bg-bloom-understand",
+  Apply: "bg-bloom-apply",
+  Analyze: "bg-bloom-analyze",
+  Evaluate: "bg-bloom-evaluate",
+  Create: "bg-bloom-create",
+};
+
+const BLOOM_GERUND: Record<BloomLevel, string> = {
+  Remember: "Remembering",
+  Understand: "Understanding",
+  Apply: "Applying",
+  Analyze: "Analyzing",
+  Evaluate: "Evaluating",
+  Create: "Creating",
+};
 
 const profileFor = (
   dominant: BloomLevel,
@@ -116,7 +130,6 @@ export const SummariesTab = ({
   lecture: Lecture;
   onNavigate?: (tab: StudyTabId) => void;
 }) => {
-  const [depth, setDepth] = useState<typeof depths[number]["id"]>("short");
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
 
   const profile = useMemo(() => {
@@ -276,8 +289,9 @@ export const SummariesTab = ({
 
   return (
     <div className="space-y-6">
+      <SummariesNav hasProfile={profile.total > 0} hasTakeaways={takeaways.length > 0} />
       {profile.total > 0 && (
-        <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-5">
+        <section id="lecture-profile" className="scroll-mt-24 rounded-xl border border-border bg-card p-6 shadow-card space-y-5">
           <header className="flex items-center gap-2">
             <Compass className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
@@ -314,9 +328,9 @@ export const SummariesTab = ({
                     aria-label={`${lvl}: ${profile.pct[lvl]}% — show study tips`}
                     aria-pressed={isActive}
                     className={cn(
-                      "h-full transition-all hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      bloomColor[lvl].split(" ")[0],
-                      isActive ? "ring-2 ring-foreground/40 ring-inset" : "opacity-80",
+                      "h-full transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      BLOOM_SOLID_BG[lvl],
+                      isActive && "ring-2 ring-foreground/40 ring-inset",
                     )}
                     style={{ width: `${profile.pct[lvl]}%` }}
                   />
@@ -335,7 +349,7 @@ export const SummariesTab = ({
                       activeLevel === lvl && "text-foreground font-medium",
                     )}
                   >
-                    <span className={cn("h-2 w-2 rounded-full", bloomColor[lvl].split(" ")[0])} />
+                    <span className={cn("h-2 w-2 rounded-full", BLOOM_SOLID_BG[lvl])} />
                     {lvl} · {profile.pct[lvl]}%
                   </button>
                 ) : null,
@@ -379,7 +393,7 @@ export const SummariesTab = ({
             <div>
               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                 <Lightbulb className="h-3.5 w-3.5 text-primary" />
-                Study tip for {activeLevel}
+                Study Tips for {BLOOM_GERUND[activeLevel]}
               </p>
               <p className="text-sm leading-relaxed text-foreground/90">
                 {LEVEL_TIPS[activeLevel]}
@@ -388,7 +402,7 @@ export const SummariesTab = ({
 
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                Recommended tools
+                Recommended Tools for This Level
               </p>
               <div className="flex flex-wrap gap-2">
                 {LEVEL_TOOLS[activeLevel].map((t) => (
@@ -419,7 +433,7 @@ export const SummariesTab = ({
           <div>
             <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
               <Lightbulb className="h-3.5 w-3.5 text-primary" />
-              Suggested NebulaLearn tools
+              Recommended Tools for This Level
             </p>
             <ul className="space-y-1.5">
               {profile.tools.map((t, i) => (
@@ -434,7 +448,7 @@ export const SummariesTab = ({
       )}
 
       {takeaways.length > 0 && (
-        <section className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-card">
+        <section id="key-takeaways" className="scroll-mt-24 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-card">
           <header className="mb-4 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
@@ -455,23 +469,215 @@ export const SummariesTab = ({
         </section>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {depths.map((d) => (
-          <Button
-            key={d.id}
-            variant={depth === d.id ? "default" : "secondary"}
-            onClick={() => setDepth(d.id)}
-            className={cn(depth === d.id && "bg-gradient-primary")}
-          >
-            {d.label}
-          </Button>
-        ))}
-      </div>
-      <article className="rounded-xl border border-border bg-card p-6 shadow-card">
-        <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line">
-          {lecture.summaries[depth] || "No summary available."}
-        </p>
-      </article>
+      <SummarySection
+        id="summary-90s"
+        title="90 Seconds"
+        body={lecture.summaries.short}
+        format="paragraphs"
+      />
+      <SummarySection
+        id="summary-5min"
+        title="5 Minutes"
+        body={lecture.summaries.medium}
+        format="chunked"
+      />
+      <SummarySection
+        id="summary-full"
+        title="Full Summary"
+        body={lecture.summaries.full}
+        format="headers"
+      />
     </div>
+  );
+};
+
+
+// --------- subcomponents & helpers below ---------
+
+const NAV_LINKS: { id: string; label: string; key: "profile" | "takeaways" | "any" }[] = [
+  { id: "lecture-profile", label: "Lecture Profile", key: "profile" },
+  { id: "key-takeaways", label: "Key Takeaways", key: "takeaways" },
+  { id: "summary-90s", label: "90 Seconds", key: "any" },
+  { id: "summary-5min", label: "5 Minutes", key: "any" },
+  { id: "summary-full", label: "Full Summary", key: "any" },
+];
+
+const SummariesNav = ({
+  hasProfile,
+  hasTakeaways,
+}: {
+  hasProfile: boolean;
+  hasTakeaways: boolean;
+}) => {
+  const links = NAV_LINKS.filter(
+    (l) =>
+      l.key === "any" ||
+      (l.key === "profile" && hasProfile) ||
+      (l.key === "takeaways" && hasTakeaways),
+  );
+  return (
+    <nav
+      aria-label="Summary sections"
+      className="sticky top-2 z-10 flex flex-wrap gap-1.5 rounded-full border border-border bg-background/80 p-1.5 shadow-sm backdrop-blur"
+    >
+      {links.map((l, i) => (
+        <a
+          key={l.id}
+          href={`#${l.id}`}
+          className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          {l.label}
+          {i < links.length - 1 && (
+            <span className="ml-1.5 text-border" aria-hidden>
+              {""}
+            </span>
+          )}
+        </a>
+      ))}
+    </nav>
+  );
+};
+
+// Split a string into sentences (rough but good-enough for prose summaries).
+const splitSentences = (text: string): string[] => {
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (!cleaned) return [];
+  // Match ending punctuation followed by space + capital, or end.
+  const parts = cleaned.match(/[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$/g) ?? [cleaned];
+  return parts.map((s) => s.trim()).filter(Boolean);
+};
+
+// Group sentences into paragraphs of N (3-4) sentences each.
+const groupIntoParagraphs = (text: string, perParagraph = 4): string[] => {
+  // Honor double-newline paragraph breaks if present.
+  const explicit = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (explicit.length > 1) {
+    return explicit.flatMap((para) => {
+      const sentences = splitSentences(para);
+      const grouped: string[] = [];
+      for (let i = 0; i < sentences.length; i += perParagraph) {
+        grouped.push(sentences.slice(i, i + perParagraph).join(" "));
+      }
+      return grouped.length ? grouped : [para];
+    });
+  }
+  const sentences = splitSentences(text);
+  const grouped: string[] = [];
+  for (let i = 0; i < sentences.length; i += perParagraph) {
+    grouped.push(sentences.slice(i, i + perParagraph).join(" "));
+  }
+  return grouped.length ? grouped : [text];
+};
+
+// Detect lines that look like a section header.
+const looksLikeHeader = (line: string): boolean => {
+  const t = line.trim();
+  if (!t) return false;
+  if (t.length > 90) return false;
+  if (/^#{1,6}\s+/.test(t)) return true; // markdown
+  if (/^\*\*[^*]+\*\*:?$/.test(t)) return true; // **Bold:**
+  if (/^[A-Z0-9][A-Z0-9 ,&/\-]{3,}$/.test(t) && !/[.!?]$/.test(t)) return true; // ALL CAPS
+  if (/^\d+[.)]\s+\S/.test(t) && t.length < 80 && !/[.!?]$/.test(t)) return true; // 1. Header
+  if (/^[A-Z][^.!?]{3,80}:$/.test(t)) return true; // Trailing colon
+  return false;
+};
+
+const stripHeaderMarkers = (line: string): string =>
+  line
+    .replace(/^#{1,6}\s+/, "")
+    .replace(/^\*\*([^*]+)\*\*:?$/, "$1")
+    .replace(/:$/, "")
+    .trim();
+
+interface BlockNode {
+  type: "header" | "paragraph";
+  text: string;
+}
+
+const formatWithHeaders = (text: string): BlockNode[] => {
+  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const blocks: BlockNode[] = [];
+  let buffer: string[] = [];
+  const flush = () => {
+    if (!buffer.length) return;
+    const para = buffer.join(" ");
+    for (const chunk of groupIntoParagraphs(para, 4)) {
+      blocks.push({ type: "paragraph", text: chunk });
+    }
+    buffer = [];
+  };
+  for (const line of lines) {
+    if (looksLikeHeader(line)) {
+      flush();
+      blocks.push({ type: "header", text: stripHeaderMarkers(line) });
+    } else {
+      buffer.push(line);
+    }
+  }
+  flush();
+  // If we found no headers, fall back to chunked paragraphs.
+  if (!blocks.some((b) => b.type === "header")) {
+    return groupIntoParagraphs(text, 4).map((p) => ({ type: "paragraph", text: p }));
+  }
+  return blocks;
+};
+
+const SummarySection = ({
+  id,
+  title,
+  body,
+  format,
+}: {
+  id: string;
+  title: string;
+  body: string;
+  format: "paragraphs" | "chunked" | "headers";
+}) => {
+  const trimmed = (body ?? "").trim();
+  return (
+    <section
+      id={id}
+      className="scroll-mt-24 rounded-xl border border-border bg-card p-6 shadow-card"
+    >
+      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">
+        {title}
+      </h3>
+      {!trimmed ? (
+        <p className="text-sm text-muted-foreground">No summary available.</p>
+      ) : format === "paragraphs" ? (
+        <div className="space-y-3 text-base leading-relaxed text-foreground/90 whitespace-pre-line">
+          {trimmed.split(/\n\s*\n/).map((p, i) => (
+            <p key={i}>{p.trim()}</p>
+          ))}
+        </div>
+      ) : format === "chunked" ? (
+        <div className="space-y-4 text-base leading-relaxed text-foreground/90">
+          {groupIntoParagraphs(trimmed, 4).map((p, i, arr) => (
+            <div key={i}>
+              <p>{p}</p>
+              {i < arr.length - 1 && (
+                <div className="mt-4 h-px w-16 bg-border/70" aria-hidden />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3 text-base leading-relaxed text-foreground/90">
+          {formatWithHeaders(trimmed).map((b, i) =>
+            b.type === "header" ? (
+              <h4
+                key={i}
+                className="mt-5 text-base font-semibold tracking-tight text-foreground first:mt-0"
+              >
+                {b.text}
+              </h4>
+            ) : (
+              <p key={i}>{b.text}</p>
+            ),
+          )}
+        </div>
+      )}
+    </section>
   );
 };

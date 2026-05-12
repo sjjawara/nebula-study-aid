@@ -25,6 +25,7 @@ import { SearchTab } from "@/components/study/SearchTab";
 import { QuizTab } from "@/components/study/QuizTab";
 import { MindMapTab } from "@/components/study/MindMapTab";
 import type { Flashcard } from "@/lib/mockData";
+import { loadFlashcards, saveFlashcards } from "@/lib/flashcardStore";
 
 const LANGUAGES = [
   "English",
@@ -82,10 +83,33 @@ const Index = () => {
   const [sessions, setSessions] = useState<StoredSession[]>(() => loadSessions());
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  const displayLecture: Lecture | null =
+  const baseLecture: Lecture | null =
     language === "English"
       ? lecture
       : translations[language] ?? lecture;
+
+  // Per-lecture user-customized flashcards (persisted to localStorage by lecture title)
+  const [customFlashcards, setCustomFlashcards] = useState<Flashcard[] | null>(null);
+
+  useEffect(() => {
+    if (!baseLecture) {
+      setCustomFlashcards(null);
+      return;
+    }
+    setCustomFlashcards(loadFlashcards(baseLecture.title));
+  }, [baseLecture?.title]);
+
+  const displayLecture: Lecture | null = baseLecture
+    ? { ...baseLecture, flashcards: customFlashcards ?? baseLecture.flashcards }
+    : null;
+
+  const updateFlashcards = (updater: (current: Flashcard[]) => Flashcard[]) => {
+    if (!baseLecture) return;
+    const current = customFlashcards ?? baseLecture.flashcards;
+    const next = updater(current);
+    setCustomFlashcards(next);
+    saveFlashcards(baseLecture.title, next);
+  };
 
   const handleLanguageChange = async (next: Language) => {
     setLanguage(next);
@@ -439,6 +463,7 @@ const Index = () => {
                     setQuizSeed(card);
                     setActiveTab("quiz");
                   }}
+                  onUpdateFlashcards={updateFlashcards}
                 />
               </TabsContent>
               <TabsContent value="search" className="mt-6">
@@ -446,9 +471,7 @@ const Index = () => {
                   lecture={displayLecture}
                   videoUrl={url}
                   onSaveFlashcard={(card) =>
-                    setLecture((prev) =>
-                      prev ? { ...prev, flashcards: [...prev.flashcards, card] } : prev
-                    )
+                    updateFlashcards((cards) => [...cards, card])
                   }
                 />
               </TabsContent>
