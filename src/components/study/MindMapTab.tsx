@@ -14,12 +14,16 @@ import {
   Plus,
   Trash2,
   GripHorizontal,
+  Maximize2,
+  Minimize2,
+  Move,
 } from "lucide-react";
 import type { Lecture, SearchMoment } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { buildYoutubeUrl } from "@/lib/timestamp";
 
 type Tool = "select" | "relabel";
 
