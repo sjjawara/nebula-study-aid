@@ -97,21 +97,17 @@ const Index = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content: JSON.stringify({
-            title: lecture.title,
-            outline: lecture.outline,
-            summaries: lecture.summaries,
-            flashcards: lecture.flashcards,
-            searchIndex: lecture.searchIndex,
-          }),
+          content: JSON.stringify(lecture),
           language: next,
         }),
       });
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const payload = await res.json();
-      const raw = payload?.data ?? payload;
+      const raw = payload?.translated ?? payload?.data ?? payload;
       const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
       const translated: Lecture = {
+        ...lecture,
+        ...parsed,
         title: parsed.title ?? lecture.title,
         outline: parsed.outline ?? lecture.outline,
         summaries: parsed.summaries ?? lecture.summaries,
