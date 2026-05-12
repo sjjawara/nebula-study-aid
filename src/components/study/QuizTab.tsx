@@ -134,6 +134,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [stepOrderingCards, setStepOrderingCards] = useState<Flashcard[] | null>(null);
   const [proofMode, setProofMode] = useState(false);
   const [proofCards, setProofCards] = useState<Flashcard[] | null>(null);
+  const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2);
 
   const formulaCount = useMemo(
     () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
