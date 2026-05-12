@@ -351,18 +351,18 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
           <div className="rounded-2xl border border-amber-400/30 bg-amber-50/40 dark:bg-amber-500/5 p-5 shadow-sm">
             <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-amber-600" />
-              Study these topics
+              {t("Study these topics")}
             </h4>
             <ul className="space-y-2">
-              {studyTopics.slice(0, 6).map((t, i) => (
+              {studyTopics.slice(0, 6).map((tk, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm">
                   <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-[11px] font-semibold text-amber-700">
-                    {t.count}
+                    {tk.count}
                   </span>
                   <div className="flex-1">
-                    <p className="text-foreground font-medium">{t.topic}</p>
+                    <p className="text-foreground font-medium">{tk.topic}</p>
                     <p className="text-xs text-muted-foreground">
-                      Missed at {t.level} level{t.timestamp ? ` · ${t.timestamp}` : ""}
+                      {t("Missed at")} {t(tk.level)} {t("level")}{tk.timestamp ? ` · ${tk.timestamp}` : ""}
                     </p>
                   </div>
                 </li>
@@ -373,7 +373,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
 
         {/* All questions with feedback, organized by Bloom */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h4 className="text-sm font-semibold text-foreground mb-3">All questions & feedback</h4>
+          <h4 className="text-sm font-semibold text-foreground mb-3">{t("All questions & feedback")}</h4>
           <div className="space-y-5">
             {BLOOM_ORDER.map((lvl) => {
               const items = records.filter((r) => r.level === lvl);
