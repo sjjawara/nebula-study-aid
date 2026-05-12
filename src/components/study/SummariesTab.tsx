@@ -50,11 +50,7 @@ const LEVEL_TOOLS: Record<BloomLevel, { label: string; tab: StudyTabId }[]> = {
   ],
 };
 
-const depths = [
-  { id: "short", label: "90 seconds" },
-  { id: "medium", label: "5 minutes" },
-  { id: "full", label: "Full summary" },
-] as const;
+// (Summary depth is now exposed as anchored sections instead of a toggle.)
 
 const BLOOM_ORDER: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
 
