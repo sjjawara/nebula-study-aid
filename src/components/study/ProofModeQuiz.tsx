@@ -193,7 +193,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
             <div key={i} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                  {typeLabel[it.type]} — Question {i + 1}
+                  {t(typeLabel[it.type])} — {t("Question")} {i + 1}
                 </p>
                 <BloomBadge level={it.card.bloom} />
               </div>
