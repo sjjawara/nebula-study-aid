@@ -549,7 +549,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
             {qType === "tf" && tf ? (
               <>
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  True or False
+                  {t("True or False")}
                 </p>
                 <h4 className="text-base font-semibold leading-snug text-foreground">
                   {tf.question}
@@ -568,7 +568,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
           <>
             <div className="rounded-lg border border-border bg-background p-4 text-sm text-foreground leading-relaxed">
               <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                Proposed answer
+                {t("Proposed answer")}
               </p>
               <p>{tf.statement}</p>
             </div>
