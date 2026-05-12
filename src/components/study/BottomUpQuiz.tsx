@@ -220,6 +220,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               );
             })}
           </div>
+          {showImmediate && tfChoice !== null && (
+            <FeedbackPanel
+              correct={tfCorrect}
+              bloom="Remember"
+              why={`The lecture establishes that "${card.answer}". This Remember-level check confirms you can recall and recognize the basic claim.`}
+              correctAnswer={tf.correctValue ? "True" : "False"}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}
@@ -249,6 +257,13 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             placeholder="In a sentence or two..."
             className="min-h-[90px] resize-none bg-background"
           />
+          {showImmediate && understandText.trim().length >= 8 && (
+            <FeedbackPanel
+              correct={null}
+              bloom="Understand"
+              why={`A strong Understand-level explanation restates the idea in your own words. The reference idea: ${card.answer}`}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}
