@@ -486,16 +486,16 @@ export const SummariesTab = ({
           <header className="mb-4 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Key Takeaways
+              {t("Key Takeaways")}
             </h3>
             <InfoTooltip content={tooltipCopy.keyTakeaways} label="About Key Takeaways" />
           </header>
           <ul className="space-y-2.5">
-            {takeaways.map((t, i) => (
-              <li key={`${t.timestamp}-${i}`} className="flex gap-3 items-start">
+            {takeaways.map((tk, i) => (
+              <li key={`${tk.timestamp}-${i}`} className="flex gap-3 items-start">
                 <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm leading-relaxed text-foreground/90">
-                  {t.sentence}
+                  {translatedTakeaways?.[i] ?? tk.sentence}
                 </p>
               </li>
             ))}
