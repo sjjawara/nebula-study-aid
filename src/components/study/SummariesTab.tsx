@@ -491,8 +491,6 @@ export const SummariesTab = ({
   );
 };
 
-// Suppress unused imports of `depths` and `depth` state.
-void depths;
 
 // --------- subcomponents & helpers below ---------
 
