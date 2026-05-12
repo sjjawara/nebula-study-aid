@@ -39,6 +39,11 @@ type Feedback = {
   feedback?: string;
   score?: number;
   correct?: boolean;
+  what_was_right?: string;
+  what_was_wrong?: string;
+  what_to_improve?: string;
+  learning_outcome?: string;
+  bloom_level_demonstrated?: string;
   [k: string]: unknown;
 };
 
@@ -447,10 +452,77 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                   <BloomBadge level={demonstratedLevel} />
                 </div>
                 {feedback && (
-                  <div className="space-y-2 text-sm text-foreground">
+                  <div className="space-y-3 text-sm text-foreground">
                     {typeof feedback.feedback === "string" && (
                       <p className="leading-relaxed">{feedback.feedback}</p>
                     )}
+                    {(typeof feedback.score === "number" ||
+                      typeof feedback.bloom_level_demonstrated === "string") && (
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        {typeof feedback.score === "number" && (
+                          <span>
+                            <span className="font-medium text-foreground">Score:</span>{" "}
+                            {feedback.score}
+                          </span>
+                        )}
+                        {typeof feedback.bloom_level_demonstrated === "string" && (
+                          <span>
+                            <span className="font-medium text-foreground">
+                              Bloom level demonstrated:
+                            </span>{" "}
+                            {feedback.bloom_level_demonstrated}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {typeof feedback.what_was_right === "string" &&
+                      feedback.what_was_right.trim() && (
+                        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+                          <p className="text-xs font-semibold text-emerald-700">
+                            ✅ What you got right
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed text-foreground">
+                            {feedback.what_was_right}
+                          </p>
+                        </div>
+                      )}
+                    {typeof feedback.what_was_wrong === "string" &&
+                      feedback.what_was_wrong.trim() &&
+                      feedback.what_was_wrong.trim().toLowerCase() !==
+                        "none — fully correct" &&
+                      feedback.what_was_wrong.trim().toLowerCase() !==
+                        "none - fully correct" && (
+                        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                          <p className="text-xs font-semibold text-destructive">
+                            ❌ Where it breaks down
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed text-foreground">
+                            {feedback.what_was_wrong}
+                          </p>
+                        </div>
+                      )}
+                    {typeof feedback.what_to_improve === "string" &&
+                      feedback.what_to_improve.trim() && (
+                        <div className="rounded-lg border border-border bg-card p-3">
+                          <p className="text-xs font-semibold text-foreground">
+                            What to improve
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                            {feedback.what_to_improve}
+                          </p>
+                        </div>
+                      )}
+                    {typeof feedback.learning_outcome === "string" &&
+                      feedback.learning_outcome.trim() && (
+                        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+                          <p className="text-xs font-semibold text-primary">
+                            Learning outcome
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed text-foreground">
+                            {feedback.learning_outcome}
+                          </p>
+                        </div>
+                      )}
                     {typeof feedback.verdict === "string" && (
                       <p className="text-xs text-muted-foreground">
                         Verdict: {feedback.verdict}
