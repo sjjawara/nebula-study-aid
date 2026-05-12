@@ -35,13 +35,13 @@ export const tooltipCopy = {
   topDown:
     "Productive Failure is a learning design developed by Dr. Manu Kapur (ETH Zürich). His research found that students who attempt complex problems before receiving instruction outperform those taught conventionally — developing deeper conceptual understanding and better transfer skills. Source: Kapur, M. (2016). Examining Productive Failure, Constructive Failure, and Instructive Failure. Educational Psychologist, 51(2).",
   bottomUp:
-    "Builds foundational knowledge first, earning your way to higher-order thinking. Best for unfamiliar topics.",
+    "The Build Up approach is grounded in scaffolding theory (Vygotsky, 1978) and mastery learning research (Bloom, 1968). Students build foundational knowledge before advancing to complex tasks, staying within their Zone of Proximal Development. Research shows scaffolded learning improves both confidence and long-term retention, particularly for students encountering unfamiliar material. Source: Wood, Bruner & Ross (1976). The role of tutoring in problem solving. Journal of Child Psychology and Psychiatry, 17(2).",
   cognitiveLoad:
     "Cognitive Load Theory (Sweller): High load sections require more mental effort. Slow down and review these moments.",
   keyTakeaways:
     "Derived from the highest Bloom's level chunks in this lecture — the concepts that require the most sophisticated thinking.",
   masteryMode:
-    "Adaptive practice that climbs and descends Bloom's levels based on your accuracy and streak.",
+    "Mastery Mode is based on Benjamin Bloom's Learning for Mastery model (1968), which found that 95% of students can achieve high levels of learning when given adequate time and appropriate instruction. Combined with spaced repetition principles (Ebbinghaus, 1885), the adaptive difficulty in Mastery Mode ensures concepts are reinforced at increasing cognitive depth — mirroring how long-term memory consolidation actually works.",
 };
 
 interface InfoTooltipProps {
