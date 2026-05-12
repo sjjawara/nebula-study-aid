@@ -75,7 +75,7 @@ export const BloomBadge = ({ level, className, withInfo = true, variant = "dots"
             content={
               <span>
                 <span className="font-semibold">{label}.</span>{" "}
-                {bloomLevelDescriptions[level]}
+                {t(bloomLevelDescriptions[level])}
               </span>
             }
             iconClassName="h-3 w-3"
