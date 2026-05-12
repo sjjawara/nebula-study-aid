@@ -549,15 +549,14 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
               <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
                 <span className="text-[11px] text-muted-foreground">Jump to in video</span>
                 {ytLink ? (
-                  <a
-                    href={ytLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => window.open(ytLink, "_blank", "noopener,noreferrer")}
                     className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20"
                   >
                     {explanation.timestamp}
                     <ExternalLink className="h-3 w-3" />
-                  </a>
+                  </button>
                 ) : (
                   <span className="text-xs font-medium text-foreground">{explanation.timestamp}</span>
                 )}

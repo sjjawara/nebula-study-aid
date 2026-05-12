@@ -426,7 +426,7 @@ const Index = () => {
                 <TabsTrigger value="mindmap">Mind Map</TabsTrigger>
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
-                <OutlineTab lecture={displayLecture} />
+                <OutlineTab lecture={displayLecture} videoUrl={url} />
               </TabsContent>
               <TabsContent value="summaries" className="mt-6">
                 <SummariesTab lecture={displayLecture} />

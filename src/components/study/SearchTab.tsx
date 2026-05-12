@@ -52,18 +52,8 @@ const buildYoutubeLink = (videoUrl: string | undefined, ts: string): string | nu
   return `${videoUrl}${sep}t=${seconds}s`;
 };
 
-const openExternal = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
-  e.preventDefault();
-  e.stopPropagation();
-  // Use top-level window to escape iframe sandboxing in preview environments
-  const w = window.open(url, "_blank", "noopener,noreferrer");
-  if (!w) {
-    try {
-      window.top?.location.assign(url);
-    } catch {
-      window.location.href = url;
-    }
-  }
+const openExternal = (url: string) => {
+  window.open(url, "_blank", "noopener,noreferrer");
 };
 
 const tokenize = (s: string): string[] =>
@@ -438,16 +428,14 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
 
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border">
                     {link ? (
-                      <a
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => { openExternal(e, link); showPreview(m.topic, m.timestamp, link); }}
+                      <button
+                        type="button"
+                        onClick={() => { openExternal(link); showPreview(m.topic, m.timestamp, link); }}
                         className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                       >
                         {card.timestamp}
                         <ExternalLink className="h-3 w-3" />
-                      </a>
+                      </button>
                     ) : (
                       <span className="text-sm font-mono text-primary">{card.timestamp}</span>
                     )}
@@ -500,16 +488,14 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border">
                 {modalLink && modalCard.card.timestamp ? (
-                  <a
-                    href={modalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => { openExternal(e, modalLink); showPreview(undefined, modalCard.card.timestamp ?? "", modalLink); }}
+                  <button
+                    type="button"
+                    onClick={() => { openExternal(modalLink); showPreview(undefined, modalCard.card.timestamp ?? "", modalLink); }}
                     className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                   >
                     {modalCard.card.timestamp}
                     <ExternalLink className="h-3 w-3" />
-                  </a>
+                  </button>
                 ) : (
                   <span className="text-sm font-mono text-primary">{modalCard.card.timestamp}</span>
                 )}
@@ -549,12 +535,10 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
           </div>
 
           <div className="px-4 pb-4 pt-2 space-y-3">
-            <a
-              href={preview.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => openExternal(e, preview.link)}
-              className="relative block aspect-video overflow-hidden rounded-lg border border-border bg-muted group"
+            <button
+              type="button"
+              onClick={() => openExternal(preview.link)}
+              className="relative block w-full aspect-video overflow-hidden rounded-lg border border-border bg-muted group text-left"
             >
               {preview.videoId ? (
                 <img
@@ -581,7 +565,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
               <span className="absolute bottom-2 right-2 rounded bg-background/80 px-1.5 py-0.5 font-mono text-[11px] text-primary tabular-nums">
                 {preview.timestamp}
               </span>
-            </a>
+            </button>
 
             <div>
               <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">{preview.topic}</p>
@@ -589,18 +573,11 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
             </div>
 
             <Button
-              asChild
               size="sm"
               className="w-full bg-gradient-primary hover:opacity-90"
+              onClick={() => openExternal(preview.link)}
             >
-              <a
-                href={preview.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => openExternal(e, preview.link)}
-              >
-                <Play className="h-4 w-4 mr-1.5 fill-current" /> Watch this moment
-              </a>
+              <Play className="h-4 w-4 mr-1.5 fill-current" /> Watch this moment
             </Button>
           </div>
         </aside>
