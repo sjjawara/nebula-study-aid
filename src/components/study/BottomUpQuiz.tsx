@@ -428,11 +428,11 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h4 className="text-base font-semibold text-foreground">
-                  Mastery achieved
+                  {t("Mastery achieved")}
                 </h4>
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                   <Sparkles className="h-3 w-3" />
-                  All levels demonstrated
+                  {t("All levels demonstrated")}
                 </span>
                 <BloomBadge level="Evaluate" />
               </div>
@@ -441,7 +441,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               )}
               <div className="rounded-lg border border-border bg-card p-4">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Correct explanation
+                  {t("Correct explanation")}
                 </p>
                 <p className="mt-1 text-sm text-foreground">{card.answer}</p>
               </div>
@@ -450,13 +450,13 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <div className="flex flex-wrap justify-end gap-2">
             {onExit && (
               <Button variant="ghost" onClick={onExit}>
-                Exit
+                {t("Exit")}
               </Button>
             )}
             {onNext && (
               <Button onClick={onNext} className="bg-gradient-primary">
                 <RefreshCw className="h-4 w-4" />
-                Next question
+                {t("Next question")}
               </Button>
             )}
           </div>
