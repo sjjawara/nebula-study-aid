@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, Lightbulb } from "lucide-react";
 import type { BloomLevel } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
