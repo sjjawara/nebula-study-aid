@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Youtube, AlertCircle } from "lucide-react";
+import { Sparkles, Youtube, AlertCircle, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { parseLecture, type Lecture, type ApiResponse } from "@/lib/mockData";
 import { OutlineTab } from "@/components/study/OutlineTab";
 import { SummariesTab } from "@/components/study/SummariesTab";
@@ -11,6 +18,20 @@ import { SearchTab } from "@/components/study/SearchTab";
 import { QuizTab } from "@/components/study/QuizTab";
 import { MindMapTab } from "@/components/study/MindMapTab";
 import type { Flashcard } from "@/lib/mockData";
+
+const LANGUAGES = [
+  "English",
+  "Spanish",
+  "French",
+  "Mandarin",
+  "Arabic",
+  "Portuguese",
+  "Hindi",
+] as const;
+type Language = (typeof LANGUAGES)[number];
+
+const TRANSLATE_URL = "https://nebulalearn-production.up.railway.app/translate";
+
 
 type Stage = "input" | "loading" | "results" | "error";
 
@@ -32,6 +53,55 @@ const Index = () => {
   const [elapsed, setElapsed] = useState(0);
   const [activeTab, setActiveTab] = useState("outline");
   const [quizSeed, setQuizSeed] = useState<Flashcard | null>(null);
+  const [language, setLanguage] = useState<Language>("English");
+  const [translations, setTranslations] = useState<Record<string, Lecture>>({});
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
+  const displayLecture: Lecture | null =
+    language === "English"
+      ? lecture
+      : translations[language] ?? lecture;
+
+  const handleLanguageChange = async (next: Language) => {
+    setLanguage(next);
+    setTranslateError(null);
+    if (next === "English" || !lecture || translations[next]) return;
+    setTranslating(true);
+    try {
+      const res = await fetch(TRANSLATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: JSON.stringify({
+            title: lecture.title,
+            outline: lecture.outline,
+            summaries: lecture.summaries,
+            flashcards: lecture.flashcards,
+            searchIndex: lecture.searchIndex,
+          }),
+          language: next,
+        }),
+      });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const payload = await res.json();
+      const raw = payload?.data ?? payload;
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      const translated: Lecture = {
+        title: parsed.title ?? lecture.title,
+        outline: parsed.outline ?? lecture.outline,
+        summaries: parsed.summaries ?? lecture.summaries,
+        flashcards: parsed.flashcards ?? lecture.flashcards,
+        searchIndex: parsed.searchIndex ?? parsed.search_index ?? lecture.searchIndex,
+      };
+      setTranslations((prev) => ({ ...prev, [next]: translated }));
+    } catch (err) {
+      setTranslateError(err instanceof Error ? err.message : "Translation failed.");
+      setLanguage("English");
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   useEffect(() => {
     if (stage !== "loading") return;
@@ -96,6 +166,9 @@ const Index = () => {
     setUrl("");
     setLecture(null);
     setError(null);
+    setLanguage("English");
+    setTranslations({});
+    setTranslateError(null);
   };
 
   return (
@@ -203,13 +276,51 @@ const Index = () => {
           </section>
         )}
 
-        {stage === "results" && lecture && (
+        {stage === "results" && lecture && displayLecture && (
           <section className="space-y-8">
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wider text-primary font-medium">Lecture loaded</p>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{lecture.title}</h2>
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-wider text-primary font-medium">Lecture loaded</p>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{displayLecture.title}</h2>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={language}
+                  onValueChange={(v) => handleLanguageChange(v as Language)}
+                  disabled={translating}
+                >
+                  <SelectTrigger className="h-9 w-[140px] bg-card">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGES.map((l) => (
+                      <SelectItem key={l} value={l}>
+                        {l}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {translating && (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                )}
+              </div>
             </div>
 
+            {translateError && (
+              <p className="text-xs text-destructive">{translateError}</p>
+            )}
+
+            {translating && (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Translating to {language}...
+                </p>
+              </div>
+            )}
+
+            {!translating && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6 bg-card border border-border h-12 p-1">
                 <TabsTrigger value="outline">Outline</TabsTrigger>
@@ -220,14 +331,14 @@ const Index = () => {
                 <TabsTrigger value="mindmap">Mind Map</TabsTrigger>
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
-                <OutlineTab lecture={lecture} />
+                <OutlineTab lecture={displayLecture} />
               </TabsContent>
               <TabsContent value="summaries" className="mt-6">
-                <SummariesTab lecture={lecture} />
+                <SummariesTab lecture={displayLecture} />
               </TabsContent>
               <TabsContent value="flashcards" className="mt-6">
                 <FlashcardsTab
-                  lecture={lecture}
+                  lecture={displayLecture}
                   onQuizCard={(card) => {
                     setQuizSeed(card);
                     setActiveTab("quiz");
@@ -236,7 +347,7 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="search" className="mt-6">
                 <SearchTab
-                  lecture={lecture}
+                  lecture={displayLecture}
                   videoUrl={url}
                   onSaveFlashcard={(card) =>
                     setLecture((prev) =>
@@ -256,6 +367,7 @@ const Index = () => {
                 <MindMapTab lecture={lecture} />
               </TabsContent>
             </Tabs>
+            )}
           </section>
         )}
       </main>
