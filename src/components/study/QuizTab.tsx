@@ -742,13 +742,17 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <p className="text-xs text-muted-foreground">
                     {filteredCardCount === 0
-                      ? stepOrderingMode
+                      ? proofMode
+                        ? "No Analyze/Evaluate flashcards match the current filters."
+                        : stepOrderingMode
                         ? "No step-sequence flashcards match the current filters. Create one in the Flashcards tab."
                         : formulaMode
                         ? "No formula flashcards match the current filters. Add a formula in the Flashcards tab."
                         : "No cards match the current filters."
                       : `${
-                          stepOrderingMode
+                          proofMode
+                            ? "Proof Mode — "
+                            : stepOrderingMode
                             ? "Step Ordering — "
                             : formulaMode
                             ? "Formula Mode — "
@@ -765,14 +769,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     disabled={filteredCardCount === 0}
                     className="bg-gradient-primary"
                   >
-                    {stepOrderingMode ? (
+                    {proofMode ? (
+                      <ScrollText className="h-4 w-4" />
+                    ) : stepOrderingMode ? (
                       <ListOrdered className="h-4 w-4" />
                     ) : formulaMode ? (
                       <FunctionSquare className="h-4 w-4" />
                     ) : (
                       <Play className="h-4 w-4" />
                     )}
-                    {stepOrderingMode
+                    {proofMode
+                      ? "Start Proof Mode"
+                      : stepOrderingMode
                       ? "Start Step Ordering"
                       : formulaMode
                       ? "Start Formula Quiz"
