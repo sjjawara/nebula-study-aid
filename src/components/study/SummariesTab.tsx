@@ -400,7 +400,7 @@ export const SummariesTab = ({
               </span>
             </div>
             <p className="text-xs italic text-muted-foreground">
-              {bloomLevelDescriptions[activeLevel]}
+              {t(bloomLevelDescriptions[activeLevel])}
             </p>
 
             {topicsForLevel.length > 0 && (
