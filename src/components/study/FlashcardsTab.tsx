@@ -304,6 +304,21 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 placeholder="The correct answer"
                 rows={4}
               />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                Formula (optional)
+                <FormulaBadge />
+              </label>
+              <Textarea
+                value={editor.formula}
+                onChange={(e) => setEditor((s) => ({ ...s, formula: e.target.value }))}
+                placeholder="e.g. F = m·a"
+                rows={2}
+                className="font-mono text-base"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Cards with a formula appear in Formula Mode quizzes.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
