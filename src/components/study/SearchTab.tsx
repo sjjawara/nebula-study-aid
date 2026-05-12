@@ -143,13 +143,19 @@ const generateKeywordFlashcard = (
   };
 };
 
+type RankedMoment = SearchMoment & { score?: number };
+
 export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps) => {
   const [q, setQ] = useState("");
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
   const [modalCard, setModalCard] = useState<{ card: Flashcard; saveKey: string } | null>(null);
+  const [aiResults, setAiResults] = useState<RankedMoment[] | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
-  const results = useMemo(() => {
+  // Instant keyword fallback — also serves as the baseline before AI returns
+  const keywordResults = useMemo<RankedMoment[]>(() => {
     if (!q.trim()) return lecture.searchIndex;
     const needle = q.toLowerCase();
     return lecture.searchIndex.filter((m) =>
@@ -158,6 +164,80 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
         .some((s) => String(s).toLowerCase().includes(needle))
     );
   }, [q, lecture.searchIndex]);
+
+  // Reset / debounce semantic search
+  useEffect(() => {
+    if (!q.trim()) {
+      setAiResults(null);
+      setAiError(null);
+      setAiLoading(false);
+      return;
+    }
+    const ctrl = new AbortController();
+    setAiLoading(true);
+    setAiError(null);
+    const handle = setTimeout(async () => {
+      try {
+        const res = await fetch(SEMANTIC_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: q.trim(),
+            search_index: lecture.searchIndex,
+          }),
+          signal: ctrl.signal,
+        });
+        if (!res.ok) throw new Error(`Request failed (${res.status})`);
+        const payload = await res.json();
+        const raw = payload?.data ?? payload?.results ?? payload;
+        const list = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.results)
+          ? raw.results
+          : [];
+
+        // Map server results back to our SearchMoment shape with a score 0..1
+        const mapped: RankedMoment[] = list
+          .map((entry: { timestamp?: string; topic?: string; keywords?: string[]; excerpt?: string; summary?: string; score?: number; relevance?: number; confidence?: number }) => {
+            const ts = entry.timestamp;
+            const fromIndex = ts
+              ? lecture.searchIndex.find((m) => m.timestamp === ts)
+              : undefined;
+            const base: SearchMoment =
+              fromIndex ?? {
+                timestamp: ts ?? "",
+                excerpt: entry.excerpt ?? entry.summary ?? "",
+                topic: entry.topic,
+                keywords: entry.keywords,
+              };
+            const rawScore = entry.score ?? entry.relevance ?? entry.confidence;
+            const score =
+              typeof rawScore === "number"
+                ? rawScore > 1
+                  ? Math.min(1, rawScore / 100)
+                  : Math.max(0, rawScore)
+                : undefined;
+            return { ...base, score };
+          })
+          .filter((m: RankedMoment) => m.timestamp || m.excerpt);
+        setAiResults(mapped);
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+        setAiError(err instanceof Error ? err.message : "Semantic search failed.");
+        setAiResults(null);
+      } finally {
+        setAiLoading(false);
+      }
+    }, 350);
+    return () => {
+      ctrl.abort();
+      clearTimeout(handle);
+    };
+  }, [q, lecture.searchIndex]);
+
+  const results: RankedMoment[] =
+    aiResults && aiResults.length > 0 ? aiResults : keywordResults;
+  const usingAi = !!aiResults && aiResults.length > 0;
 
   const handleSave = (card: Flashcard, key: string) => {
     onSaveFlashcard?.(card);
