@@ -502,32 +502,12 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
           </div>
         </div>
 
-        {/* Feedback mode toggle */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background p-1 text-xs">
-            <span className="px-2 text-muted-foreground">Feedback:</span>
-            {(["immediate", "end"] as FeedbackMode[]).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setFeedbackMode(mode)}
-                className={cn(
-                  "rounded-md px-3 py-1 font-medium transition-colors",
-                  feedbackMode === mode
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {mode === "immediate" ? "Immediate" : "End of Quiz"}
-              </button>
-            ))}
+        {feedbackMode === "end" && (
+          <div className="mt-4 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-primary" />
+            Answers will be reviewed in one summary at the end.
           </div>
-          {feedbackMode === "end" && (
-            <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3 text-primary" />
-              Answers will be reviewed in one summary at the end.
-            </span>
-          )}
-        </div>
+        )}
 
         {/* Mastery bar */}
         <div className="mt-5 space-y-2">
