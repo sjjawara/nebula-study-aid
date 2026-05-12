@@ -276,13 +276,51 @@ const Index = () => {
           </section>
         )}
 
-        {stage === "results" && lecture && (
+        {stage === "results" && lecture && displayLecture && (
           <section className="space-y-8">
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wider text-primary font-medium">Lecture loaded</p>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{lecture.title}</h2>
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <p className="text-xs uppercase tracking-wider text-primary font-medium">Lecture loaded</p>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{displayLecture.title}</h2>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={language}
+                  onValueChange={(v) => handleLanguageChange(v as Language)}
+                  disabled={translating}
+                >
+                  <SelectTrigger className="h-9 w-[140px] bg-card">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGES.map((l) => (
+                      <SelectItem key={l} value={l}>
+                        {l}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {translating && (
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                )}
+              </div>
             </div>
 
+            {translateError && (
+              <p className="text-xs text-destructive">{translateError}</p>
+            )}
+
+            {translating && (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Translating to {language}...
+                </p>
+              </div>
+            )}
+
+            {!translating && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6 bg-card border border-border h-12 p-1">
                 <TabsTrigger value="outline">Outline</TabsTrigger>
