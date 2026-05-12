@@ -28,11 +28,45 @@ export const questionLeaksAnswer = (question: string, answer: string): boolean =
   return ansTokens.length >= 3 && overlap / ansTokens.length >= 0.7;
 };
 
+/** Vague / non-testable phrasings we never want appearing in a question or claim. */
+const VAGUE_PATTERNS: RegExp[] = [
+  /\bthe following statement\b/i,
+  /\bthis is correct\b/i,
+  /\bthis statement\b/i,
+  /\bwas (this|it|that|the following) covered\b/i,
+  /\bcovered in (the )?lecture\b/i,
+  /\bmentioned in (the )?lecture\b/i,
+  /\bdiscussed in (the )?lecture\b/i,
+  /\baccording to (the )?lecture\b/i,
+];
+
+const isVague = (text: string): boolean =>
+  VAGUE_PATTERNS.some((re) => re.test(text));
+
+/**
+ * True if the text reads like a comma-separated list of topics/keywords
+ * rather than a real question or claim (e.g. "Computational thinking, Python
+ * programming, code organization, ...").
+ */
+const isTopicList = (text: string): boolean => {
+  const t = text.trim();
+  const commas = (t.match(/,/g) || []).length;
+  if (commas < 2) return false;
+  const hasSentenceVerb = /\b(is|are|was|were|do|does|did|have|has|can|should|would|will|means|requires|describes|defines|happens|occurs|explains|involves|uses|allows|enables)\b/i.test(t);
+  const hasQuestionWord = /\b(what|why|how|when|where|which|who)\b/i.test(t);
+  const endsWithQuestion = /\?\s*$/.test(t);
+  return !hasSentenceVerb && !hasQuestionWord && !endsWithQuestion;
+};
+
+const wordCount = (text: string): number =>
+  text.trim().split(/\s+/).filter(Boolean).length;
+
 /** True if a string reads as a single, atomic claim (good for True/False). */
 export const isSingleClaim = (text: string): boolean => {
   const t = text.trim();
   if (!t) return false;
   if (t.length > 220) return false;
+  if (isVague(t) || isTopicList(t)) return false;
   if (/[;:]|\b(and also|as well as|whereas|however)\b/i.test(t)) return false;
   // More than two sentences = compound
   const sentences = t.split(/(?<=[.!?])\s+/).filter(Boolean);
@@ -43,11 +77,14 @@ export const isSingleClaim = (text: string): boolean => {
   return true;
 };
 
-/** A flashcard is "clean" if the stem doesn't leak the answer and both sides are non-trivial. */
+/** A flashcard is "clean" if the stem is a real, specific question and the answer is non-trivial. */
 export const isCleanFlashcard = (card: Flashcard): boolean => {
   const q = card.question?.trim() ?? "";
   const a = card.answer?.trim() ?? "";
-  if (q.length < 8 || a.length < 2) return false;
+  if (a.length < 2) return false;
+  // Question must be a substantive prompt — at least 15 words.
+  if (wordCount(q) < 15) return false;
+  if (isVague(q) || isTopicList(q)) return false;
   if (questionLeaksAnswer(q, a)) return false;
   return true;
 };
