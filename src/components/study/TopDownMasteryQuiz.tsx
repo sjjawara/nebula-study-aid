@@ -385,10 +385,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Defend your reasoning
+                  {t("Defend your reasoning")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Why is this the correct explanation, and not an alternative? Justify it.
+                  {t("Why is this the correct explanation, and not an alternative? Justify it.")}
                 </p>
               </div>
               <BloomBadge level="Evaluate" />
@@ -396,7 +396,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <Textarea
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
-              placeholder="Write your justification here..."
+              placeholder={t("Write your justification here...")}
               className="min-h-[140px] resize-none bg-background"
             />
             {submitError && (
@@ -409,11 +409,11 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                     onClick={requestScaffold}
                     className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
                   >
-                    I'm stuck, break it down for me
+                    {t("I'm stuck, break it down for me")}
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  Struggling a bit longer improves retention.
+                  {t("Struggling a bit longer improves retention.")}
                 </TooltipContent>
               </Tooltip>
               <Button
@@ -424,11 +424,11 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Evaluating...
+                    {t("Evaluating...")}
                   </>
                 ) : (
                   <>
-                    Submit Justification
+                    {t("Submit Justification")}
                     <ChevronRight className="h-4 w-4" />
                   </>
                 )}
