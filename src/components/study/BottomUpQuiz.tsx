@@ -320,6 +320,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               );
             })}
           </div>
+          {showImmediate && mcChoice !== null && (
+            <FeedbackPanel
+              correct={mcCorrect}
+              bloom="Apply"
+              why={`"${card.answer}" is the strongest answer because it's the option grounded in the lecture. The distractors are plausible-sounding misconceptions drawn from related material.`}
+              correctAnswer={card.answer}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}
@@ -351,6 +359,13 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             placeholder="List the parts and how they connect..."
             className="min-h-[110px] resize-none bg-background"
           />
+          {showImmediate && analyzeText.trim().length >= 12 && (
+            <FeedbackPanel
+              correct={null}
+              bloom="Analyze"
+              why={`A strong Analyze response identifies the parts and how they connect. The grounding answer: ${card.answer}`}
+            />
+          )}
           <div className="flex justify-end">
             <Button
               onClick={advance}
