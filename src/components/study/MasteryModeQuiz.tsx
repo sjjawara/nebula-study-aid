@@ -176,7 +176,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
     setWasCorrect(correct);
     setStreak((s) => (correct ? s + 1 : 0));
     setScore((s) => {
-      const next = s + (correct ? STEP_CORRECT : STEP_WRONG);
+      const next = s + (correct ? stepCorrect : STEP_WRONG);
       return Math.max(0, Math.min(BLOOM_ORDER.length - 0.001, next));
     });
 
