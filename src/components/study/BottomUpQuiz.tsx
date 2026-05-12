@@ -347,10 +347,10 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-foreground">
-                Break it down
+                {t("Break it down")}
               </p>
               <p className="text-xs text-muted-foreground">
-                What underlying concepts and relationships make this answer correct?
+                {t("What underlying concepts and relationships make this answer correct?")}
               </p>
             </div>
             <BloomBadge level="Analyze" />
@@ -358,7 +358,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           <Textarea
             value={analyzeText}
             onChange={(e) => setAnalyzeText(e.target.value)}
-            placeholder="List the parts and how they connect..."
+            placeholder={t("List the parts and how they connect...")}
             className="min-h-[110px] resize-none bg-background"
           />
           {showImmediate && analyzeText.trim().length >= 12 && (
@@ -374,7 +374,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={analyzeText.trim().length < 12}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
