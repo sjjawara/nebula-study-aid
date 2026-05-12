@@ -453,7 +453,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
   if (!card) {
     return (
       <div className="rounded-2xl border border-border bg-card p-10 text-center">
-        <p className="text-sm text-muted-foreground">Loading questions…</p>
+        <p className="text-sm text-muted-foreground">{t("Loading questions…")}</p>
       </div>
     );
   }
