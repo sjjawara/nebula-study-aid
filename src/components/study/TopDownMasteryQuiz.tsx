@@ -10,7 +10,7 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
-import type { Lecture, Flashcard } from "@/lib/mockData";
+import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { BloomBadge } from "@/components/BloomBadge";
@@ -72,21 +72,15 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-const pickQuestion = (lecture: Lecture): Flashcard | null => {
-  if (!lecture.flashcards.length) return null;
-  const order = ["Evaluate", "Analyze", "Apply", "Understand", "Remember", "Create"];
-  const sorted = [...lecture.flashcards].sort(
-    (a, b) => order.indexOf(a.bloom) - order.indexOf(b.bloom),
-  );
-  return sorted[0];
-};
+interface Props {
+  lecture: Lecture;
+  card: Flashcard;
+  onNext?: () => void;
+  onExit?: () => void;
+}
 
-export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
-  const [seed, setSeed] = useState(0);
-  const card = useMemo(() => pickQuestion(lecture), [lecture, seed]);
-
+export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit }: Props) => {
   const distractors = useMemo(() => {
-    if (!card) return [] as string[];
     const others = lecture.flashcards
       .filter((f) => f.answer !== card.answer)
       .map((f) => f.answer);
@@ -94,7 +88,7 @@ export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
   }, [lecture, card]);
 
   const mcOptions = useMemo(
-    () => (card ? shuffle([card.answer, ...distractors]) : []),
+    () => shuffle([card.answer, ...distractors]),
     [card, distractors],
   );
 
@@ -110,17 +104,7 @@ export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [demonstratedLevel, setDemonstratedLevel] = useState<Flashcard["bloom"]>("Evaluate");
-
-  if (!card) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-10 text-center">
-        <p className="text-sm text-muted-foreground">
-          No questions available for this lecture yet.
-        </p>
-      </div>
-    );
-  }
+  const [demonstratedLevel, setDemonstratedLevel] = useState<BloomLevel>("Evaluate");
 
   const requestScaffold = () => setConfirmOpen(true);
 
@@ -158,19 +142,6 @@ export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const reset = () => {
-    setSeed((s) => s + 1);
-    setStage("l5");
-    setUnlocked(new Set(["l5"]));
-    setJustification("");
-    setBrainstorm("");
-    setMcChoice(null);
-    setTfChoice(null);
-    setFeedback(null);
-    setSubmitError(null);
-    setDemonstratedLevel("Evaluate");
   };
 
   return (
@@ -325,7 +296,7 @@ export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
           </div>
         </Section>
 
-        {/* Level 5 — Justify (original hard question, stays at bottom) */}
+        {/* Level 5 — Justify */}
         <Section show={unlocked.has("l5") && stage !== "done"}>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -421,11 +392,18 @@ export const TopDownMasteryQuiz = ({ lecture }: { lecture: Lecture }) => {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end">
-              <Button variant="secondary" onClick={reset}>
-                <RefreshCw className="h-4 w-4" />
-                Try another question
-              </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              {onExit && (
+                <Button variant="ghost" onClick={onExit}>
+                  Exit
+                </Button>
+              )}
+              {onNext && (
+                <Button onClick={onNext} className="bg-gradient-primary">
+                  <RefreshCw className="h-4 w-4" />
+                  Next question
+                </Button>
+              )}
             </div>
           </div>
         )}

@@ -8,7 +8,8 @@ import { OutlineTab } from "@/components/study/OutlineTab";
 import { SummariesTab } from "@/components/study/SummariesTab";
 import { FlashcardsTab } from "@/components/study/FlashcardsTab";
 import { SearchTab } from "@/components/study/SearchTab";
-import { TopDownMasteryQuiz } from "@/components/study/TopDownMasteryQuiz";
+import { QuizTab } from "@/components/study/QuizTab";
+import type { Flashcard } from "@/lib/mockData";
 
 type Stage = "input" | "loading" | "results" | "error";
 
@@ -28,6 +29,8 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const elapsedRef = useRef<number>(0);
   const [elapsed, setElapsed] = useState(0);
+  const [activeTab, setActiveTab] = useState("outline");
+  const [quizSeed, setQuizSeed] = useState<Flashcard | null>(null);
 
   useEffect(() => {
     if (stage !== "loading") return;
@@ -206,7 +209,7 @@ const Index = () => {
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{lecture.title}</h2>
             </div>
 
-            <Tabs defaultValue="outline" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-5 bg-card border border-border h-12 p-1">
                 <TabsTrigger value="outline">Outline</TabsTrigger>
                 <TabsTrigger value="summaries">Summaries</TabsTrigger>
@@ -221,7 +224,13 @@ const Index = () => {
                 <SummariesTab lecture={lecture} />
               </TabsContent>
               <TabsContent value="flashcards" className="mt-6">
-                <FlashcardsTab lecture={lecture} />
+                <FlashcardsTab
+                  lecture={lecture}
+                  onQuizCard={(card) => {
+                    setQuizSeed(card);
+                    setActiveTab("quiz");
+                  }}
+                />
               </TabsContent>
               <TabsContent value="search" className="mt-6">
                 <SearchTab
@@ -235,7 +244,11 @@ const Index = () => {
                 />
               </TabsContent>
               <TabsContent value="quiz" className="mt-6">
-                <TopDownMasteryQuiz lecture={lecture} />
+                <QuizTab
+                  lecture={lecture}
+                  initialCard={quizSeed}
+                  onConsumedInitial={() => setQuizSeed(null)}
+                />
               </TabsContent>
             </Tabs>
           </section>
