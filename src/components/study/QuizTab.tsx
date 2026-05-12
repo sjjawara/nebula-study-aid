@@ -155,6 +155,20 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   };
 
   const next = () => {
+    if (customLecture) {
+      // Custom quiz: walk through pool, exit when count reached.
+      if (customAnswered >= customLecture.flashcards.length) {
+        setCustomLecture(null);
+        setCustomAnswered(0);
+        setCard(null);
+        return;
+      }
+      const idx = customAnswered % customLecture.flashcards.length;
+      setCard(customLecture.flashcards[idx]);
+      setCustomAnswered((n) => n + 1);
+      setSessionKey((k) => k + 1);
+      return;
+    }
     const n = pickRandom(lecture, card ?? undefined);
     if (!n) return;
     setCard(n);
@@ -169,6 +183,8 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const exit = () => {
     setCard(null);
     setMasteryActive(false);
+    setCustomLecture(null);
+    setCustomAnswered(0);
   };
 
   const ModePill = ({
