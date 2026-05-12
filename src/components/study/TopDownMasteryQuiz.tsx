@@ -354,10 +354,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  What concepts are relevant here?
+                  {t("What concepts are relevant here?")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Free-write the ideas, terms, or relationships you'd need.
+                  {t("Free-write the ideas, terms, or relationships you'd need.")}
                 </p>
               </div>
               <BloomBadge level="Analyze" />
@@ -365,13 +365,13 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <Textarea
               value={brainstorm}
               onChange={(e) => setBrainstorm(e.target.value)}
-              placeholder="List the concepts that come to mind..."
+              placeholder={t("List the concepts that come to mind...")}
               className="min-h-[100px] resize-none bg-background"
             />
             {stage === "l4" && (
               <div className="flex justify-end">
                 <Button variant="secondary" onClick={requestScaffold}>
-                  Still stuck — show options
+                  {t("Still stuck — show options")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
