@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare, ListOrdered } from "lucide-react";
+import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare, ListOrdered, ScrollText } from "lucide-react";
+import { ProofModeQuiz } from "./ProofModeQuiz";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
