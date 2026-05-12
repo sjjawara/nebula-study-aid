@@ -25,9 +25,15 @@ export const bloomLevelDescriptions: Record<BloomLevel, string> = {
 
 export const tooltipCopy = {
   bloomTaxonomy:
-    "Bloom's Revised Taxonomy classifies thinking into 6 levels from basic recall (Remember) to complex creation (Create). Higher levels require deeper understanding.",
+    "Bloom's Revised Taxonomy (Anderson & Krathwohl, 2001) classifies thinking into 6 levels from basic recall (Remember) to complex creation (Create). Higher levels require deeper understanding.",
+  bloomTaxonomyProfile:
+    "Bloom's Revised Taxonomy (Anderson & Krathwohl, 2001) is a hierarchical framework classifying cognitive learning into six levels: Remember, Understand, Apply, Analyze, Evaluate, and Create. Originally developed by Benjamin Bloom in 1956 and updated in 2001, it is widely used by educators to design curricula and assessments that develop higher-order thinking skills.",
+  bloomTaxonomyQuiz:
+    "Bloom's Revised Taxonomy (Anderson & Krathwohl, 2001) classifies thinking into six cognitive levels from basic recall to complex creation. NebulaLearn calibrates every quiz question to the Bloom's level of the source content — so you're always being tested at the right cognitive depth.",
+  feedbackMode:
+    "Immediate feedback accelerates learning by correcting misconceptions before they solidify — research shows it improves retention by up to 25% compared to delayed feedback (Hattie & Timperley, 2007). End of Quiz mode reduces interruptions and simulates exam conditions, helping students build focus and self-assessment skills.",
   topDown:
-    "Based on Manu Kapur's research: struggling with hard questions before easier ones leads to better long-term retention than starting easy.",
+    "Productive Failure is a learning design developed by Dr. Manu Kapur (ETH Zürich). His research found that students who attempt complex problems before receiving instruction outperform those taught conventionally — developing deeper conceptual understanding and better transfer skills. Source: Kapur, M. (2016). Examining Productive Failure, Constructive Failure, and Instructive Failure. Educational Psychologist, 51(2).",
   bottomUp:
     "Builds foundational knowledge first, earning your way to higher-order thinking. Best for unfamiliar topics.",
   cognitiveLoad:
