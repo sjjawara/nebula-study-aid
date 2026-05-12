@@ -201,6 +201,29 @@ export const buildTrueFalseStatement = (
   return { question: card.question, statement: falseClaim, correctValue: false };
 };
 
+/**
+ * Clean an explanation/feedback string for display:
+ * - Strip a leading "Why:" / "why -" / "Why -" prefix (any case, any separator).
+ * - Optionally remove a verbatim repetition of the correct answer (it's
+ *   shown separately in the feedback card).
+ */
+export const cleanExplanation = (raw: string, correctAnswer?: string): string => {
+  if (!raw) return "";
+  let out = raw.trim();
+  // Strip leading "why" label, with optional colon/dash/em-dash separator.
+  out = out.replace(/^\s*why\s*[:\-–—]\s*/i, "").trim();
+  if (correctAnswer && correctAnswer.trim().length >= 6) {
+    const ans = correctAnswer.trim();
+    // Remove any standalone repetition of the answer surrounded by optional
+    // quotes/punctuation. Keep the rest of the sentence intact.
+    const escaped = ans.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(`["“”']?${escaped}["“”']?[\\.,;]?\\s*`, "gi");
+    const stripped = out.replace(re, "").trim();
+    if (stripped.length >= 8) out = stripped;
+  }
+  return out;
+};
+
 export const BLOOM_ORDER: BloomLevel[] = [
   "Remember",
   "Understand",

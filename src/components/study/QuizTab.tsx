@@ -134,6 +134,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [stepOrderingCards, setStepOrderingCards] = useState<Flashcard[] | null>(null);
   const [proofMode, setProofMode] = useState(false);
   const [proofCards, setProofCards] = useState<Flashcard[] | null>(null);
+  const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2);
 
   const formulaCount = useMemo(
     () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
@@ -179,12 +180,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const filteredCardCount = useMemo(() => {
     return lecture.flashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
-      customLevels.has(c.bloom) &&
       (!formulaMode || !!c.formula?.trim()) &&
       (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
       (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode, stepOrderingMode, proofMode]);
+  }, [lecture.flashcards, selectedCardKeys, formulaMode, stepOrderingMode, proofMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -209,7 +209,6 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       .filter(
         (c, i) =>
           selectedCardKeys.has(cardKey(c, i)) &&
-          customLevels.has(c.bloom) &&
           (!formulaMode || !!c.formula?.trim()) &&
           (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
           (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
@@ -226,9 +225,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       setSessionKey((k) => k + 1);
       return;
     }
-    const pool = formulaMode
+    // Override each card's bloom level using the user's chosen target levels —
+    // questions are generated AT those cognitive levels regardless of the
+    // source flashcard's original level.
+    const targetLevels = Array.from(customLevels);
+    const overrideBloom = (c: Flashcard, idx: number): Flashcard =>
+      targetLevels.length === 0
+        ? c
+        : { ...c, bloom: targetLevels[idx % targetLevels.length] };
+    const pool = (formulaMode
       ? basePool.map((c, idx) => buildFormulaCard(c, idx))
-      : basePool;
+      : basePool
+    ).map(overrideBloom);
     const customL: Lecture = { ...lecture, flashcards: pool };
     setCustomLecture(customL);
     setCustomAnswered(1);
@@ -385,6 +393,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           lecture={lecture}
           onExit={exit}
           feedbackMode={feedbackMode}
+          questionsPerLevel={questionsPerTopic}
         />
       </div>
     );
@@ -711,10 +720,43 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                   );
                 })()}
 
-                {/* Bloom level filter */}
+                {/* Questions per topic */}
                 <div className="space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {t("Bloom's levels to include")}
+                    {t("Questions per topic")}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground -mt-1">
+                    {t("How many questions to ask before moving on. In Mastery Mode, this is also the number of consecutive correct answers required to level up.")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[1, 2, 3, 5].map((n) => {
+                      const active = questionsPerTopic === n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setQuestionsPerTopic(n)}
+                          className={cn(
+                            "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                            active
+                              ? "border-primary/50 bg-primary text-primary-foreground"
+                              : "border-border bg-background text-foreground hover:border-primary/30",
+                          )}
+                        >
+                          {n}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Bloom level — target levels for question generation */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    {t("Test me at these levels")}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground -mt-1">
+                    {t("Questions will be generated at these cognitive levels, regardless of the source flashcard's original level.")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {BLOOM_LEVELS.map((lvl) => {

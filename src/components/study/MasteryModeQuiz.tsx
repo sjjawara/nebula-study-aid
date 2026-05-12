@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import {
   BLOOM_ORDER,
   buildTrueFalseStatement,
+  cleanExplanation,
   pickCardForLevel,
   pickDistractors,
   shuffle,
@@ -34,6 +35,8 @@ interface Props {
   lecture: Lecture;
   onExit?: () => void;
   feedbackMode?: FeedbackMode;
+  /** Consecutive correct answers required to advance one Bloom level. */
+  questionsPerLevel?: number;
 }
 
 type QType = "tf" | "mcq" | "open";
@@ -45,7 +48,6 @@ const typeForLevel = (l: BloomLevel): QType => {
   return "open";
 };
 
-const STEP_CORRECT = 1 / 3;
 const STEP_WRONG = -1 / 2;
 
 interface AnswerRecord {
@@ -84,7 +86,9 @@ const explanationFor = (record: Pick<AnswerRecord, "qType" | "correctAnswer" | "
   return `A complete answer would land on: ${record.correctAnswer}.`;
 };
 
-export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }: Props) => {
+export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", questionsPerLevel = 2 }: Props) => {
+  // Consecutive correct answers needed to bump up one full Bloom level.
+  const stepCorrect = 1 / Math.max(1, questionsPerLevel);
   const { t } = useT();
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -172,7 +176,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
     setWasCorrect(correct);
     setStreak((s) => (correct ? s + 1 : 0));
     setScore((s) => {
-      const next = s + (correct ? STEP_CORRECT : STEP_WRONG);
+      const next = s + (correct ? stepCorrect : STEP_WRONG);
       return Math.max(0, Math.min(BLOOM_ORDER.length - 0.001, next));
     });
 
@@ -412,7 +416,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                           </p>
                         )}
                         <p className="text-xs text-foreground/80 leading-relaxed pl-6">
-                          {explanationFor(r)}
+                          {cleanExplanation(explanationFor(r), r.correctAnswer)}
                         </p>
                       </div>
                     ))}
@@ -474,7 +478,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
               {t("Question")} {questionNum} · {t("current level:")} {t(currentLevel)}
             </h3>
             <p className="text-xs text-muted-foreground">
-              {t("3 in a row levels you up. One miss drops you back half a level.")}
+              {t("{n} in a row levels you up. One miss drops you back half a level.").replace("{n}", String(questionsPerLevel))}
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -657,11 +661,11 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      {t("Evaluating…")}
+                      {t("Reviewing your response...")}
                     </>
                   ) : (
                     <>
-                      {t("Submit")} <ChevronRight className="h-4 w-4" />
+                      {t("Submit Answer")} <ChevronRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -696,8 +700,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
               <BloomBadge level={lastRecord.level} />
             </div>
             <div className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
-              {explanationFor(lastRecord)}
+              {cleanExplanation(explanationFor(lastRecord), lastRecord.correctAnswer)}
             </div>
             {!wasCorrect && (
               <div className="text-xs text-muted-foreground">

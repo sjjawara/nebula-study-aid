@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
 import { FollowUpQuestions } from "./FollowUpQuestions";
-import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
+import { buildTrueFalseStatement, cleanExplanation, pickDistractors, shuffle } from "@/lib/quizUtils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 
@@ -29,9 +29,10 @@ interface Props {
   onExit?: () => void;
   onSelectFollowUp?: (c: Flashcard) => void;
   feedbackMode?: "immediate" | "end";
+  questionsPerLevel?: number;
 }
 
-export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
+export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate", questionsPerLevel = 2 }: Props) => {
   const { t } = useT();
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
@@ -56,9 +57,15 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
+  // Explicit submit flags for open-ended levels (Understand / Analyze) — feedback
+  // only appears after the user clicks Submit, never on keystroke.
+  const [understandSubmitted, setUnderstandSubmitted] = useState(false);
+  const [analyzeSubmitted, setAnalyzeSubmitted] = useState(false);
 
   const advance = () => {
     setSubmitError(null);
+    setUnderstandSubmitted(false);
+    setAnalyzeSubmitted(false);
     if (levelIdx < LEVELS.length - 1) setLevelIdx((i) => i + 1);
     else setDone(true);
   };
@@ -132,7 +139,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <BloomBadge level={bloom} />
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="font-medium text-foreground">{t("Why:")}</span> {why}
+        {cleanExplanation(why, correctAnswer)}
       </p>
       {correct === false && correctAnswer && (
         <p className="text-xs text-muted-foreground">
@@ -258,22 +265,29 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             onChange={(e) => setUnderstandText(e.target.value)}
             placeholder={t("In a sentence or two...")}
             className="min-h-[90px] resize-none bg-background"
+            disabled={understandSubmitted}
           />
-          {showImmediate && understandText.trim().length >= 8 && (
+          {showImmediate && understandSubmitted && (
             <FeedbackPanel
               correct={null}
               bloom="Understand"
               why={`A strong Understand-level explanation restates the idea in your own words. The reference idea: ${card.answer}`}
             />
           )}
-          <div className="flex justify-end">
-            <Button
-              onClick={advance}
-              disabled={understandText.trim().length < 8}
-              className="bg-gradient-primary"
-            >
-              {t("Next level")} <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-end gap-2">
+            {!understandSubmitted ? (
+              <Button
+                onClick={() => setUnderstandSubmitted(true)}
+                disabled={understandText.trim().length < 8}
+                className="bg-gradient-primary"
+              >
+                {t("Submit Answer")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={advance} className="bg-gradient-primary">
+                {t("Next level")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -360,22 +374,29 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
             onChange={(e) => setAnalyzeText(e.target.value)}
             placeholder={t("List the parts and how they connect...")}
             className="min-h-[110px] resize-none bg-background"
+            disabled={analyzeSubmitted}
           />
-          {showImmediate && analyzeText.trim().length >= 12 && (
+          {showImmediate && analyzeSubmitted && (
             <FeedbackPanel
               correct={null}
               bloom="Analyze"
               why={`A strong Analyze response identifies the parts and how they connect. The grounding answer: ${card.answer}`}
             />
           )}
-          <div className="flex justify-end">
-            <Button
-              onClick={advance}
-              disabled={analyzeText.trim().length < 12}
-              className="bg-gradient-primary"
-            >
-              {t("Next level")} <ChevronRight className="h-4 w-4" />
-            </Button>
+          <div className="flex justify-end gap-2">
+            {!analyzeSubmitted ? (
+              <Button
+                onClick={() => setAnalyzeSubmitted(true)}
+                disabled={analyzeText.trim().length < 12}
+                className="bg-gradient-primary"
+              >
+                {t("Submit Answer")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={advance} className="bg-gradient-primary">
+                {t("Next level")} <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -407,11 +428,11 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {t("Evaluating...")}
+                  {t("Reviewing your response...")}
                 </>
               ) : (
                 <>
-                  {t("Submit & finish")} <ChevronRight className="h-4 w-4" />
+                  {t("Submit Answer")} <ChevronRight className="h-4 w-4" />
                 </>
               )}
             </Button>

@@ -30,7 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
+import { buildTrueFalseStatement, cleanExplanation, pickDistractors, shuffle } from "@/lib/quizUtils";
 import { useT } from "@/lib/i18n";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
@@ -239,8 +239,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                     <BloomBadge level="Remember" />
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
-                    The lecture grounds the claim "{card.answer}". This Remember-level check confirms recognition.
+                    {cleanExplanation(`The lecture grounds the claim "${card.answer}". This Remember-level check confirms recognition.`, card.answer)}
                   </p>
                   {tfChoice !== tf.correctValue && (
                     <p className="text-xs text-muted-foreground">
@@ -327,8 +326,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                   <BloomBadge level="Apply" />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
-                  "{card.answer}" is grounded directly in the lecture; the other options are plausible-sounding distractors drawn from related material.
+                  {cleanExplanation(`"${card.answer}" is grounded directly in the lecture; the other options are plausible-sounding distractors drawn from related material.`, card.answer)}
                 </p>
                 {mcChoice !== card.answer && (
                   <p className="text-xs text-muted-foreground">
@@ -424,11 +422,11 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {t("Evaluating...")}
+                    {t("Reviewing your response...")}
                   </>
                 ) : (
                   <>
-                    {t("Submit Justification")}
+                    {t("Submit Answer")}
                     <ChevronRight className="h-4 w-4" />
                   </>
                 )}
