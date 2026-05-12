@@ -217,7 +217,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
                 ))}
               </ol>
               <div className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-foreground">
-                <p className="mb-1 font-medium text-primary">Annotation</p>
+                <p className="mb-1 font-medium text-primary">{t("Annotation")}</p>
                 <p className="leading-relaxed">{it.explanation}</p>
               </div>
             </div>
@@ -226,7 +226,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         <div className="flex justify-end">
           <Button onClick={onExit} className="bg-gradient-primary">
             <Sparkles className="h-4 w-4" />
-            Done
+            {t("Done")}
           </Button>
         </div>
       </div>
@@ -238,18 +238,18 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
       <div className="flex items-center justify-between">
         <div className="inline-flex items-center gap-2 rounded-lg border border-bloom-evaluate/40 bg-bloom-evaluate/5 px-3 py-1.5 text-xs font-medium text-bloom-evaluate">
           <ScrollText className="h-3.5 w-3.5" />
-          Proof Mode — {idx + 1} / {items.length}
+          {t("Proof Mode —")} {idx + 1} / {items.length}
         </div>
         <Button variant="ghost" size="sm" onClick={onExit}>
           <X className="h-4 w-4" />
-          Exit
+          {t("Exit")}
         </Button>
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-medium uppercase tracking-wider text-primary">
-            {typeLabel[item.type]}
+            {t(typeLabel[item.type])}
           </p>
           <BloomBadge level={item.card.bloom} />
         </div>
