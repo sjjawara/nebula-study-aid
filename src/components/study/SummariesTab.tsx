@@ -24,13 +24,17 @@ const LEVEL_TIPS: Record<BloomLevel, string> = {
     "These are the highest-order concepts in the lecture. After quizzing, try adding your own nodes to the Mind Map.",
 };
 
-const LEVEL_TOOLS: Record<BloomLevel, { label: string; tab: StudyTabId }[]> = {
+type ToolAction =
+  | { label: string; tab: StudyTabId }
+  | { label: string; section: "profile" | "takeaways" | "summary"; depth?: "short" | "medium" | "full" };
+
+const LEVEL_TOOLS: Record<BloomLevel, ToolAction[]> = {
   Remember: [
     { label: "Open Flashcards", tab: "flashcards" },
-    { label: "Read 90-sec summary", tab: "summaries" },
+    { label: "Read 90-sec summary", section: "summary", depth: "short" },
   ],
   Understand: [
-    { label: "Read full summary", tab: "summaries" },
+    { label: "Read full summary", section: "summary", depth: "full" },
     { label: "Browse Outline", tab: "outline" },
   ],
   Apply: [
@@ -438,18 +442,33 @@ export const SummariesTab = ({
                 {t("Recommended Tools for This Level")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {LEVEL_TOOLS[activeLevel].map((tool) => (
-                  <Button
-                    key={tool.label}
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => onNavigate?.(tool.tab)}
-                    disabled={!onNavigate}
-                  >
-                    {t(tool.label)}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                ))}
+                {LEVEL_TOOLS[activeLevel].map((tool) => {
+                  const isInternal = "section" in tool;
+                  return (
+                    <Button
+                      key={tool.label}
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        if (isInternal) {
+                          setSection(tool.section);
+                          if (tool.section === "summary" && tool.depth) {
+                            setSummaryDepth(tool.depth);
+                          }
+                          if (typeof window !== "undefined") {
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }
+                        } else {
+                          onNavigate?.(tool.tab);
+                        }
+                      }}
+                      disabled={!isInternal && !onNavigate}
+                    >
+                      {t(tool.label)}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           </div>
