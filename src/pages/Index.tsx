@@ -74,6 +74,9 @@ const Index = () => {
   const [stepIndex, setStepIndex] = useState(0);
   const [lecture, setLecture] = useState<Lecture | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<
+    "private" | "unlisted" | "no-captions" | "not-found" | "generic"
+  >("generic");
   const elapsedRef = useRef<number>(0);
   const [elapsed, setElapsed] = useState(0);
   const [activeTab, setActiveTab] = useState("outline");
