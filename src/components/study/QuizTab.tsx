@@ -819,48 +819,87 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                         .replace("{selected}", String(selectedCardKeys.size))
                         .replace("{total}", String(lecture.flashcards.length))}
                     </p>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSelectedCardKeys(
-                            new Set(lecture.flashcards.map((c, i) => cardKey(c, i))),
-                          )
-                        }
-                        className="text-xs text-primary hover:underline"
-                      >
-                        {t("Select all")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedCardKeys(new Set())}
-                        className="text-xs text-muted-foreground hover:underline"
-                      >
-                        {t("Clear")}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCardKeys(new Set())}
+                      className="text-xs text-muted-foreground hover:underline"
+                    >
+                      {t("Clear all")}
+                    </button>
                   </div>
+
+                  <FlashcardFilters
+                    filters={cardListFilters}
+                    visibleCount={lecture.flashcards.filter((c) => cardListFilters.matches(c)).length}
+                    totalCount={lecture.flashcards.length}
+                  />
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedCardKeys((prev) => {
+                          const next = new Set(prev);
+                          lecture.flashcards.forEach((c, i) => {
+                            if (cardListFilters.matches(c)) next.add(cardKey(c, i));
+                          });
+                          return next;
+                        })
+                      }
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {t("Select all visible")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedCardKeys((prev) => {
+                          const next = new Set(prev);
+                          lecture.flashcards.forEach((c, i) => {
+                            if (cardListFilters.matches(c)) next.delete(cardKey(c, i));
+                          });
+                          return next;
+                        })
+                      }
+                      className="text-xs text-muted-foreground hover:underline"
+                    >
+                      {t("Deselect all visible")}
+                    </button>
+                  </div>
+
                   <div className="max-h-56 overflow-y-auto rounded-md border border-border divide-y divide-border">
-                    {lecture.flashcards.map((c, i) => {
-                      const key = cardKey(c, i);
-                      const checked = selectedCardKeys.has(key);
-                      return (
-                        <label
-                          key={key}
-                          className="flex cursor-pointer items-start gap-3 px-3 py-2 hover:bg-muted/40"
-                        >
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={() => toggleCard(key)}
-                            className="mt-0.5"
-                          />
-                          <span className="flex-1 text-sm text-foreground/90 line-clamp-2">
-                            {c.question}
-                          </span>
-                          <BloomBadge level={c.bloom} withInfo={false} className="shrink-0" />
-                        </label>
-                      );
-                    })}
+                    {(() => {
+                      const visibleRows = lecture.flashcards
+                        .map((c, i) => ({ c, i }))
+                        .filter(({ c }) => cardListFilters.matches(c));
+                      if (visibleRows.length === 0) {
+                        return (
+                          <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+                            {t("No flashcards match the current filters.")}
+                          </p>
+                        );
+                      }
+                      return visibleRows.map(({ c, i }) => {
+                        const key = cardKey(c, i);
+                        const checked = selectedCardKeys.has(key);
+                        return (
+                          <label
+                            key={key}
+                            className="flex cursor-pointer items-start gap-3 px-3 py-2 hover:bg-muted/40"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleCard(key)}
+                              className="mt-0.5"
+                            />
+                            <span className="flex-1 text-sm text-foreground/90 line-clamp-2">
+                              {c.question}
+                            </span>
+                            <BloomBadge level={c.bloom} withInfo={false} className="shrink-0" />
+                          </label>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
 
