@@ -97,7 +97,7 @@ export const OutlineTab = ({ lecture, videoUrl }: { lecture: Lecture; videoUrl?:
             )}
           </div>
           <BloomBadge level={item.bloom} variant="dots" />
-          <CognitiveLoad value={item.load} />
+          
         </div>
       );
     })}
