@@ -33,9 +33,10 @@ interface Props {
   card: Flashcard;
   onNext?: () => void;
   onExit?: () => void;
+  onSelectFollowUp?: (c: Flashcard) => void;
 }
 
-export const BottomUpQuiz = ({ lecture, card, onNext, onExit }: Props) => {
+export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
