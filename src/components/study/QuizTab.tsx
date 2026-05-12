@@ -155,6 +155,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   // Initialize selected cards on first render / when the lecture changes.
   useEffect(() => {
     setSelectedCardKeys(new Set(lecture.flashcards.map((c, i) => cardKey(c, i))));
+    setCustomCount(
+      Math.max(MIN_QUESTION_COUNT, Math.min(DEFAULT_QUESTION_COUNT, lecture.flashcards.length || DEFAULT_QUESTION_COUNT)),
+    );
   }, [lecture.title]);
 
   const filteredCardCount = useMemo(() => {
