@@ -10,6 +10,7 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
+import { FollowUpQuestions } from "./FollowUpQuestions";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
