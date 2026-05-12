@@ -1,6 +1,7 @@
 import { bloomColor, type BloomLevel } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, bloomLevelDescriptions } from "@/components/InfoTooltip";
+import { useT } from "@/lib/i18n";
 
 const bloomDots: Record<BloomLevel, number> = {
   Remember: 1,
