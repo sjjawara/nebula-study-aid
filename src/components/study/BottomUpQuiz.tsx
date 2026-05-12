@@ -282,9 +282,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="animate-fade-in rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-foreground">Pick the best answer</p>
+              <p className="text-sm font-medium text-foreground">{t("Pick the best answer")}</p>
               <p className="text-xs text-muted-foreground">
-                Apply what you know to choose the right option.
+                {t("Apply what you know to choose the right option.")}
               </p>
             </div>
             <BloomBadge level="Apply" />
@@ -336,7 +336,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               disabled={!mcCorrect}
               className="bg-gradient-primary"
             >
-              Next level <ChevronRight className="h-4 w-4" />
+              {t("Next level")} <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
