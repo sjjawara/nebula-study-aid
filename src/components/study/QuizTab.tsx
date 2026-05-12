@@ -121,9 +121,15 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [customLecture, setCustomLecture] = useState<Lecture | null>(null);
   const [customAnswered, setCustomAnswered] = useState(0);
   const [formulaMode, setFormulaMode] = useState(false);
+  const [stepOrderingMode, setStepOrderingMode] = useState(false);
+  const [stepOrderingCards, setStepOrderingCards] = useState<Flashcard[] | null>(null);
 
   const formulaCount = useMemo(
     () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
+    [lecture.flashcards],
+  );
+  const stepCardCount = useMemo(
+    () => lecture.flashcards.filter((c) => (c.steps?.length ?? 0) >= 2).length,
     [lecture.flashcards],
   );
 
