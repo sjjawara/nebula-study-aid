@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Loader2, Sparkles, Lightbulb } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Loader2, Sparkles, Lightbulb } from "lucide-react";
 import type { BloomLevel } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 
@@ -11,12 +11,12 @@ const stages = [
 
 const tips: { title: string; body: string }[] = [
   { title: "The Big Picture", body: "Bloom's Revised Taxonomy is a framework that classifies thinking into six levels, from basic recall to complex creation. Not all learning is equal — memorizing a formula is fundamentally different from knowing when to use it. NebulaLearn uses this framework to map every moment of your lecture to the type of thinking it requires." },
-  { title: "Remember", body: "Remember is the foundation — recalling facts, definitions, and terminology. In a biology class, this is knowing that mitosis produces two identical daughter cells. In linear algebra, it's recalling that a matrix is invertible if its determinant is non-zero. This is where studying usually starts, but it's only the beginning." },
-  { title: "Understand", body: "Understand means explaining concepts in your own words. In chemistry, it's not just knowing that ionic bonds form — it's explaining why sodium gives up an electron to chlorine. In economics, it's describing why supply curves slope upward. You understand something when you can teach it simply." },
-  { title: "Apply", body: "Apply means using knowledge to solve a new problem. In calculus, you're not just remembering the chain rule — you're using it to differentiate a composite function you've never seen before. In computer science, it's implementing a sorting algorithm from its description. Application is where understanding becomes skill." },
-  { title: "Analyze", body: "Analyze means breaking something down to examine its structure and relationships. In literature, it's identifying how an author's word choice creates tension. In physics, it's comparing Newton's laws across different reference frames. In a proof-based math course, it's examining why each step follows logically from the last." },
-  { title: "Evaluate", body: "Evaluate means making informed judgments. In statistics, it's critiquing whether a study's methodology supports its conclusions. In engineering, it's defending why one design approach is safer than another given specific constraints. Evaluation requires you to apply criteria — not just know them, but use them to judge." },
-  { title: "Create", body: "Create is the highest level — producing something original by synthesizing what you know. In architecture, it's designing a structure that meets competing constraints. In mathematics, it's constructing a novel proof. In a capstone course, it's building a system from scratch. Creation is the goal of deep learning." },
+  { title: "Bloom's Revised Taxonomy Level 1: Remember", body: "Remember is the foundation — recalling facts, definitions, and terminology. In a biology class, this is knowing that mitosis produces two identical daughter cells. In linear algebra, it's recalling that a matrix is invertible if its determinant is non-zero. This is where studying usually starts, but it's only the beginning." },
+  { title: "Bloom's Revised Taxonomy Level 2: Understand", body: "Understand means explaining concepts in your own words. In chemistry, it's not just knowing that ionic bonds form — it's explaining why sodium gives up an electron to chlorine. In economics, it's describing why supply curves slope upward. You understand something when you can teach it simply." },
+  { title: "Bloom's Revised Taxonomy Level 3: Apply", body: "Apply means using knowledge to solve a new problem. In calculus, you're not just remembering the chain rule — you're using it to differentiate a composite function you've never seen before. In computer science, it's implementing a sorting algorithm from its description. Application is where understanding becomes skill." },
+  { title: "Bloom's Revised Taxonomy Level 4: Analyze", body: "Analyze means breaking something down to examine its structure and relationships. In literature, it's identifying how an author's word choice creates tension. In physics, it's comparing Newton's laws across different reference frames. In a proof-based math course, it's examining why each step follows logically from the last." },
+  { title: "Bloom's Revised Taxonomy Level 5: Evaluate", body: "Evaluate means making informed judgments. In statistics, it's critiquing whether a study's methodology supports its conclusions. In engineering, it's defending why one design approach is safer than another given specific constraints. Evaluation requires you to apply criteria — not just know them, but use them to judge." },
+  { title: "Bloom's Revised Taxonomy Level 6: Create", body: "Create is the highest level — producing something original by synthesizing what you know. In architecture, it's designing a structure that meets competing constraints. In mathematics, it's constructing a novel proof. In a capstone course, it's building a system from scratch. Creation is the goal of deep learning." },
   { title: "Why It Matters for You", body: "Most students study all lecture content the same way. But a lecture on ionic bonding has Remember-level moments (what is an ionic bond), Understand-level moments (why does it form), and Analyze-level moments (how does it compare to covalent bonding). NebulaLearn identifies each one so you can study smarter — not longer." },
   { title: "Cognitive Load", body: "Cognitive Load Theory, developed by John Sweller, explains why some content feels harder to process than others. High cognitive load moments — dense terminology, abstract concepts, multiple simultaneous ideas — require more mental effort. NebulaLearn flags these moments in your outline so you know exactly where to slow down." },
   { title: "How NebulaLearn Uses This", body: "Your lecture is being processed by three AI agents right now. Agent 1 extracts and structures the transcript. Agent 2 classifies every segment using Bloom's Taxonomy and Cognitive Load Theory. Agent 3 builds your personalized study environment — flashcards calibrated to the right cognitive level, summaries at three depths, and a quiz system that matches how your brain actually learns." },
@@ -40,6 +40,7 @@ interface Props {
 export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
   const [tipIdx, setTipIdx] = useState(0);
   const [fade, setFade] = useState(true);
+  const [restartKey, setRestartKey] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -50,7 +51,17 @@ export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
       }, 350);
     }, 10000);
     return () => clearInterval(id);
-  }, []);
+  }, [restartKey]);
+
+  const goToTip = (next: number) => {
+    const target = ((next % tips.length) + tips.length) % tips.length;
+    setFade(false);
+    setTimeout(() => {
+      setTipIdx(target);
+      setFade(true);
+    }, 200);
+    setRestartKey((k) => k + 1);
+  };
 
   // Pyramid lights up progressively while Agent 2 (stepIndex === 1) runs,
   // then stays fully lit afterwards.
@@ -151,14 +162,32 @@ export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
                 <Lightbulb className="h-3.5 w-3.5" />
                 Did you know?
               </div>
-              <span className="text-[11px] text-muted-foreground tabular-nums">
-                {tipIdx + 1} / {tips.length}
-              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => goToTip(tipIdx - 1)}
+                  aria-label="Previous tip"
+                  className="rounded-md p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <span className="text-[11px] text-muted-foreground tabular-nums min-w-[34px] text-center">
+                  {tipIdx + 1} / {tips.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => goToTip(tipIdx + 1)}
+                  aria-label="Next tip"
+                  className="rounded-md p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
             <div
               key={tipIdx}
               className={cn(
-                "transition-opacity duration-300 space-y-2",
+                "transition-opacity duration-300 space-y-2 min-h-[160px]",
                 fade ? "opacity-100" : "opacity-0",
               )}
             >
@@ -171,10 +200,13 @@ export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
             </div>
             <div className="mt-4 flex gap-1.5">
               {tips.map((_, i) => (
-                <span
+                <button
                   key={i}
+                  type="button"
+                  onClick={() => goToTip(i)}
+                  aria-label={`Go to tip ${i + 1}`}
                   className={cn(
-                    "h-1 flex-1 rounded-full transition-all duration-300",
+                    "h-1.5 flex-1 rounded-full transition-all duration-300 hover:bg-primary/60",
                     i === tipIdx ? "bg-primary" : "bg-primary/15",
                   )}
                 />
