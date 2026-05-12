@@ -162,14 +162,32 @@ export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
                 <Lightbulb className="h-3.5 w-3.5" />
                 Did you know?
               </div>
-              <span className="text-[11px] text-muted-foreground tabular-nums">
-                {tipIdx + 1} / {tips.length}
-              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => goToTip(tipIdx - 1)}
+                  aria-label="Previous tip"
+                  className="rounded-md p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <span className="text-[11px] text-muted-foreground tabular-nums min-w-[34px] text-center">
+                  {tipIdx + 1} / {tips.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => goToTip(tipIdx + 1)}
+                  aria-label="Next tip"
+                  className="rounded-md p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
             <div
               key={tipIdx}
               className={cn(
-                "transition-opacity duration-300 space-y-2",
+                "transition-opacity duration-300 space-y-2 min-h-[160px]",
                 fade ? "opacity-100" : "opacity-0",
               )}
             >
@@ -182,10 +200,13 @@ export const LoadingScreen = ({ stepIndex, elapsed }: Props) => {
             </div>
             <div className="mt-4 flex gap-1.5">
               {tips.map((_, i) => (
-                <span
+                <button
                   key={i}
+                  type="button"
+                  onClick={() => goToTip(i)}
+                  aria-label={`Go to tip ${i + 1}`}
                   className={cn(
-                    "h-1 flex-1 rounded-full transition-all duration-300",
+                    "h-1.5 flex-1 rounded-full transition-all duration-300 hover:bg-primary/60",
                     i === tipIdx ? "bg-primary" : "bg-primary/15",
                   )}
                 />
