@@ -17,6 +17,7 @@ import { FollowUpQuestions } from "./FollowUpQuestions";
 import { GoDeeperCard } from "./GoDeeperCard";
 import { buildTrueFalseStatement, cleanExplanation, pickDistractors, shuffle } from "@/lib/quizUtils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useT } from "@/lib/i18n";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
