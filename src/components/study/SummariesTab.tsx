@@ -234,9 +234,7 @@ export const SummariesTab = ({
 
     const tsToSeconds = (ts?: string) => {
       if (!ts) return null;
-      const parts = ts.split(":").map((p) => parseInt(p, 10));
-      if (parts.some((n) => Number.isNaN(n))) return null;
-      return parts.reduce((acc, n) => acc * 60 + n, 0);
+      return timestampToSeconds(ts);
     };
 
     const tokenize = (s: string) =>
