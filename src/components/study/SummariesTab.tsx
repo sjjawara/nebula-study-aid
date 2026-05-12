@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
-import type { Lecture } from "@/lib/mockData";
+import type { Lecture, BloomLevel } from "@/lib/mockData";
+import { bloomColor } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Sparkles, CheckCircle2 } from "lucide-react";
+import { Sparkles, CheckCircle2, Compass, Lightbulb } from "lucide-react";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { BloomBadge } from "@/components/BloomBadge";
 
 const depths = [
   { id: "short", label: "90 seconds" },
@@ -11,8 +13,78 @@ const depths = [
   { id: "full", label: "Full summary" },
 ] as const;
 
+const BLOOM_ORDER: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
+
+const profileFor = (
+  dominant: BloomLevel,
+  pct: Record<BloomLevel, number>,
+): { recommendation: string; tools: string[] } => {
+  const lower = pct.Remember + pct.Understand;
+  const higher = pct.Analyze + pct.Evaluate + pct.Create;
+  if (lower >= 55) {
+    return {
+      recommendation:
+        "This lecture is concept- and definition-heavy. Start by locking in the vocabulary and core facts, then build up to applying them. Repetition matters more than synthesis here.",
+      tools: [
+        "Start with the 90-second summary to map the terrain",
+        "Drill the Flashcards tab for spaced recall",
+        "Run Bottom Up quiz mode to climb from Remember to Apply",
+      ],
+    };
+  }
+  if (higher >= 45) {
+    return {
+      recommendation:
+        "This lecture lives in higher-order territory — judgment, analysis, and trade-offs. Don't try to memorize first; wrestle with the reasoning early so the structure sticks.",
+      tools: [
+        "Open the Mind Map to see how concepts connect",
+        "Use Top Down quiz mode to start from Evaluate and scaffold down",
+        "Read the Full summary to get the argumentative throughline",
+      ],
+    };
+  }
+  if (dominant === "Apply") {
+    return {
+      recommendation:
+        "This lecture is procedure- and worked-example heavy. You'll learn fastest by doing, not just reading — get into practice problems quickly and review feedback closely.",
+      tools: [
+        "Skim the 5-minute summary for the procedure",
+        "Run Mastery Mode quiz — it adapts difficulty as you go",
+        "Use the Outline tab to jump to the worked-example moments",
+      ],
+    };
+  }
+  return {
+    recommendation:
+      "This lecture mixes recall and reasoning fairly evenly. A balanced approach works best — get the core ideas in place, then stress-test them with mixed-difficulty practice.",
+    tools: [
+      "Read the 5-minute summary first",
+      "Use Mastery Mode quiz for an adaptive mix across Bloom's levels",
+      "Revisit Flashcards for any concepts you missed",
+    ],
+  };
+};
+
 export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
   const [depth, setDepth] = useState<typeof depths[number]["id"]>("short");
+
+  const profile = useMemo(() => {
+    const counts: Record<BloomLevel, number> = {
+      Remember: 0, Understand: 0, Apply: 0, Analyze: 0, Evaluate: 0, Create: 0,
+    };
+    for (const o of lecture.outline) counts[o.bloom] = (counts[o.bloom] ?? 0) + 1;
+    const total = lecture.outline.length || 1;
+    const pct: Record<BloomLevel, number> = {
+      Remember: 0, Understand: 0, Apply: 0, Analyze: 0, Evaluate: 0, Create: 0,
+    };
+    (Object.keys(counts) as BloomLevel[]).forEach((k) => {
+      pct[k] = Math.round((counts[k] / total) * 100);
+    });
+    const dominant = (Object.entries(counts) as [BloomLevel, number][])
+      .sort((a, b) => b[1] - a[1])[0][0];
+    const { recommendation, tools } = profileFor(dominant, pct);
+    return { counts, pct, dominant, total, recommendation, tools };
+  }, [lecture.outline]);
 
   const takeaways = useMemo(() => {
     // Prioritize the highest-order chunks: Analyze + Evaluate first.
