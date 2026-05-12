@@ -343,39 +343,7 @@ const Index = () => {
         )}
 
         {stage === "loading" && (
-          <section className="py-20 flex flex-col items-center gap-8">
-            <div className="relative h-16 w-16">
-              <div className="absolute inset-0 rounded-full bg-gradient-primary opacity-30 animate-ping" />
-              <div className="relative h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-                <Sparkles className="h-7 w-7 text-primary-foreground animate-pulse" />
-              </div>
-            </div>
-            <ul className="space-y-3 w-full max-w-sm">
-              {loadingSteps.map((s, i) => {
-                const state = i < stepIndex ? "done" : i === stepIndex ? "active" : "pending";
-                return (
-                  <li
-                    key={s}
-                    className={`flex items-center gap-3 rounded-lg border px-4 py-3 transition-all ${
-                      state === "active"
-                        ? "border-primary/40 bg-card shadow-glow"
-                        : state === "done"
-                        ? "border-border bg-card/50 opacity-60"
-                        : "border-border/40 bg-transparent opacity-30"
-                    }`}
-                  >
-                    <span className={`h-2 w-2 rounded-full ${
-                      state === "active" ? "bg-primary animate-pulse" : state === "done" ? "bg-bloom-apply" : "bg-muted"
-                    }`} />
-                    <span className="text-sm">{s}</span>
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="text-xs text-muted-foreground">
-              This usually takes 60 – 120 seconds · {elapsed}s elapsed
-            </p>
-          </section>
+          <LoadingScreen stepIndex={stepIndex} elapsed={elapsed} />
         )}
 
         {stage === "error" && (
