@@ -640,21 +640,41 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <p className="text-xs text-muted-foreground">
                     {filteredCardCount === 0
-                      ? formulaMode
+                      ? stepOrderingMode
+                        ? "No step-sequence flashcards match the current filters. Create one in the Flashcards tab."
+                        : formulaMode
                         ? "No formula flashcards match the current filters. Add a formula in the Flashcards tab."
                         : "No cards match the current filters."
-                      : `${formulaMode ? "Formula Mode — " : ""}Quiz will run on up to ${Math.min(
+                      : `${
+                          stepOrderingMode
+                            ? "Step Ordering — "
+                            : formulaMode
+                            ? "Formula Mode — "
+                            : ""
+                        }Quiz will run on up to ${Math.min(
                           customCount,
                           filteredCardCount,
-                        )} question${Math.min(customCount, filteredCardCount) === 1 ? "" : "s"}.`}
+                        )} ${stepOrderingMode ? "problem" : "question"}${
+                          Math.min(customCount, filteredCardCount) === 1 ? "" : "s"
+                        }.`}
                   </p>
                   <Button
                     onClick={startCustomQuiz}
                     disabled={filteredCardCount === 0}
                     className="bg-gradient-primary"
                   >
-                    {formulaMode ? <FunctionSquare className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    {formulaMode ? "Start Formula Quiz" : "Generate Custom Quiz"}
+                    {stepOrderingMode ? (
+                      <ListOrdered className="h-4 w-4" />
+                    ) : formulaMode ? (
+                      <FunctionSquare className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                    {stepOrderingMode
+                      ? "Start Step Ordering"
+                      : formulaMode
+                      ? "Start Formula Quiz"
+                      : "Generate Custom Quiz"}
                   </Button>
                 </div>
               </div>
