@@ -30,6 +30,7 @@ import { extractVideoId, openYoutubeAt } from "@/lib/timestamp";
 
 export const OutlineTab = ({ lecture, videoUrl }: { lecture: Lecture; videoUrl?: string }) => {
   const videoId = videoUrl ? extractVideoId(videoUrl) : null;
+  const { t } = useT();
 
   return (
   <div className="space-y-3">
@@ -37,19 +38,19 @@ export const OutlineTab = ({ lecture, videoUrl }: { lecture: Lecture; videoUrl?:
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-2.5 text-xs text-muted-foreground">
       <div className="flex flex-wrap items-center gap-3">
         <span className="font-medium text-foreground inline-flex items-center gap-1">
-          Cognitive load:
+          {t("Cognitive load:")}
           <InfoTooltip content={tooltipCopy.cognitiveLoad} label="About cognitive load" />
         </span>
         {(["low", "medium", "high"] as LoadBucket[]).map((b) => (
           <span key={b} className="inline-flex items-center gap-1.5">
             <span className={cn("h-2 w-2 rounded-full", dotClass[b])} />
-            {labelFor[b]}
+            {t(labelKeyFor[b])}
           </span>
         ))}
       </div>
       <span className="inline-flex items-center gap-1.5 text-amber-600">
         <AlertTriangle className="h-3.5 w-3.5" />
-        Slow down on high-load moments — they need extra processing time.
+        {t("Slow down on high-load moments — they need extra processing time.")}
       </span>
     </div>
 
@@ -70,8 +71,8 @@ export const OutlineTab = ({ lecture, videoUrl }: { lecture: Lecture; videoUrl?:
               dotClass[bucket],
               isHigh && "animate-pulse",
             )}
-            title={`${labelFor[bucket]} cognitive load (${item.load}/5)`}
-            aria-label={`${labelFor[bucket]} cognitive load`}
+            title={`${t(labelKeyFor[bucket])} cognitive load (${item.load}/5)`}
+            aria-label={`${t(labelKeyFor[bucket])} cognitive load`}
           />
           {videoId ? (
             <button
@@ -93,7 +94,7 @@ export const OutlineTab = ({ lecture, videoUrl }: { lecture: Lecture; videoUrl?:
             {isHigh && (
               <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-medium text-red-600">
                 <AlertTriangle className="h-3 w-3" />
-                High load — slow down to process
+                {t("High load — slow down to process")}
               </p>
             )}
           </div>
