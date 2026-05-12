@@ -316,51 +316,159 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
       )}
 
       <Dialog open={editor.open} onOpenChange={(o) => (o ? null : closeEditor())}>
-        <DialogContent className="sm:max-w-[520px]">
+        <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editor.index === null ? "Create Flashcard" : "Edit Flashcard"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {/* Card type selector */}
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { id: "standard", label: "Standard", desc: "Question & answer" },
+                { id: "steps", label: "Step Sequence", desc: "Ordered procedure" },
+              ] as const).map((opt) => {
+                const active = editor.cardType === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setEditor((s) => ({ ...s, cardType: opt.id }))}
+                    className={`rounded-lg border p-3 text-left transition-colors ${
+                      active
+                        ? "border-primary/50 bg-primary/5"
+                        : "border-border bg-background hover:border-primary/30"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-foreground">{opt.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{opt.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Question
+                {editor.cardType === "steps" ? "Problem prompt" : "Question"}
               </label>
               <Textarea
                 value={editor.question}
                 onChange={(e) => setEditor((s) => ({ ...s, question: e.target.value }))}
-                placeholder="What's the question?"
-                rows={3}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Answer
-              </label>
-              <Textarea
-                value={editor.answer}
-                onChange={(e) => setEditor((s) => ({ ...s, answer: e.target.value }))}
-                placeholder="The correct answer"
-                rows={4}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                Formula (optional)
-                <FormulaBadge />
-              </label>
-              <Textarea
-                value={editor.formula}
-                onChange={(e) => setEditor((s) => ({ ...s, formula: e.target.value }))}
-                placeholder="e.g. F = m·a"
+                placeholder={
+                  editor.cardType === "steps"
+                    ? "e.g. Solve a quadratic equation by factoring"
+                    : "What's the question?"
+                }
                 rows={2}
-                className="font-mono text-base"
               />
-              <p className="text-[11px] text-muted-foreground">
-                Cards with a formula appear in Formula Mode quizzes.
-              </p>
             </div>
+
+            {editor.cardType === "standard" && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Answer
+                  </label>
+                  <Textarea
+                    value={editor.answer}
+                    onChange={(e) => setEditor((s) => ({ ...s, answer: e.target.value }))}
+                    placeholder="The correct answer"
+                    rows={4}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    Formula (optional)
+                    <FormulaBadge />
+                  </label>
+                  <Textarea
+                    value={editor.formula}
+                    onChange={(e) => setEditor((s) => ({ ...s, formula: e.target.value }))}
+                    placeholder="e.g. F = m·a"
+                    rows={2}
+                    className="font-mono text-base"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Cards with a formula appear in Formula Mode quizzes.
+                  </p>
+                </div>
+              </>
+            )}
+
+            {editor.cardType === "steps" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    Ordered steps
+                    <StepSequenceBadge />
+                  </label>
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Checkbox
+                      checked={editor.multiPath}
+                      onCheckedChange={(v) => setEditor((s) => ({ ...s, multiPath: v === true }))}
+                    />
+                    Multi-path (any valid order accepted)
+                  </label>
+                </div>
+                <ol className="space-y-2">
+                  {editor.steps.map((step, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground">
+                        {i + 1}
+                      </span>
+                      <Input
+                        value={step}
+                        onChange={(e) => updateStep(i, e.target.value)}
+                        placeholder={`Step ${i + 1}`}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => moveStep(i, -1)}
+                        disabled={i === 0}
+                        aria-label="Move step up"
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => moveStep(i, 1)}
+                        disabled={i === editor.steps.length - 1}
+                        aria-label="Move step down"
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        onClick={() => removeStep(i)}
+                        disabled={editor.steps.length <= 2}
+                        aria-label="Remove step"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ol>
+                <Button type="button" variant="outline" size="sm" onClick={addStep}>
+                  <Plus className="h-3.5 w-3.5" />
+                  Add step
+                </Button>
+                <p className="text-[11px] text-muted-foreground">
+                  Step Sequence cards appear in the quiz's "Step Ordering" mode.
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -401,7 +509,12 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
               <Button variant="ghost" onClick={closeEditor}>Cancel</Button>
               <Button
                 onClick={saveEditor}
-                disabled={!editor.question.trim() || !editor.answer.trim()}
+                disabled={
+                  !editor.question.trim() ||
+                  (editor.cardType === "standard" && !editor.answer.trim()) ||
+                  (editor.cardType === "steps" &&
+                    editor.steps.map((s) => s.trim()).filter(Boolean).length < 2)
+                }
                 className="bg-gradient-primary"
               >
                 {editor.index === null ? "Create" : "Save"}
