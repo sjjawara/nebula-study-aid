@@ -530,45 +530,50 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
                 {t("Current level:")} <span className="font-medium text-foreground">{t(currentLevel)}</span>
               </span>
             </div>
-            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="absolute inset-y-0 left-0 bg-gradient-primary transition-[width] duration-500 pointer-events-none"
-                style={{ width: `${masteryPct}%` }}
-              />
-              {/* Clickable Bloom segments overlay */}
-              <div className="absolute inset-0 flex">
-                {BLOOM_ORDER.map((l, i) => {
-                  const peakIdx = BLOOM_ORDER.indexOf(peakLevel);
-                  const canJump = i < peakIdx;
-                  const seg = (
-                    <button
-                      type="button"
-                      key={l}
-                      onClick={() => {
-                        if (canJump) {
-                          setScore(i);
-                          setStreak(0);
-                        }
-                      }}
-                      disabled={!canJump}
-                      aria-label={canJump ? `${t("Jump to")} ${t(l)}` : t(l)}
-                      className={cn(
-                        "flex-1 border-r border-background/70 last:border-r-0",
-                        canJump ? "cursor-pointer hover:bg-foreground/5" : "cursor-default",
-                      )}
+            <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-muted flex">
+              {BLOOM_ORDER.map((l, i) => {
+                const peakIdx = BLOOM_ORDER.indexOf(peakLevel);
+                const currentIdx = BLOOM_ORDER.indexOf(currentLevel);
+                const canJump = i < peakIdx;
+                // Fill amount within this segment (0..1) based on overall mastery score
+                const fill = Math.max(0, Math.min(1, score - i));
+                const bloomVar = `hsl(var(--bloom-${l.toLowerCase()}))`;
+                const bloomMuted = `hsl(var(--bloom-${l.toLowerCase()}) / 0.18)`;
+                const seg = (
+                  <button
+                    type="button"
+                    key={l}
+                    onClick={() => {
+                      if (canJump) {
+                        setScore(i);
+                        setStreak(0);
+                      }
+                    }}
+                    disabled={!canJump}
+                    aria-label={canJump ? `${t("Jump to")} ${t(l)}` : t(l)}
+                    style={{ backgroundColor: bloomMuted }}
+                    className={cn(
+                      "relative flex-1 border-r border-background/70 last:border-r-0 overflow-hidden",
+                      canJump ? "cursor-pointer hover:opacity-80" : "cursor-default",
+                      i === currentIdx && "ring-1 ring-inset ring-foreground/10",
+                    )}
+                  >
+                    <span
+                      className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                      style={{ width: `${fill * 100}%`, backgroundColor: bloomVar }}
                     />
-                  );
-                  if (canJump) return seg;
-                  return (
-                    <Tooltip key={l}>
-                      <TooltipTrigger asChild>{seg}</TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">
-                        {t("Complete the current level to unlock")}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
+                  </button>
+                );
+                if (canJump) return seg;
+                return (
+                  <Tooltip key={l}>
+                    <TooltipTrigger asChild>{seg}</TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {t("Complete the current level to unlock")}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
             </div>
             <div className="flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
               {BLOOM_ORDER.map((l) => (
