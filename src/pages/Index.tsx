@@ -49,6 +49,20 @@ const loadingSteps = [
 ];
 
 const API_URL = "https://nebulalearn-production.up.railway.app/process";
+const API_WITH_TRANSCRIPT_URL = "https://nebulalearn-production.up.railway.app/process-with-transcript";
+const SUPADATA_URL = "https://api.supadata.ai/v1/youtube/transcript";
+const SUPADATA_API_KEY = (import.meta as any).env?.VITE_SUPADATA_API_KEY as string | undefined;
+
+type TranscriptItem = { text: string; offset: number; duration: number };
+
+const formatTranscript = (items: TranscriptItem[]): string =>
+  items
+    .map((item) => {
+      const minutes = Math.floor(item.offset / 60000);
+      const seconds = Math.floor((item.offset % 60000) / 1000);
+      return `[${minutes}:${seconds.toString().padStart(2, "0")}] ${item.text}`;
+    })
+    .join("\n");
 
 const Index = () => {
   const [stage, setStage] = useState<Stage>("input");
@@ -142,10 +156,26 @@ const Index = () => {
     try {
       const trimmedUrl = url.trim();
 
-      const res = await fetch(API_URL, {
+      // 1. Fetch raw transcript array from Supadata
+      const supaRes = await fetch(
+        `${SUPADATA_URL}?url=${encodeURIComponent(trimmedUrl)}&text=false`,
+        { headers: SUPADATA_API_KEY ? { "x-api-key": SUPADATA_API_KEY } : {} }
+      );
+      if (!supaRes.ok) throw new Error(`Transcript fetch failed (${supaRes.status})`);
+      const supaPayload = await supaRes.json();
+      const rawItems: TranscriptItem[] = Array.isArray(supaPayload)
+        ? supaPayload
+        : supaPayload?.content ?? supaPayload?.transcript ?? [];
+      if (!Array.isArray(rawItems) || rawItems.length === 0) {
+        throw new Error("No transcript returned for this video.");
+      }
+      const formattedTranscript = formatTranscript(rawItems);
+
+      // 2. Send formatted transcript string (not raw array) to backend
+      const res = await fetch(API_WITH_TRANSCRIPT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: trimmedUrl }),
+        body: JSON.stringify({ url: trimmedUrl, transcript: formattedTranscript }),
       });
 
       if (!res.ok) {
