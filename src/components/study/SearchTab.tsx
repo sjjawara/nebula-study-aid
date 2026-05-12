@@ -488,16 +488,14 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border">
                 {modalLink && modalCard.card.timestamp ? (
-                  <a
-                    href={modalLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => { openExternal(e, modalLink); showPreview(undefined, modalCard.card.timestamp ?? "", modalLink); }}
+                  <button
+                    type="button"
+                    onClick={() => { openExternal(modalLink); showPreview(undefined, modalCard.card.timestamp ?? "", modalLink); }}
                     className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                   >
                     {modalCard.card.timestamp}
                     <ExternalLink className="h-3 w-3" />
-                  </a>
+                  </button>
                 ) : (
                   <span className="text-sm font-mono text-primary">{modalCard.card.timestamp}</span>
                 )}
