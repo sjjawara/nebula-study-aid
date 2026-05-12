@@ -239,8 +239,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                     <BloomBadge level="Remember" />
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
-                    The lecture grounds the claim "{card.answer}". This Remember-level check confirms recognition.
+                    {cleanExplanation(`The lecture grounds the claim "${card.answer}". This Remember-level check confirms recognition.`, card.answer)}
                   </p>
                   {tfChoice !== tf.correctValue && (
                     <p className="text-xs text-muted-foreground">
