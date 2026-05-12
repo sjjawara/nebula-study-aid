@@ -49,6 +49,7 @@ const skillFor = (card: Flashcard): BloomLevel => {
 };
 
 export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
+  const { t } = useT();
   const [idx, setIdx] = useState(0);
   const card = cards[idx];
 
