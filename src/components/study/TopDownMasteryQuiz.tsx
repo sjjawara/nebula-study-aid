@@ -315,24 +315,24 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                     {mcChoice === card.answer ? (
                       <>
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        <span className="text-emerald-700">Correct</span>
+                        <span className="text-emerald-700">{t("Correct")}</span>
                       </>
                     ) : (
                       <>
                         <XCircle className="h-4 w-4 text-destructive" />
-                        <span className="text-destructive">Not quite</span>
+                        <span className="text-destructive">{t("Not quite")}</span>
                       </>
                     )}
                   </p>
                   <BloomBadge level="Apply" />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="font-medium text-foreground">Why:</span>{" "}
+                  <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
                   "{card.answer}" is grounded directly in the lecture; the other options are plausible-sounding distractors drawn from related material.
                 </p>
                 {mcChoice !== card.answer && (
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">Correct answer:</span> {card.answer}
+                    <span className="font-medium text-foreground">{t("Correct answer:")}</span> {card.answer}
                   </p>
                 )}
               </div>
@@ -340,7 +340,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             {stage === "l3" && (
               <div className="flex justify-end">
                 <Button variant="secondary" onClick={requestScaffold}>
-                  Show foundational check
+                  {t("Show foundational check")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
