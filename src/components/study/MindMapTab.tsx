@@ -1,304 +1,172 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { toPng } from "html-to-image";
-import {
-  Link2,
-  Scale,
-  Pencil,
-  ShieldCheck,
-  Download,
-  RotateCcw,
-  MousePointer2,
-} from "lucide-react";
-import type { Lecture, BloomLevel } from "@/lib/mockData";
+import { Pencil, Download, RotateCcw, MousePointer2, ZoomIn, ZoomOut } from "lucide-react";
+import type { Lecture } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type Tool = "select" | "connect" | "weight" | "relabel";
+type Tool = "select" | "relabel";
 
-interface NodeDatum extends d3.SimulationNodeDatum {
+interface TreeDatum {
   id: string;
-  label: string;
-  bloom: BloomLevel;
-  type: "core" | "sub";
-  isolated?: boolean;
+  name: string;
+  kind: "root" | "branch" | "leaf";
+  children?: TreeDatum[];
 }
 
-interface LinkDatum extends d3.SimulationLinkDatum<NodeDatum> {
-  id: string;
-  weight: 1 | 2 | 3;
-}
+const NODE_PAD_X = 14;
+const NODE_PAD_Y = 8;
+const FONT_BY_KIND = { root: 15, branch: 13, leaf: 11 } as const;
 
-const CORE_BLOOMS: BloomLevel[] = ["Analyze", "Evaluate", "Create"];
+// Estimate text width without measuring DOM (good enough for layout)
+const estimateWidth = (text: string, fontSize: number) =>
+  Math.min(260, Math.max(60, text.length * (fontSize * 0.58)));
 
-const bloomDot: Record<BloomLevel, string> = {
-  Remember: "bg-bloom-remember",
-  Understand: "bg-bloom-understand",
-  Apply: "bg-bloom-apply",
-  Analyze: "bg-bloom-analyze",
-  Evaluate: "bg-bloom-evaluate",
-  Create: "bg-bloom-create",
+const buildTree = (lecture: Lecture, labelOverrides: Record<string, string>): TreeDatum => {
+  const labelOf = (id: string, fallback: string) => labelOverrides[id] ?? fallback;
+
+  const branches: TreeDatum[] = lecture.outline.map((o, i) => {
+    const branchId = `b:${o.timestamp}-${i}`;
+
+    // Pull keywords from search index entries that share the timestamp/topic
+    const keywordPool = new Set<string>();
+    for (const m of lecture.searchIndex) {
+      if (m.timestamp === o.timestamp || (m.topic && m.topic === o.topic)) {
+        for (const k of m.keywords ?? []) {
+          if (k && k.trim()) keywordPool.add(k.trim());
+        }
+      }
+    }
+
+    const leaves: TreeDatum[] = Array.from(keywordPool)
+      .filter((k) => k.toLowerCase() !== o.topic.toLowerCase())
+      .slice(0, 5)
+      .map((k, j) => {
+        const id = `${branchId}:l:${j}`;
+        return { id, name: labelOf(id, k), kind: "leaf" };
+      });
+
+    return {
+      id: branchId,
+      name: labelOf(branchId, o.topic),
+      kind: "branch",
+      children: leaves.length ? leaves : undefined,
+    };
+  });
+
+  return {
+    id: "root",
+    name: labelOf("root", lecture.title),
+    kind: "root",
+    children: branches,
+  };
 };
-
-const weightToStroke = (w: number) => (w === 1 ? 1.5 : w === 2 ? 3.5 : 6);
 
 export const MindMapTab = ({ lecture }: { lecture: Lecture }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
-  const simRef = useRef<d3.Simulation<NodeDatum, LinkDatum> | null>(null);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   const [tool, setTool] = useState<Tool>("select");
-  const [pendingNodeId, setPendingNodeId] = useState<string | null>(null);
-  const [version, setVersion] = useState(0);
-  const [checked, setChecked] = useState(false);
+  const [labels, setLabels] = useState<Record<string, string>>({});
 
-  const initialNodes = useMemo<NodeDatum[]>(() => {
-    const seen = new Set<string>();
-    const nodes: NodeDatum[] = [];
-    for (const o of lecture.outline) {
-      const id = `${o.timestamp}-${o.topic}`;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      nodes.push({
-        id,
-        label: o.topic,
-        bloom: o.bloom,
-        type: CORE_BLOOMS.includes(o.bloom) ? "core" : "sub",
-      });
-    }
-    return nodes;
+  // Reset overrides when lecture changes
+  useEffect(() => {
+    setLabels({});
   }, [lecture]);
 
-  const nodesRef = useRef<NodeDatum[]>([]);
-  const linksRef = useRef<LinkDatum[]>([]);
+  const treeData = useMemo(() => buildTree(lecture, labels), [lecture, labels]);
 
-  // Initialize state once per lecture
+  // Compute layout
+  const { nodes, links, width, height } = useMemo(() => {
+    const root = d3.hierarchy<TreeDatum>(treeData);
+    const depthCount = root.height + 1; // 3 typical (root/branch/leaf)
+    const leafCount = Math.max(root.leaves().length, 4);
+
+    // Horizontal layout: x = depth, y = vertical
+    const layout = d3
+      .tree<TreeDatum>()
+      .nodeSize([42, 240])
+      .separation((a, b) => (a.parent === b.parent ? 1 : 1.4));
+
+    layout(root);
+
+    const allNodes = root.descendants();
+    const allLinks = root.links();
+
+    // Normalize coords (d3.tree gives x = vertical, y = horizontal)
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const n of allNodes) {
+      if (n.x < minX) minX = n.x;
+      if (n.x > maxX) maxX = n.x;
+      if (n.y < minY) minY = n.y;
+      if (n.y > maxY) maxY = n.y;
+    }
+    const padX = 80;
+    const padY = 60;
+    for (const n of allNodes) {
+      // swap so tree grows left → right
+      const ox = n.y - minY + padX;
+      const oy = n.x - minX + padY;
+      // store in custom fields
+      (n as unknown as { _x: number })._x = ox;
+      (n as unknown as { _y: number })._y = oy;
+    }
+
+    return {
+      nodes: allNodes,
+      links: allLinks,
+      width: Math.max(800, maxY - minY + padX * 2 + 260),
+      height: Math.max(420, maxX - minX + padY * 2 + 60),
+      depthCount,
+      leafCount,
+    };
+  }, [treeData]);
+
+  // Setup zoom/pan
   useEffect(() => {
-    nodesRef.current = initialNodes.map((n) => ({ ...n }));
-    linksRef.current = [];
-    setPendingNodeId(null);
-    setChecked(false);
-    setVersion((v) => v + 1);
-  }, [initialNodes]);
-
-  // D3 setup + redraw on version change
-  useEffect(() => {
-    if (!svgRef.current || !gRef.current || !containerRef.current) return;
-    const width = containerRef.current.clientWidth;
-    const height = 520;
-
+    if (!svgRef.current || !gRef.current) return;
     const svg = d3.select(svgRef.current);
     const g = d3.select(gRef.current);
 
-    // Zoom / pan
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.3, 2.5])
+      .scaleExtent([0.4, 2.5])
       .on("zoom", (event) => {
         g.attr("transform", event.transform.toString());
       });
+    zoomRef.current = zoom;
     svg.call(zoom);
 
-    // Stop any prior sim
-    simRef.current?.stop();
-
-    const sim = d3
-      .forceSimulation<NodeDatum>(nodesRef.current)
-      .force(
-        "link",
-        d3
-          .forceLink<NodeDatum, LinkDatum>(linksRef.current)
-          .id((d) => d.id)
-          .distance(140)
-          .strength(0.4),
-      )
-      .force("charge", d3.forceManyBody().strength(-260))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collide", d3.forceCollide<NodeDatum>().radius(54));
-    simRef.current = sim;
-
-    // Links
-    const linkSel = g
-      .select<SVGGElement>(".links")
-      .selectAll<SVGLineElement, LinkDatum>("line")
-      .data(linksRef.current, (d) => d.id)
-      .join(
-        (enter) =>
-          enter
-            .append("line")
-            .attr("stroke", "hsl(var(--muted-foreground))")
-            .attr("stroke-opacity", 0.55)
-            .attr("stroke-linecap", "round")
-            .style("cursor", "pointer"),
-        (update) => update,
-        (exit) => exit.remove(),
-      )
-      .attr("stroke-width", (d) => weightToStroke(d.weight))
-      .on("click", (event, d) => {
-        event.stopPropagation();
-        if (tool !== "weight") return;
-        const next = ((d.weight % 3) + 1) as 1 | 2 | 3;
-        d.weight = next;
-        d3.select(event.currentTarget as SVGLineElement).attr(
-          "stroke-width",
-          weightToStroke(next),
-        );
-      });
-
-    // Nodes
-    const nodeG = g
-      .select<SVGGElement>(".nodes")
-      .selectAll<SVGGElement, NodeDatum>("g.node")
-      .data(nodesRef.current, (d) => d.id)
-      .join(
-        (enter) => {
-          const grp = enter.append("g").attr("class", "node").style("cursor", "pointer");
-          grp
-            .append("circle")
-            .attr("r", (d) => (d.type === "core" ? 30 : 22))
-            .attr("stroke-width", 2);
-          grp
-            .append("text")
-            .attr("text-anchor", "middle")
-            .attr("dy", (d) => (d.type === "core" ? 46 : 38))
-            .attr("font-size", 11)
-            .attr("font-weight", 500)
-            .attr("fill", "hsl(var(--foreground))")
-            .style("pointer-events", "none");
-          grp
-            .append("text")
-            .attr("class", "bloom-tag")
-            .attr("text-anchor", "middle")
-            .attr("dy", 4)
-            .attr("font-size", 9)
-            .attr("font-weight", 600)
-            .attr("fill", "hsl(var(--background))")
-            .style("pointer-events", "none");
-          return grp;
-        },
-        (update) => update,
-        (exit) => exit.remove(),
-      );
-
-    nodeG
-      .select("circle")
-      .attr("fill", (d) =>
-        d.isolated
-          ? "hsl(38 92% 60%)"
-          : d.type === "core"
-          ? "hsl(238 75% 60%)"
-          : "hsl(215 20% 50%)",
-      )
-      .attr("stroke", (d) =>
-        d.id === pendingNodeId ? "hsl(238 90% 70%)" : "hsl(var(--background))",
-      )
-      .attr("stroke-dasharray", (d) => (d.id === pendingNodeId ? "4 3" : "0"));
-
-    nodeG.select("text:not(.bloom-tag)").text((d) => {
-      const max = d.type === "core" ? 28 : 22;
-      return d.label.length > max ? d.label.slice(0, max - 1) + "…" : d.label;
-    });
-    nodeG.select("text.bloom-tag").text((d) => d.bloom.slice(0, 4).toUpperCase());
-
-    nodeG.on("click", (event, d) => {
-      event.stopPropagation();
-      if (tool === "connect") {
-        if (!pendingNodeId) {
-          setPendingNodeId(d.id);
-          return;
-        }
-        if (pendingNodeId === d.id) {
-          setPendingNodeId(null);
-          return;
-        }
-        const exists = linksRef.current.some(
-          (l) =>
-            ((l.source as NodeDatum).id === pendingNodeId &&
-              (l.target as NodeDatum).id === d.id) ||
-            ((l.source as NodeDatum).id === d.id &&
-              (l.target as NodeDatum).id === pendingNodeId),
-        );
-        if (!exists) {
-          linksRef.current.push({
-            id: `${pendingNodeId}->${d.id}-${Date.now()}`,
-            source: pendingNodeId,
-            target: d.id,
-            weight: 1,
-          });
-        }
-        setPendingNodeId(null);
-        setChecked(false);
-        setVersion((v) => v + 1);
-      } else if (tool === "relabel") {
-        const next = window.prompt("Rename this concept", d.label);
-        if (next && next.trim()) {
-          d.label = next.trim();
-          setVersion((v) => v + 1);
-        }
-      }
-    });
-
-    // Drag
-    const drag = d3
-      .drag<SVGGElement, NodeDatum>()
-      .on("start", (event, d) => {
-        if (!event.active) sim.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-      })
-      .on("drag", (event, d) => {
-        d.fx = event.x;
-        d.fy = event.y;
-      })
-      .on("end", (event, d) => {
-        if (!event.active) sim.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
-      });
-    nodeG.call(drag);
-
-    sim.on("tick", () => {
-      linkSel
-        .attr("x1", (d) => (d.source as NodeDatum).x ?? 0)
-        .attr("y1", (d) => (d.source as NodeDatum).y ?? 0)
-        .attr("x2", (d) => (d.target as NodeDatum).x ?? 0)
-        .attr("y2", (d) => (d.target as NodeDatum).y ?? 0);
-      nodeG.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
-    });
+    // Center initially
+    if (containerRef.current) {
+      const cw = containerRef.current.clientWidth;
+      const initialX = Math.max(20, (cw - width) / 2);
+      svg.call(zoom.transform, d3.zoomIdentity.translate(initialX > 0 ? initialX : 20, 20).scale(0.9));
+    }
 
     return () => {
-      sim.stop();
+      svg.on(".zoom", null);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version, tool, pendingNodeId]);
+  }, [width, height]);
 
-  const checkStructure = () => {
-    const connected = new Set<string>();
-    for (const l of linksRef.current) {
-      connected.add((l.source as NodeDatum).id ?? (l.source as unknown as string));
-      connected.add((l.target as NodeDatum).id ?? (l.target as unknown as string));
+  const handleNodeClick = (id: string, current: string) => {
+    if (tool !== "relabel") return;
+    const next = window.prompt("Rename this concept", current);
+    if (next && next.trim()) {
+      setLabels((prev) => ({ ...prev, [id]: next.trim() }));
     }
-    nodesRef.current.forEach((n) => {
-      n.isolated = !connected.has(n.id);
-    });
-    setChecked(true);
-    setVersion((v) => v + 1);
   };
 
-  const reset = () => {
-    nodesRef.current = initialNodes.map((n) => ({ ...n }));
-    linksRef.current = [];
-    setPendingNodeId(null);
-    setChecked(false);
-    setVersion((v) => v + 1);
-  };
+  const reset = () => setLabels({});
 
   const exportPng = async () => {
     if (!containerRef.current) return;
     try {
       const dataUrl = await toPng(containerRef.current, {
-        backgroundColor: "#f8fafc",
+        backgroundColor: "#ffffff",
         pixelRatio: 2,
       });
       const a = document.createElement("a");
@@ -310,11 +178,12 @@ export const MindMapTab = ({ lecture }: { lecture: Lecture }) => {
     }
   };
 
-  const isolatedCount = checked
-    ? nodesRef.current.filter((n) => n.isolated).length
-    : 0;
+  const zoomBy = (factor: number) => {
+    if (!svgRef.current || !zoomRef.current) return;
+    d3.select(svgRef.current).transition().duration(150).call(zoomRef.current.scaleBy, factor);
+  };
 
-  if (!initialNodes.length) {
+  if (!lecture.outline.length) {
     return (
       <div className="rounded-2xl border border-border bg-card p-10 text-center">
         <p className="text-sm text-muted-foreground">
@@ -324,45 +193,12 @@ export const MindMapTab = ({ lecture }: { lecture: Lecture }) => {
     );
   }
 
-  const ToolButton = ({
-    value,
-    icon: Icon,
-    label,
-    bloom,
-  }: {
-    value: Tool;
-    icon: typeof Link2;
-    label: string;
-    bloom?: string;
-  }) => {
-    const active = tool === value;
-    return (
-      <button
-        onClick={() => {
-          setTool(value);
-          setPendingNodeId(null);
-        }}
-        className={cn(
-          "group flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-          active
-            ? "border-primary/50 bg-primary/10 text-primary shadow-sm"
-            : "border-border bg-card text-foreground hover:border-primary/30",
-        )}
-      >
-        <Icon className="h-3.5 w-3.5" />
-        <span>{label}</span>
-        {bloom && (
-          <span
-            className={cn(
-              "rounded-full px-1.5 py-0.5 text-[9px] uppercase tracking-wider",
-              active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
-            )}
-          >
-            {bloom}
-          </span>
-        )}
-      </button>
-    );
+  // Pre-compute rect dimensions per node
+  const rectFor = (n: d3.HierarchyPointNode<TreeDatum> | d3.HierarchyNode<TreeDatum>) => {
+    const fs = FONT_BY_KIND[n.data.kind];
+    const w = estimateWidth(n.data.name, fs) + NODE_PAD_X * 2;
+    const h = fs + NODE_PAD_Y * 2 + 4;
+    return { w, h, fs };
   };
 
   return (
@@ -370,31 +206,53 @@ export const MindMapTab = ({ lecture }: { lecture: Lecture }) => {
       {/* Header */}
       <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-card/60 p-5 shadow-sm">
         <p className="text-xs font-medium uppercase tracking-wider text-primary">
-          Mind map builder
+          Mind map
         </p>
         <h3 className="mt-1 text-lg font-semibold text-foreground">
-          Connect, weight, and rename concepts
+          Concept hierarchy for this lecture
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          Nothing is linked yet. Build the structure yourself — the act of grouping is
-          where the learning happens.
+          The lecture title is the root, major topics branch out, and supporting keywords sit at the leaves.
+          Drag to pan, scroll to zoom, and rename any node to wording that clicks for you.
         </p>
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3">
-        <ToolButton value="select" icon={MousePointer2} label="Move" />
-        <ToolButton value="connect" icon={Link2} label="Connect" bloom="Analyze" />
-        <ToolButton value="weight" icon={Scale} label="Weight" bloom="Evaluate" />
-        <ToolButton value="relabel" icon={Pencil} label="Relabel" bloom="Create" />
+        <button
+          onClick={() => setTool("select")}
+          className={cn(
+            "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+            tool === "select"
+              ? "border-primary/50 bg-primary/10 text-primary shadow-sm"
+              : "border-border bg-card text-foreground hover:border-primary/30",
+          )}
+        >
+          <MousePointer2 className="h-3.5 w-3.5" />
+          Move
+        </button>
+        <button
+          onClick={() => setTool("relabel")}
+          className={cn(
+            "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+            tool === "relabel"
+              ? "border-primary/50 bg-primary/10 text-primary shadow-sm"
+              : "border-border bg-card text-foreground hover:border-primary/30",
+          )}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Relabel
+        </button>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={checkStructure}>
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Check structure
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)}>
+            <ZoomOut className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)}>
+            <ZoomIn className="h-3.5 w-3.5" />
           </Button>
           <Button variant="ghost" size="sm" onClick={reset}>
             <RotateCcw className="h-3.5 w-3.5" />
-            Reset
+            Reset labels
           </Button>
           <Button size="sm" onClick={exportPng} className="bg-gradient-primary">
             <Download className="h-3.5 w-3.5" />
@@ -403,81 +261,94 @@ export const MindMapTab = ({ lecture }: { lecture: Lecture }) => {
         </div>
       </div>
 
-      {/* Hint line */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
-        <span>
-          {tool === "connect" &&
-            (pendingNodeId
-              ? "Now click a second node to draw the connection."
-              : "Click any two nodes to connect them.")}
-          {tool === "weight" && "Click a line to cycle thin → medium → thick."}
-          {tool === "relabel" && "Click a node to rename it."}
-          {tool === "select" && "Drag nodes to arrange. Scroll to zoom."}
-        </span>
-        {checked && (
-          <span
-            className={cn(
-              "rounded-full border px-2 py-0.5 text-[11px] font-medium",
-              isolatedCount > 0
-                ? "border-amber-400/40 bg-amber-400/10 text-amber-700"
-                : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700",
-            )}
-          >
-            {isolatedCount > 0
-              ? `${isolatedCount} isolated concept${isolatedCount === 1 ? "" : "s"}`
-              : "All concepts are connected"}
-          </span>
-        )}
+      {/* Hint */}
+      <div className="px-1 text-xs text-muted-foreground">
+        {tool === "relabel"
+          ? "Click any node to rename it to your own term."
+          : "Drag the canvas to pan. Scroll or use the zoom buttons to scale."}
       </div>
 
       {/* Canvas */}
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-2xl border border-border bg-slate-50 shadow-sm"
-        style={{ height: 520 }}
+        className="relative overflow-hidden rounded-2xl border border-border bg-white shadow-sm"
+        style={{ height: 560 }}
       >
         <svg
           ref={svgRef}
           width="100%"
           height="100%"
-          className="block"
-          style={{
-            backgroundImage:
-              "radial-gradient(hsl(215 20% 85%) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-          }}
+          className="block bg-white"
+          style={{ cursor: tool === "relabel" ? "pointer" : "grab" }}
         >
           <g ref={gRef}>
-            <g className="links" />
-            <g className="nodes" />
+            {/* Links */}
+            <g className="links" fill="none" stroke="#cbd5e1" strokeWidth={1.4}>
+              {links.map((l, i) => {
+                const s = l.source as d3.HierarchyPointNode<TreeDatum>;
+                const t = l.target as d3.HierarchyPointNode<TreeDatum>;
+                const sx = (s as unknown as { _x: number })._x;
+                const sy = (s as unknown as { _y: number })._y;
+                const tx = (t as unknown as { _x: number })._x;
+                const ty = (t as unknown as { _y: number })._y;
+                const sRect = rectFor(s);
+                const tRect = rectFor(t);
+                const x0 = sx + sRect.w / 2;
+                const x1 = tx - tRect.w / 2;
+                const midX = (x0 + x1) / 2;
+                const d = `M${x0},${sy} C${midX},${sy} ${midX},${ty} ${x1},${ty}`;
+                return <path key={i} d={d} />;
+              })}
+            </g>
+
+            {/* Nodes */}
+            <g className="nodes">
+              {nodes.map((n) => {
+                const x = (n as unknown as { _x: number })._x;
+                const y = (n as unknown as { _y: number })._y;
+                const { w, h, fs } = rectFor(n);
+                const fill =
+                  n.data.kind === "root"
+                    ? "#f1f5f9"
+                    : n.data.kind === "branch"
+                    ? "#f8fafc"
+                    : "#ffffff";
+                const stroke = n.data.kind === "root" ? "#94a3b8" : "#cbd5e1";
+                const strokeWidth = n.data.kind === "root" ? 1.5 : 1;
+                return (
+                  <g
+                    key={n.data.id}
+                    transform={`translate(${x - w / 2},${y - h / 2})`}
+                    onClick={() => handleNodeClick(n.data.id, n.data.name)}
+                    style={{ cursor: tool === "relabel" ? "pointer" : "default" }}
+                  >
+                    <rect
+                      width={w}
+                      height={h}
+                      rx={10}
+                      ry={10}
+                      fill={fill}
+                      stroke={stroke}
+                      strokeWidth={strokeWidth}
+                    />
+                    <text
+                      x={w / 2}
+                      y={h / 2}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      fontSize={fs}
+                      fontWeight={n.data.kind === "root" ? 700 : n.data.kind === "branch" ? 600 : 500}
+                      fill="#0f172a"
+                      style={{ pointerEvents: "none", fontFamily: "inherit" }}
+                    >
+                      {n.data.name.length > 38 ? n.data.name.slice(0, 37) + "…" : n.data.name}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
           </g>
         </svg>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full" style={{ background: "hsl(238 75% 60%)" }} />
-          <span className="text-foreground">Core (Analyze / Evaluate / Create)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full" style={{ background: "hsl(215 20% 50%)" }} />
-          <span className="text-foreground">Sub (Remember / Understand / Apply)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full" style={{ background: "hsl(38 92% 60%)" }} />
-          <span className="text-muted-foreground">Isolated (after check)</span>
-        </div>
-        <div className="ml-auto flex items-center gap-3 text-muted-foreground">
-          {(["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"] as BloomLevel[]).map(
-            (b) => (
-              <span key={b} className="flex items-center gap-1">
-                <span className={cn("h-2 w-2 rounded-full", bloomDot[b])} />
-                {b}
-              </span>
-            ),
-          )}
-        </div>
       </div>
     </div>
   );

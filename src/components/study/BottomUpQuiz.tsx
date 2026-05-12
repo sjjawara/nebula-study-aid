@@ -14,19 +14,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
 import { FollowUpQuestions } from "./FollowUpQuestions";
+import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
 const LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate"];
-
-const shuffle = <T,>(arr: T[]): T[] => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
 
 interface Props {
   lecture: Lecture;
@@ -40,17 +32,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
-  const distractors = useMemo(() => {
-    const others = lecture.flashcards
-      .filter((f) => f.answer !== card.answer)
-      .map((f) => f.answer);
-    return shuffle(others).slice(0, 3);
-  }, [lecture, card]);
+  const distractors = useMemo(() => pickDistractors(lecture, card, 3), [lecture, card]);
 
   const mcOptions = useMemo(
     () => shuffle([card.answer, ...distractors]),
     [card, distractors],
   );
+
+  const tf = useMemo(() => buildTrueFalseStatement(lecture, card), [lecture, card]);
 
   // Per-level state
   const [tfChoice, setTfChoice] = useState<boolean | null>(null);
@@ -95,7 +84,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
     }
   };
 
-  const tfCorrect = tfChoice === true;
+  const tfCorrect = tfChoice !== null && tfChoice === tf.correctValue;
   const mcCorrect = mcChoice === card.answer;
 
   return (
@@ -145,19 +134,22 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
             <div>
               <p className="text-sm font-medium text-foreground">Recall</p>
               <p className="text-xs text-muted-foreground">
-                True or false: <span className="text-foreground">{card.answer}</span>
+                Is the following claim correct?
               </p>
             </div>
             <BloomBadge level="Remember" />
           </div>
+          <p className="rounded-lg border border-border bg-background p-3 text-sm text-foreground leading-relaxed">
+            {tf.statement}
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: "True", value: true },
               { label: "False", value: false },
             ].map((o) => {
               const selected = tfChoice === o.value;
-              const showRight = selected && o.value === true;
-              const showWrong = selected && o.value !== true;
+              const showRight = selected && o.value === tf.correctValue;
+              const showWrong = selected && o.value !== tf.correctValue;
               return (
                 <button
                   key={o.label}

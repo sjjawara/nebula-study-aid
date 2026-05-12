@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp, Play, X } from "lucide-react";
+import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge } from "lucide-react";
 import type { Lecture, Flashcard } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { TopDownMasteryQuiz } from "./TopDownMasteryQuiz";
 import { BottomUpQuiz } from "./BottomUpQuiz";
+import { MasteryModeQuiz } from "./MasteryModeQuiz";
 import { cn } from "@/lib/utils";
 
-export type QuizMode = "top" | "bottom";
+export type QuizMode = "bottom" | "top" | "mastery";
 
 interface Props {
   lecture: Lecture;
@@ -29,9 +30,10 @@ const pickRandom = (lecture: Lecture, exclude?: Flashcard): Flashcard | null => 
 };
 
 export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
-  const [mode, setMode] = useState<QuizMode>("top");
+  const [mode, setMode] = useState<QuizMode>("bottom");
   const [card, setCard] = useState<Flashcard | null>(null);
   const [sessionKey, setSessionKey] = useState(0);
+  const [masteryActive, setMasteryActive] = useState(false);
 
   useEffect(() => {
     if (initialCard) {
@@ -42,6 +44,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   }, [initialCard, onConsumedInitial]);
 
   const start = (c?: Flashcard | null) => {
+    if (mode === "mastery") {
+      setMasteryActive(true);
+      setSessionKey((k) => k + 1);
+      return;
+    }
     const next = c ?? pickRandom(lecture);
     if (!next) return;
     setCard(next);
@@ -60,7 +67,10 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setSessionKey((k) => k + 1);
   };
 
-  const exit = () => setCard(null);
+  const exit = () => {
+    setCard(null);
+    setMasteryActive(false);
+  };
 
   const ModePill = ({
     value,
@@ -110,6 +120,27 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     );
   }
 
+  // Active mastery session
+  if (masteryActive) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="inline-flex rounded-lg border border-border bg-card p-1 text-xs">
+            <span className="rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground">
+              <Gauge className="mr-1 inline h-3 w-3" />
+              Mastery Mode
+            </span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={exit}>
+            <X className="h-4 w-4" />
+            Exit
+          </Button>
+        </div>
+        <MasteryModeQuiz key={`mastery-${sessionKey}`} lecture={lecture} onExit={exit} />
+      </div>
+    );
+  }
+
   if (!card) {
     const hardest = pickHardest(lecture);
     return (
@@ -121,7 +152,13 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
             How do you want to learn today?
           </h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <ModePill
+              value="bottom"
+              icon={ArrowUp}
+              title="Bottom Up"
+              desc="Build up — earn each Bloom's level in turn."
+            />
             <ModePill
               value="top"
               icon={ArrowDown}
@@ -129,10 +166,10 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
               desc="Productive failure — start at Evaluate, scaffold down."
             />
             <ModePill
-              value="bottom"
-              icon={ArrowUp}
-              title="Bottom Up"
-              desc="Build up — earn each Bloom's level in turn."
+              value="mastery"
+              icon={Gauge}
+              title="Mastery Mode"
+              desc="Adaptive stream — difficulty rises with your accuracy."
             />
           </div>
         </div>
@@ -143,14 +180,16 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           </div>
           <h4 className="text-base font-semibold text-foreground">Ready when you are</h4>
           <p className="text-sm text-muted-foreground">
-            We'll pull a question from your flashcards and launch instantly.
+            {mode === "mastery"
+              ? "Mastery Mode adapts to you — start at Remember and climb."
+              : "We'll pull a question from your flashcards and launch instantly."}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
             <Button onClick={() => start()} className="bg-gradient-primary">
               <Play className="h-4 w-4" />
               Start Quiz
             </Button>
-            {hardest && (
+            {mode !== "mastery" && hardest && (
               <Button variant="secondary" onClick={() => start(hardest)}>
                 Try the hardest one
               </Button>
@@ -166,6 +205,16 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       <div className="flex items-center justify-between">
         <div className="inline-flex rounded-lg border border-border bg-card p-1 text-xs">
           <button
+            onClick={() => setMode("bottom")}
+            className={cn(
+              "rounded-md px-3 py-1.5 font-medium transition-colors",
+              mode === "bottom" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <ArrowUp className="mr-1 inline h-3 w-3" />
+            Bottom Up
+          </button>
+          <button
             onClick={() => setMode("top")}
             className={cn(
               "rounded-md px-3 py-1.5 font-medium transition-colors",
@@ -176,14 +225,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             Top Down
           </button>
           <button
-            onClick={() => setMode("bottom")}
+            onClick={() => {
+              setMode("mastery");
+              setMasteryActive(true);
+              setSessionKey((k) => k + 1);
+            }}
             className={cn(
               "rounded-md px-3 py-1.5 font-medium transition-colors",
-              mode === "bottom" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              mode === "mastery" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <ArrowUp className="mr-1 inline h-3 w-3" />
-            Bottom Up
+            <Gauge className="mr-1 inline h-3 w-3" />
+            Mastery
           </button>
         </div>
         <Button variant="ghost" size="sm" onClick={exit}>

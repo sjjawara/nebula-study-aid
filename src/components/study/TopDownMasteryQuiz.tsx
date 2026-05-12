@@ -30,6 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
@@ -64,14 +65,6 @@ const Section = ({
     </div>
   ) : null;
 
-const shuffle = <T,>(arr: T[]): T[] => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
 
 interface Props {
   lecture: Lecture;
@@ -82,17 +75,14 @@ interface Props {
 }
 
 export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
-  const distractors = useMemo(() => {
-    const others = lecture.flashcards
-      .filter((f) => f.answer !== card.answer)
-      .map((f) => f.answer);
-    return shuffle(others).slice(0, 3);
-  }, [lecture, card]);
+  const distractors = useMemo(() => pickDistractors(lecture, card, 3), [lecture, card]);
 
   const mcOptions = useMemo(
     () => shuffle([card.answer, ...distractors]),
     [card, distractors],
   );
+
+  const tf = useMemo(() => buildTrueFalseStatement(lecture, card), [lecture, card]);
 
   const [stage, setStage] = useState<Stage>("l5");
   const [unlocked, setUnlocked] = useState<Set<Stage>>(new Set(["l5"]));
@@ -176,18 +166,21 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                   Foundational check
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  True or false: <span className="text-foreground">{card.answer}</span>
+                  Is the following claim correct?
                 </p>
               </div>
               <BloomBadge level="Remember" />
             </div>
+            <p className="rounded-lg border border-border bg-background p-3 text-sm text-foreground leading-relaxed">
+              {tf.statement}
+            </p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "True", value: true },
                 { label: "False", value: false },
               ].map((o) => {
                 const selected = tfChoice === o.value;
-                const correct = o.value === true;
+                const correct = o.value === tf.correctValue;
                 const showRight = selected && correct;
                 const showWrong = selected && !correct;
                 return (
@@ -215,10 +208,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Pick the best answer
+                  Narrow it down — which is the strongest answer?
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Choose the option that best resolves the question above.
+                  Each option is a plausible read of the question. Pick the one that holds up under scrutiny.
                 </p>
               </div>
               <BloomBadge level="Apply" />
