@@ -15,6 +15,7 @@ import type { Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 
 interface Props {
   cards: Flashcard[];
