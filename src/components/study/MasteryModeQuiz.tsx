@@ -642,7 +642,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
             <Textarea
               value={openText}
               onChange={(e) => setOpenText(e.target.value)}
-              placeholder="Write your reasoning here..."
+              placeholder={t("Write your reasoning here...")}
               className="min-h-[140px] resize-none bg-background"
               disabled={answered}
             />
@@ -657,11 +657,11 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Evaluating…
+                      {t("Evaluating…")}
                     </>
                   ) : (
                     <>
-                      Submit <ChevronRight className="h-4 w-4" />
+                      {t("Submit")} <ChevronRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -684,33 +684,33 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                 {wasCorrect ? (
                   <>
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span className="text-emerald-700">Correct — mastery increased</span>
+                    <span className="text-emerald-700">{t("Correct — mastery increased")}</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="h-4 w-4 text-destructive" />
-                    <span className="text-destructive">Not quite — mastery dropped half a level</span>
+                    <span className="text-destructive">{t("Not quite — mastery dropped half a level")}</span>
                   </>
                 )}
               </p>
               <BloomBadge level={lastRecord.level} />
             </div>
             <div className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">Why:</span>{" "}
+              <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
               {explanationFor(lastRecord)}
             </div>
             {!wasCorrect && (
               <div className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">Correct answer:</span> {lastRecord.correctAnswer}
+                <span className="font-medium text-foreground">{t("Correct answer:")}</span> {lastRecord.correctAnswer}
               </div>
             )}
             <p className="text-xs text-foreground/80 italic">
-              {encouragementFor(!!wasCorrect, accuracy, streak)}
+              {t(encouragementFor(!!wasCorrect, accuracy, streak))}
             </p>
             <div className="flex justify-end pt-1">
               <Button onClick={nextQuestion} className="bg-gradient-primary">
                 <RefreshCw className="h-4 w-4" />
-                Next question
+                {t("Next question")}
               </Button>
             </div>
           </div>
@@ -718,7 +718,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
 
         {answered && feedbackMode === "end" && (
           <p className="text-xs text-muted-foreground italic text-right">
-            Answer recorded. Loading next question…
+            {t("Answer recorded. Loading next question…")}
           </p>
         )}
       </div>
