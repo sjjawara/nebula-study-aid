@@ -258,7 +258,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         {item.type === "proof_strategy" && (
           <div className="rounded-xl border border-bloom-evaluate/30 bg-bloom-evaluate/5 p-5">
             <p className="text-[11px] font-medium uppercase tracking-wider text-bloom-evaluate">
-              Theorem
+              {t("Theorem")}
             </p>
             <p className="mt-1.5 text-base font-semibold leading-snug text-foreground">
               {item.theorem}
@@ -288,7 +288,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         {(item.type === "justify_step" || item.type === "what_comes_next") && (
           <div className="rounded-lg border border-border bg-background p-4">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Theorem
+              {t("Theorem")}
             </p>
             <p className="mt-1 text-sm font-medium text-foreground">{item.theorem}</p>
             {item.steps.length > 0 && (
@@ -303,7 +303,7 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
           </div>
         )}
 
-        <p className="text-sm font-medium text-foreground">{item.prompt}</p>
+        <p className="text-sm font-medium text-foreground">{t(item.prompt)}</p>
 
         <div className="grid gap-2">
           {item.options.map((opt) => {
