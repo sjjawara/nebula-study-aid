@@ -224,13 +224,14 @@ export const cleanExplanation = (raw: string, correctAnswer?: string): string =>
   return out;
 };
 
+// Quiz-assessable Bloom levels in ascending complexity. "Create" is excluded
+// because original construction cannot be evaluated in a quiz format.
 export const BLOOM_ORDER: BloomLevel[] = [
   "Remember",
   "Understand",
   "Apply",
   "Analyze",
   "Evaluate",
-  "Create",
 ];
 
 /**
