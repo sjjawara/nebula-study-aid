@@ -535,12 +535,10 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
           </div>
 
           <div className="px-4 pb-4 pt-2 space-y-3">
-            <a
-              href={preview.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => openExternal(e, preview.link)}
-              className="relative block aspect-video overflow-hidden rounded-lg border border-border bg-muted group"
+            <button
+              type="button"
+              onClick={() => openExternal(preview.link)}
+              className="relative block w-full aspect-video overflow-hidden rounded-lg border border-border bg-muted group text-left"
             >
               {preview.videoId ? (
                 <img
@@ -567,7 +565,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
               <span className="absolute bottom-2 right-2 rounded bg-background/80 px-1.5 py-0.5 font-mono text-[11px] text-primary tabular-nums">
                 {preview.timestamp}
               </span>
-            </a>
+            </button>
 
             <div>
               <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">{preview.topic}</p>
@@ -575,18 +573,11 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
             </div>
 
             <Button
-              asChild
               size="sm"
               className="w-full bg-gradient-primary hover:opacity-90"
+              onClick={() => openExternal(preview.link)}
             >
-              <a
-                href={preview.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => openExternal(e, preview.link)}
-              >
-                <Play className="h-4 w-4 mr-1.5 fill-current" /> Watch this moment
-              </a>
+              <Play className="h-4 w-4 mr-1.5 fill-current" /> Watch this moment
             </Button>
           </div>
         </aside>
