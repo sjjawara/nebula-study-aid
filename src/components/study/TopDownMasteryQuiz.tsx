@@ -163,17 +163,20 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Foundational check
+                  Foundational check — true or false?
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Is the following claim correct?
+                  {tf.question}
                 </p>
               </div>
               <BloomBadge level="Remember" />
             </div>
-            <p className="rounded-lg border border-border bg-background p-3 text-sm text-foreground leading-relaxed">
-              {tf.statement}
-            </p>
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
+                Proposed answer
+              </p>
+              <p className="text-sm text-foreground leading-relaxed">{tf.statement}</p>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: "True", value: true },
