@@ -35,6 +35,8 @@ interface Props {
   lecture: Lecture;
   onExit?: () => void;
   feedbackMode?: FeedbackMode;
+  /** Consecutive correct answers required to advance one Bloom level. */
+  questionsPerLevel?: number;
 }
 
 type QType = "tf" | "mcq" | "open";
@@ -46,7 +48,6 @@ const typeForLevel = (l: BloomLevel): QType => {
   return "open";
 };
 
-const STEP_CORRECT = 1 / 3;
 const STEP_WRONG = -1 / 2;
 
 interface AnswerRecord {
