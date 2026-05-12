@@ -3,13 +3,28 @@
 // jumps to the correct moment.
 
 /** Convert "h:mm:ss" or "m:ss" (or "ss") to total seconds. */
-export const timestampToSeconds = (timestamp: string): number => {
-  if (!timestamp) return 0;
-  const parts = timestamp.split(":").map((p) => parseInt(p, 10));
-  if (parts.some((n) => Number.isNaN(n))) return 0;
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  if (parts.length === 1) return parts[0];
+export const timestampToSeconds = (timestamp: string | number | null | undefined): number => {
+  if (timestamp === null || timestamp === undefined || timestamp === "") return 0;
+  const clean = timestamp.toString().trim();
+  if (!clean) return 0;
+  const parts = clean.split(":");
+  if (parts.length === 2) {
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    if (Number.isNaN(minutes) || Number.isNaN(seconds)) return 0;
+    return minutes * 60 + seconds;
+  }
+  if (parts.length === 3) {
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    const seconds = parseInt(parts[2], 10);
+    if (Number.isNaN(hours) || Number.isNaN(minutes) || Number.isNaN(seconds)) return 0;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+  if (parts.length === 1) {
+    const n = parseInt(parts[0], 10);
+    return Number.isNaN(n) ? 0 : n;
+  }
   return 0;
 };
 
