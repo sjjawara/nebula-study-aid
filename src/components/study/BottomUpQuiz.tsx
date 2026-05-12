@@ -15,6 +15,7 @@ import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
 import { FollowUpQuestions } from "./FollowUpQuestions";
 import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
+import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
