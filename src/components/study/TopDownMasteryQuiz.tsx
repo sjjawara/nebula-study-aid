@@ -208,10 +208,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Pick the best answer
+                  Narrow it down — which is the strongest answer?
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Choose the option that best resolves the question above.
+                  Each option is a plausible read of the question. Pick the one that holds up under scrutiny.
                 </p>
               </div>
               <BloomBadge level="Apply" />
