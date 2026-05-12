@@ -150,6 +150,7 @@ interface Props {
 }
 
 export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
+  const { t } = useT();
   const items = useMemo<ProofItem[]>(
     () => cards.map((c, i) => buildItem(lecture, c, TYPE_ROTATION[i % TYPE_ROTATION.length])),
     [cards, lecture],
