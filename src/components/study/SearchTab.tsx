@@ -137,6 +137,7 @@ const generateKeywordFlashcard = (
 type RankedMoment = SearchMoment & { score?: number };
 
 export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps) => {
+  const { t } = useT();
   const [q, setQ] = useState("");
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
