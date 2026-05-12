@@ -237,7 +237,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
         <>
           <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <span>Card {Math.min(i, total - 1) + 1} of {total}</span>
+              <span>{t("Card")} {Math.min(i, total - 1) + 1} {t("of")} {total}</span>
               {card.timestamp && <TimestampBadge videoId={videoId} timestamp={card.timestamp} />}
             </div>
             <div className="flex items-center gap-2">
@@ -249,7 +249,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   className="h-7 gap-1 text-xs"
                 >
                   <Sparkles className="h-3 w-3" />
-                  Quiz me on this
+                  {t("Quiz me on this")}
                 </Button>
               )}
               {canEdit && (
@@ -258,7 +258,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   size="icon"
                   onClick={() => openEdit(Math.min(i, total - 1))}
                   className="h-7 w-7"
-                  aria-label="Edit flashcard"
+                  aria-label={t("Edit flashcard")}
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
@@ -275,7 +275,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
           >
             <div className="absolute top-4 right-4 text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1">
               <RotateCw className="h-3 w-3" />
-              {flipped ? "Answer" : "Question"}
+              {flipped ? t("Answer") : t("Question")}
             </div>
             {card.timestamp && (
               <div className="absolute top-4 left-4">
@@ -314,7 +314,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="secondary" onClick={() => setFlipped((f) => !f)}>
-              Flip card
+              {t("Flip card")}
             </Button>
             <Button variant="secondary" size="icon" onClick={() => go(1)}>
               <ChevronRight className="h-4 w-4" />
