@@ -222,6 +222,7 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
               Lecture Profile
             </h3>
+            <InfoTooltip content={tooltipCopy.bloomTaxonomyProfile} label="About Bloom's Taxonomy" />
           </header>
 
           <div className="flex flex-wrap items-center gap-3">
