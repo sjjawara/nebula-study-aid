@@ -30,7 +30,10 @@ export const OutlineTab = ({ lecture }: { lecture: Lecture }) => (
     {/* Legend */}
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card/60 px-4 py-2.5 text-xs text-muted-foreground">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="font-medium text-foreground">Cognitive load:</span>
+        <span className="font-medium text-foreground inline-flex items-center gap-1">
+          Cognitive load:
+          <InfoTooltip content={tooltipCopy.cognitiveLoad} label="About cognitive load" />
+        </span>
         {(["low", "medium", "high"] as LoadBucket[]).map((b) => (
           <span key={b} className="inline-flex items-center gap-1.5">
             <span className={cn("h-2 w-2 rounded-full", dotClass[b])} />
