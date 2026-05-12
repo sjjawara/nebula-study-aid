@@ -371,30 +371,30 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       <div className="space-y-5">
         <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-card/60 p-6 shadow-sm">
           <p className="text-xs font-medium uppercase tracking-wider text-primary">
-            Quiz mode
+            {t("Quiz mode")}
           </p>
           <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground inline-flex items-center gap-1.5">
-            How do you want to learn today?
+            {t("How do you want to learn today?")}
             <InfoTooltip content={tooltipCopy.bloomTaxonomyQuiz} label="About Bloom's Taxonomy" iconClassName="h-4 w-4" />
           </h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <ModePill
               value="bottom"
               icon={ArrowUp}
-              title="Bottom Up"
-              desc="Build up — earn each Bloom's level in turn."
+              title={t("Bottom Up")}
+              desc={t("Build up — earn each Bloom's level in turn.")}
             />
             <ModePill
               value="top"
               icon={ArrowDown}
-              title="Top Down (Productive Failure)"
-              desc="Productive failure — start at Evaluate, scaffold down."
+              title={t("Top Down (Productive Failure)")}
+              desc={t("Productive failure — start at Evaluate, scaffold down.")}
             />
             <ModePill
               value="mastery"
               icon={Gauge}
-              title="Mastery Mode"
-              desc="Adaptive stream — difficulty rises with your accuracy."
+              title={t("Mastery Mode")}
+              desc={t("Adaptive stream — difficulty rises with your accuracy.")}
             />
           </div>
         </div>
@@ -403,23 +403,23 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow">
             <Sparkles className="h-5 w-5" />
           </div>
-          <h4 className="text-base font-semibold text-foreground">Ready when you are</h4>
+          <h4 className="text-base font-semibold text-foreground">{t("Ready when you are")}</h4>
           <div className="flex justify-center">
             <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
           </div>
           <p className="text-sm text-muted-foreground">
             {mode === "mastery"
-              ? "Mastery Mode adapts to you — start at Remember and climb."
-              : "We'll pull a question from your flashcards and launch instantly."}
+              ? t("Mastery Mode adapts to you — start at Remember and climb.")
+              : t("We'll pull a question from your flashcards and launch instantly.")}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
             <Button onClick={() => start()} className="bg-gradient-primary">
               <Play className="h-4 w-4" />
-              Start Quiz
+              {t("Start Quiz")}
             </Button>
             {mode !== "mastery" && hardest && (
               <Button variant="secondary" onClick={() => start(hardest)}>
-                Try the hardest one
+                {t("Try the hardest one")}
               </Button>
             )}
           </div>
