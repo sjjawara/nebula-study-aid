@@ -39,6 +39,11 @@ type Feedback = {
   feedback?: string;
   score?: number;
   correct?: boolean;
+  what_was_right?: string;
+  what_was_wrong?: string;
+  what_to_improve?: string;
+  learning_outcome?: string;
+  bloom_level_demonstrated?: string;
   [k: string]: unknown;
 };
 
