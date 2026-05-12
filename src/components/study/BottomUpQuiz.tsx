@@ -57,9 +57,31 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [feedbackText, setFeedbackText] = useState<string | null>(null);
+  // Per-level "correct so far at this level" counter — gates advancement when
+  // questionsPerLevel > 1.
+  const [levelCorrect, setLevelCorrect] = useState(0);
+  // Explicit submit flags for open-ended levels (Understand / Analyze).
+  const [understandSubmitted, setUnderstandSubmitted] = useState(false);
+  const [analyzeSubmitted, setAnalyzeSubmitted] = useState(false);
 
   const advance = () => {
     setSubmitError(null);
+    const nextCount = levelCorrect + 1;
+    if (nextCount < questionsPerLevel) {
+      // Stay on this level until N correct/submitted answers are accumulated.
+      setLevelCorrect(nextCount);
+      // Reset per-question state so the user can answer again on the same level.
+      setTfChoice(null);
+      setMcChoice(null);
+      setUnderstandText("");
+      setAnalyzeText("");
+      setUnderstandSubmitted(false);
+      setAnalyzeSubmitted(false);
+      return;
+    }
+    setLevelCorrect(0);
+    setUnderstandSubmitted(false);
+    setAnalyzeSubmitted(false);
     if (levelIdx < LEVELS.length - 1) setLevelIdx((i) => i + 1);
     else setDone(true);
   };
