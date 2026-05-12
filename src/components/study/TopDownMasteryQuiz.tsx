@@ -174,7 +174,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    Foundational check — true or false?
+                    {t("Foundational check — true or false?")}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {tf.question}
@@ -184,7 +184,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
               </div>
               <div className="rounded-lg border border-border bg-background p-3">
                 <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                  Proposed answer
+                  {t("Proposed answer")}
                 </p>
                 <p className="text-sm text-foreground leading-relaxed">{tf.statement}</p>
               </div>
@@ -208,7 +208,7 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                         showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
                       )}
                     >
-                      {o.label}
+                      {t(o.label)}
                     </button>
                   );
                 })}
