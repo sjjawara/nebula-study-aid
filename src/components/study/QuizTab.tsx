@@ -73,6 +73,36 @@ const pickRandom = (lecture: Lecture, exclude?: Flashcard): Flashcard | null => 
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
+/** Rewrite a flashcard's question using one of three formula-specific patterns. */
+const buildFormulaCard = (card: Flashcard, idx: number): Flashcard => {
+  const formula = card.formula?.trim();
+  if (!formula) return card;
+  const concept = card.question.replace(/[?.!]+$/, "").trim();
+  const vars = Array.from(
+    new Set((formula.match(/\b[a-zA-Zα-ωΑ-Ω]\b/g) ?? []).filter((v) => !/^[ivx]$/i.test(v))),
+  );
+  const patterns: Array<() => { question: string; answer: string } | null> = [
+    () => ({ question: `Write the formula for ${concept}.`, answer: formula }),
+    () =>
+      vars.length
+        ? {
+            question: `In the formula  ${formula}  — what does "${vars[idx % vars.length]}" represent?`,
+            answer: card.answer,
+          }
+        : null,
+    () => ({
+      question: `Which formula would you use to solve: ${concept}?`,
+      answer: formula,
+    }),
+  ];
+  const order = [idx % 3, (idx + 1) % 3, (idx + 2) % 3];
+  for (const p of order) {
+    const r = patterns[p]();
+    if (r) return { ...card, question: r.question, answer: r.answer };
+  }
+  return card;
+};
+
 export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [mode, setMode] = useState<QuizMode>("bottom");
   const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>("immediate");
