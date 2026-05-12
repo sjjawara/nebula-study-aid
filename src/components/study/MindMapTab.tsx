@@ -352,6 +352,9 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     };
   }, [treeData, positions]);
 
+  // Keep latest laid-out nodes available to pointer handlers.
+  nodesRef.current = nodes;
+
   useEffect(() => {
     if (!svgRef.current || !gRef.current) return;
     const svg = d3.select(svgRef.current);
