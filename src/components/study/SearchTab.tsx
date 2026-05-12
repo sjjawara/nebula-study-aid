@@ -261,7 +261,37 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
           placeholder="Ask a question or search lecture content..."
           className="pl-10 h-12 bg-card"
         />
+        {aiLoading && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+        )}
       </div>
+
+      {q.trim() && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            {usingAi ? (
+              <>
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span className="text-primary">AI semantic ranking</span>
+              </>
+            ) : aiLoading ? (
+              <>
+                <Zap className="h-3 w-3" />
+                Showing instant matches while AI thinks…
+              </>
+            ) : aiError ? (
+              <span className="text-destructive">AI search failed — showing keyword matches</span>
+            ) : (
+              <>
+                <Zap className="h-3 w-3" />
+                Keyword matches
+              </>
+            )}
+          </span>
+          <span>{results.length} result{results.length === 1 ? "" : "s"}</span>
+        </div>
+      )}
+
       <div className="space-y-2">
         {results.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">No matching moments found.</p>
