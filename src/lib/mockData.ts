@@ -1,12 +1,12 @@
 export type BloomLevel = "Remember" | "Understand" | "Apply" | "Analyze" | "Evaluate" | "Create";
 
 export const bloomColor: Record<BloomLevel, string> = {
-  Remember: "bg-bloom-remember/15 text-bloom-remember border-bloom-remember/30",
-  Understand: "bg-bloom-understand/15 text-bloom-understand border-bloom-understand/30",
-  Apply: "bg-bloom-apply/15 text-bloom-apply border-bloom-apply/30",
-  Analyze: "bg-bloom-analyze/15 text-bloom-analyze border-bloom-analyze/30",
-  Evaluate: "bg-bloom-evaluate/15 text-bloom-evaluate border-bloom-evaluate/30",
-  Create: "bg-bloom-create/15 text-bloom-create border-bloom-create/30",
+  Remember: "bg-bloom-remember text-slate-900 border-bloom-remember",
+  Understand: "bg-bloom-understand text-slate-900 border-bloom-understand",
+  Apply: "bg-bloom-apply text-slate-900 border-bloom-apply",
+  Analyze: "bg-bloom-analyze text-slate-900 border-bloom-analyze",
+  Evaluate: "bg-bloom-evaluate text-slate-900 border-bloom-evaluate",
+  Create: "bg-bloom-create text-white border-bloom-create",
 };
 
 export interface OutlineItem {

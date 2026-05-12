@@ -323,7 +323,7 @@ export const SummariesTab = ({
             <span className="text-xs text-muted-foreground">Dominant level:</span>
             <BloomBadge level={profile.dominant} />
             <span className="text-xs text-muted-foreground">
-              {profile.pct[profile.dominant]}% of {profile.total} chunks
+              {profile.pct[profile.dominant]}% of {profile.total} segments
             </span>
           </div>
 
