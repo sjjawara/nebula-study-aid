@@ -2,30 +2,40 @@
 // Used across Outline, Flashcards, Search, Mind Map, and Quiz tabs so every link
 // jumps to the correct moment.
 
-/** Convert "h:mm:ss" or "m:ss" (or "ss") to total seconds. */
+/**
+ * Convert a timestamp to total seconds. Supports:
+ *   - "M:SS" or "H:MM:SS"
+ *   - decimal like "2.30" → treated as total seconds (NOT minutes.seconds)
+ *   - plain integer seconds
+ */
 export const timestampToSeconds = (timestamp: string | number | null | undefined): number => {
-  if (timestamp === null || timestamp === undefined || timestamp === "") return 0;
-  const clean = timestamp.toString().trim();
-  if (!clean) return 0;
-  const parts = clean.split(":");
+  if (!timestamp && timestamp !== 0) return 0;
+  const str = String(timestamp).trim();
+  if (!str) return 0;
+
+  // Decimal format like "2.30" — treat as total seconds
+  if (str.includes(".") && !str.includes(":")) {
+    const f = parseFloat(str);
+    return Number.isNaN(f) ? 0 : Math.floor(f);
+  }
+
+  // "M:SS" or "H:MM:SS"
+  const parts = str.split(":");
   if (parts.length === 2) {
-    const minutes = parseInt(parts[0], 10);
-    const seconds = parseInt(parts[1], 10);
-    if (Number.isNaN(minutes) || Number.isNaN(seconds)) return 0;
+    const minutes = parseInt(parts[0], 10) || 0;
+    const seconds = parseInt(parts[1], 10) || 0;
     return minutes * 60 + seconds;
   }
   if (parts.length === 3) {
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-    const seconds = parseInt(parts[2], 10);
-    if (Number.isNaN(hours) || Number.isNaN(minutes) || Number.isNaN(seconds)) return 0;
+    const hours = parseInt(parts[0], 10) || 0;
+    const minutes = parseInt(parts[1], 10) || 0;
+    const seconds = parseInt(parts[2], 10) || 0;
     return hours * 3600 + minutes * 60 + seconds;
   }
-  if (parts.length === 1) {
-    const n = parseInt(parts[0], 10);
-    return Number.isNaN(n) ? 0 : n;
-  }
-  return 0;
+
+  // Plain seconds
+  const num = parseInt(str, 10);
+  return Number.isNaN(num) ? 0 : num;
 };
 
 export const extractVideoId = (videoUrl: string): string | null => {
