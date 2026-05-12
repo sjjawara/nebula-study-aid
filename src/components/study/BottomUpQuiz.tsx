@@ -186,6 +186,8 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
               const isCompleted = i < levelIdx || done;
               const isCurrent = i === levelIdx && !done;
               const canJump = i < levelIdx && !done;
+              const bloomVar = `hsl(var(--bloom-${l.toLowerCase()}))`;
+              const bloomMuted = `hsl(var(--bloom-${l.toLowerCase()}) / 0.2)`;
               const segment = (
                 <button
                   type="button"
@@ -199,11 +201,12 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
                   }}
                   disabled={!canJump}
                   aria-label={canJump ? `${t("Jump to")} ${t(l)}` : t(l)}
+                  style={{
+                    backgroundColor: isCompleted || isCurrent ? bloomVar : bloomMuted,
+                    boxShadow: isCurrent ? `0 0 0 2px hsl(var(--bloom-${l.toLowerCase()}) / 0.35)` : undefined,
+                  }}
                   className={cn(
                     "h-1.5 w-full rounded-full transition-all",
-                    isCompleted && "bg-emerald-500",
-                    isCurrent && "bg-primary",
-                    !isCompleted && !isCurrent && "bg-muted",
                     canJump ? "cursor-pointer hover:opacity-80" : "cursor-default",
                   )}
                 />
