@@ -29,16 +29,40 @@ const timestampToSeconds = (ts: string): number => {
   return parts[0] || 0;
 };
 
+const extractVideoId = (videoUrl: string): string | null => {
+  try {
+    const u = new URL(videoUrl);
+    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1) || null;
+    const v = u.searchParams.get("v");
+    if (v) return v;
+    const m = u.pathname.match(/\/(?:embed|shorts|v)\/([^/?#]+)/);
+    if (m) return m[1];
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const buildYoutubeLink = (videoUrl: string | undefined, ts: string): string | null => {
   if (!videoUrl) return null;
   const seconds = timestampToSeconds(ts);
-  try {
-    const u = new URL(videoUrl);
-    u.searchParams.set("t", `${seconds}s`);
-    return u.toString();
-  } catch {
-    const sep = videoUrl.includes("?") ? "&" : "?";
-    return `${videoUrl}${sep}t=${seconds}s`;
+  const id = extractVideoId(videoUrl);
+  if (id) return `https://www.youtube.com/watch?v=${id}&t=${seconds}s`;
+  const sep = videoUrl.includes("?") ? "&" : "?";
+  return `${videoUrl}${sep}t=${seconds}s`;
+};
+
+const openExternal = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
+  e.preventDefault();
+  e.stopPropagation();
+  // Use top-level window to escape iframe sandboxing in preview environments
+  const w = window.open(url, "_blank", "noopener,noreferrer");
+  if (!w) {
+    try {
+      window.top?.location.assign(url);
+    } catch {
+      window.location.href = url;
+    }
   }
 };
 
