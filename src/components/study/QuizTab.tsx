@@ -15,12 +15,39 @@ const modeTooltip: Record<QuizMode, string> = {
 };
 
 export type QuizMode = "bottom" | "top" | "mastery";
+export type FeedbackMode = "immediate" | "end";
 
 interface Props {
   lecture: Lecture;
   initialCard?: Flashcard | null;
   onConsumedInitial?: () => void;
 }
+
+const FeedbackModeToggle = ({
+  mode,
+  onChange,
+}: {
+  mode: FeedbackMode;
+  onChange: (m: FeedbackMode) => void;
+}) => (
+  <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-background p-1 text-xs">
+    <span className="px-2 text-muted-foreground">Feedback:</span>
+    {(["immediate", "end"] as FeedbackMode[]).map((m) => (
+      <button
+        key={m}
+        onClick={() => onChange(m)}
+        className={cn(
+          "rounded-md px-3 py-1 font-medium transition-colors",
+          mode === m
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        {m === "immediate" ? "Immediate" : "End of Quiz"}
+      </button>
+    ))}
+  </div>
+);
 
 const pickHardest = (lecture: Lecture): Flashcard | null => {
   if (!lecture.flashcards.length) return null;
