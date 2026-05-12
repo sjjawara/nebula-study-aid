@@ -373,7 +373,7 @@ const Index = () => {
               })}
             </ul>
             <p className="text-xs text-muted-foreground">
-              This usually takes 60–120 seconds · {elapsed}s elapsed
+              This usually takes 60 – 120 seconds · {elapsed}s elapsed
             </p>
           </section>
         )}
