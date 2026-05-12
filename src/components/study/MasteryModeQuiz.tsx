@@ -592,7 +592,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
                       wrongPick && "border-destructive/50 bg-destructive/5 text-destructive",
                     )}
                   >
-                    {o.label}
+                    {t(o.label)}
                   </button>
                 );
               })}
