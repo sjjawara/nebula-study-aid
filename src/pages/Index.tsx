@@ -298,7 +298,7 @@ const Index = () => {
                 <span className="text-primary">YouTube lecture</span>
               </h2>
               <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-                Paste a link and we'll generate an outline, summaries, flashcards, and a searchable transcript — all classified by cognitive depth.
+                Paste a link and we'll generate an outline, summaries, flashcards, quizzes, mind maps, and a searchable transcript with timestamps — all classified by cognitive depth.
               </p>
             </div>
 
