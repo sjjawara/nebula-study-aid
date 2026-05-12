@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ListOrdered, RotateCw, Sparkles, Play, Pencil, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useT } from "@/lib/i18n";
 
 interface FlashcardsTabProps {
   lecture: Lecture;
@@ -82,18 +83,24 @@ const emptyEditor: EditorState = {
   multiPath: false,
 };
 
-export const FormulaBadge = () => (
-  <span className="inline-flex items-center rounded-md border border-bloom-apply/40 bg-bloom-apply/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-apply">
-    Formula
-  </span>
-);
+export const FormulaBadge = () => {
+  const { t } = useT();
+  return (
+    <span className="inline-flex items-center rounded-md border border-bloom-apply/40 bg-bloom-apply/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-apply">
+      {t("Formula")}
+    </span>
+  );
+};
 
-export const StepSequenceBadge = () => (
-  <span className="inline-flex items-center gap-1 rounded-md border border-bloom-analyze/40 bg-bloom-analyze/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-analyze">
-    <ListOrdered className="h-3 w-3" />
-    Steps
-  </span>
-);
+export const StepSequenceBadge = () => {
+  const { t } = useT();
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-bloom-analyze/40 bg-bloom-analyze/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-analyze">
+      <ListOrdered className="h-3 w-3" />
+      {t("Steps")}
+    </span>
+  );
+};
 
 export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcards }: FlashcardsTabProps) => {
   const [i, setI] = useState(0);
@@ -102,6 +109,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
   const total = lecture.flashcards.length;
   const videoId = videoUrl ? extractVideoId(videoUrl) : null;
   const canEdit = !!onUpdateFlashcards;
+  const { t } = useT();
 
   // Keep cursor in range when cards are added/removed
   useEffect(() => {
@@ -209,12 +217,12 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-xs text-muted-foreground">
-          {total > 0 ? `${total} card${total === 1 ? "" : "s"} in this deck` : "No flashcards yet"}
+          {total > 0 ? `${total} ${total === 1 ? t("card") : t("cards")} ${t("in this deck")}` : t("No flashcards yet")}
         </div>
         {canEdit && (
           <Button size="sm" onClick={openCreate} className="bg-gradient-primary">
             <Plus className="h-4 w-4" />
-            Create Flashcard
+            {t("Create Flashcard")}
           </Button>
         )}
       </div>
@@ -222,7 +230,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
       {total === 0 || !card ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
           <p className="text-sm text-muted-foreground">
-            {canEdit ? "Create your first flashcard to start studying." : "No flashcards available."}
+            {canEdit ? t("Create your first flashcard to start studying.") : t("No flashcards available.")}
           </p>
         </div>
       ) : (
