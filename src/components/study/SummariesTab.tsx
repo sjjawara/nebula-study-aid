@@ -329,13 +329,13 @@ export const SummariesTab = ({
           <header className="flex items-center gap-2">
             <Compass className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Lecture Profile
+              {t("Lecture Profile")}
             </h3>
             <InfoTooltip content={tooltipCopy.bloomTaxonomyProfile} label="About Bloom's Taxonomy" />
           </header>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs text-muted-foreground">Dominant level:</span>
+            <span className="text-xs text-muted-foreground">{t("Dominant level:")}</span>
             <BloomBadge level={profile.dominant} />
             <span className="text-xs text-muted-foreground">
               {profile.pct[profile.dominant]}% of {profile.total} segments
@@ -344,9 +344,9 @@ export const SummariesTab = ({
 
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Bloom's distribution{" "}
+              {t("Bloom's distribution")}{" "}
               <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">
-                — click a segment for tailored study tips
+                {t("— click a segment for tailored study tips")}
               </span>
             </p>
             <div className="flex h-4 w-full overflow-hidden rounded-full border border-border bg-muted">
