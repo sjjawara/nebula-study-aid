@@ -167,17 +167,8 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
   const [aiResults, setAiResults] = useState<RankedMoment[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<{ topic: string; timestamp: string; link: string; videoId: string | null } | null>(null);
+  const videoId = videoUrl ? extractVideoId(videoUrl) : null;
 
-  const showPreview = (topic: string | undefined, timestamp: string, link: string | null) => {
-    if (!link) return;
-    setPreview({
-      topic: topic ?? "Lecture moment",
-      timestamp,
-      link,
-      videoId: videoUrl ? extractVideoId(videoUrl) : null,
-    });
-  };
 
   // Instant keyword fallback — also serves as the baseline before AI returns
   const keywordResults = useMemo<RankedMoment[]>(() => {
