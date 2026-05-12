@@ -32,10 +32,11 @@ const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-respons
 interface Props {
   lecture: Lecture;
   onExit?: () => void;
+  feedbackMode?: FeedbackMode;
 }
 
 type QType = "tf" | "mcq" | "open";
-type FeedbackMode = "immediate" | "end";
+export type FeedbackMode = "immediate" | "end";
 
 const typeForLevel = (l: BloomLevel): QType => {
   if (l === "Remember") return "tf";
@@ -82,8 +83,7 @@ const explanationFor = (record: Pick<AnswerRecord, "qType" | "correctAnswer" | "
   return `A complete answer would land on: ${record.correctAnswer}.`;
 };
 
-export const MasteryModeQuiz = ({ lecture, onExit }: Props) => {
-  const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>("immediate");
+export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }: Props) => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [used, setUsed] = useState<Set<string>>(new Set());
