@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Youtube, AlertCircle, Globe, Loader2 } from "lucide-react";
+import { Sparkles, Youtube, AlertCircle, Globe, Loader2, History, RotateCcw } from "lucide-react";
+import { SessionHistoryPanel } from "@/components/study/SessionHistoryPanel";
+import {
+  loadSessions,
+  saveSession,
+  removeSession,
+  type StoredSession,
+} from "@/lib/sessionHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,6 +64,8 @@ const Index = () => {
   const [translations, setTranslations] = useState<Record<string, Lecture>>({});
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<StoredSession[]>(() => loadSessions());
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const displayLecture: Lecture | null =
     language === "English"
@@ -153,7 +162,9 @@ const Index = () => {
       if (!raw) throw new Error("Malformed response: missing 'data' field.");
 
       const parsed: ApiResponse = typeof raw === "string" ? JSON.parse(raw) : raw;
-      setLecture(parseLecture(parsed));
+      const parsedLecture = parseLecture(parsed);
+      setLecture(parsedLecture);
+      setSessions(saveSession(parsedLecture, trimmedUrl));
       setStage("results");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -171,6 +182,27 @@ const Index = () => {
     setTranslateError(null);
   };
 
+  // Save current session (if any) and return to input screen
+  const processAnother = () => {
+    if (lecture && url) setSessions(saveSession(lecture, url));
+    reset();
+  };
+
+  const loadStored = (s: StoredSession) => {
+    setLecture(s.lecture);
+    setUrl(s.url);
+    setLanguage("English");
+    setTranslations({});
+    setTranslateError(null);
+    setActiveTab("outline");
+    setStage("results");
+    setHistoryOpen(false);
+  };
+
+  const removeStored = (id: string) => {
+    setSessions(removeSession(id));
+  };
+
   return (
     <div className="relative min-h-screen bg-background">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] bg-gradient-glow" />
@@ -186,11 +218,27 @@ const Index = () => {
               <p className="text-xs text-muted-foreground -mt-0.5">Turn any lecture into a study environment</p>
             </div>
           </div>
-          {(stage === "results" || stage === "error") && (
-            <Button variant="ghost" size="sm" onClick={reset}>
-              New lecture
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHistoryOpen(true)}
+              title="Recent sessions"
+            >
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">History</span>
+              {sessions.length > 0 && (
+                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold text-primary">
+                  {sessions.length}
+                </span>
+              )}
             </Button>
-          )}
+            {(stage === "results" || stage === "error") && (
+              <Button variant="ghost" size="sm" onClick={reset}>
+                New lecture
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -284,6 +332,10 @@ const Index = () => {
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{displayLecture.title}</h2>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                <Button variant="outline" size="sm" onClick={processAnother}>
+                  <RotateCcw className="h-4 w-4" />
+                  Process another lecture
+                </Button>
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <Select
                   value={language}
@@ -371,6 +423,14 @@ const Index = () => {
           </section>
         )}
       </main>
+
+      <SessionHistoryPanel
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        sessions={sessions}
+        onLoad={loadStored}
+        onRemove={removeStored}
+      />
     </div>
   );
 };
