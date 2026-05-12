@@ -504,7 +504,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                     href={modalLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={(e) => openExternal(e, modalLink)}
+                    onClick={(e) => { openExternal(e, modalLink); showPreview(undefined, modalCard.card.timestamp ?? "", modalLink); }}
                     className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                   >
                     {modalCard.card.timestamp}
