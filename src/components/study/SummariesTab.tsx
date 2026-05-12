@@ -59,6 +59,25 @@ const depths = [
 
 const BLOOM_ORDER: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
 
+// Full-saturation Bloom backgrounds (no opacity dimming)
+const BLOOM_SOLID_BG: Record<BloomLevel, string> = {
+  Remember: "bg-bloom-remember",
+  Understand: "bg-bloom-understand",
+  Apply: "bg-bloom-apply",
+  Analyze: "bg-bloom-analyze",
+  Evaluate: "bg-bloom-evaluate",
+  Create: "bg-bloom-create",
+};
+
+const BLOOM_GERUND: Record<BloomLevel, string> = {
+  Remember: "Remembering",
+  Understand: "Understanding",
+  Apply: "Applying",
+  Analyze: "Analyzing",
+  Evaluate: "Evaluating",
+  Create: "Creating",
+};
+
 const profileFor = (
   dominant: BloomLevel,
   pct: Record<BloomLevel, number>,
