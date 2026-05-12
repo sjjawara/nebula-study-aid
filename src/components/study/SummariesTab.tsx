@@ -384,7 +384,7 @@ export const SummariesTab = ({
                     )}
                   >
                     <span className={cn("h-2 w-2 rounded-full", BLOOM_SOLID_BG[lvl])} />
-                    {lvl} · {profile.pct[lvl]}%
+                    {t(lvl)} · {profile.pct[lvl]}%
                   </button>
                 ) : null,
               )}
