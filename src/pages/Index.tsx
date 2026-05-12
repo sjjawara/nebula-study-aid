@@ -443,7 +443,7 @@ const Index = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6 bg-card border border-border h-12 p-1">
                 <TabsTrigger value="outline">Outline</TabsTrigger>
-                <TabsTrigger value="summaries">Summaries</TabsTrigger>
+                <TabsTrigger value="summaries">Analysis</TabsTrigger>
                 <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
                 <TabsTrigger value="search">Search</TabsTrigger>
                 <TabsTrigger value="quiz">Quiz</TabsTrigger>
