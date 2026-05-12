@@ -331,14 +331,14 @@ const Index = () => {
                 <TabsTrigger value="mindmap">Mind Map</TabsTrigger>
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
-                <OutlineTab lecture={lecture} />
+                <OutlineTab lecture={displayLecture} />
               </TabsContent>
               <TabsContent value="summaries" className="mt-6">
-                <SummariesTab lecture={lecture} />
+                <SummariesTab lecture={displayLecture} />
               </TabsContent>
               <TabsContent value="flashcards" className="mt-6">
                 <FlashcardsTab
-                  lecture={lecture}
+                  lecture={displayLecture}
                   onQuizCard={(card) => {
                     setQuizSeed(card);
                     setActiveTab("quiz");
@@ -347,7 +347,7 @@ const Index = () => {
               </TabsContent>
               <TabsContent value="search" className="mt-6">
                 <SearchTab
-                  lecture={lecture}
+                  lecture={displayLecture}
                   videoUrl={url}
                   onSaveFlashcard={(card) =>
                     setLecture((prev) =>
@@ -367,6 +367,7 @@ const Index = () => {
                 <MindMapTab lecture={lecture} />
               </TabsContent>
             </Tabs>
+            )}
           </section>
         )}
       </main>
