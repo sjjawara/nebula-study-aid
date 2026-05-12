@@ -313,7 +313,10 @@ export const MasteryModeQuiz = ({ lecture, onExit }: Props) => {
 
         {/* Per-Bloom breakdown */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h4 className="text-sm font-semibold text-foreground mb-3">Performance by Bloom's level</h4>
+          <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
+            Performance by Bloom's level
+            <InfoTooltip content={tooltipCopy.bloomTaxonomy} label="About Bloom's Taxonomy" />
+          </h4>
           <div className="space-y-2.5">
             {perLevel.map((row) => (
               <div key={row.level} className="flex items-center gap-3">
