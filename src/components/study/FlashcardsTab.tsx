@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ListOrdered, RotateCw, Sparkles, Play, Pencil, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useT } from "@/lib/i18n";
 
 interface FlashcardsTabProps {
   lecture: Lecture;
@@ -82,18 +83,24 @@ const emptyEditor: EditorState = {
   multiPath: false,
 };
 
-export const FormulaBadge = () => (
-  <span className="inline-flex items-center rounded-md border border-bloom-apply/40 bg-bloom-apply/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-apply">
-    Formula
-  </span>
-);
+export const FormulaBadge = () => {
+  const { t } = useT();
+  return (
+    <span className="inline-flex items-center rounded-md border border-bloom-apply/40 bg-bloom-apply/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-apply">
+      {t("Formula")}
+    </span>
+  );
+};
 
-export const StepSequenceBadge = () => (
-  <span className="inline-flex items-center gap-1 rounded-md border border-bloom-analyze/40 bg-bloom-analyze/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-analyze">
-    <ListOrdered className="h-3 w-3" />
-    Steps
-  </span>
-);
+export const StepSequenceBadge = () => {
+  const { t } = useT();
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-bloom-analyze/40 bg-bloom-analyze/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-analyze">
+      <ListOrdered className="h-3 w-3" />
+      {t("Steps")}
+    </span>
+  );
+};
 
 export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcards }: FlashcardsTabProps) => {
   const [i, setI] = useState(0);
@@ -102,6 +109,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
   const total = lecture.flashcards.length;
   const videoId = videoUrl ? extractVideoId(videoUrl) : null;
   const canEdit = !!onUpdateFlashcards;
+  const { t } = useT();
 
   // Keep cursor in range when cards are added/removed
   useEffect(() => {
@@ -209,12 +217,12 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-xs text-muted-foreground">
-          {total > 0 ? `${total} card${total === 1 ? "" : "s"} in this deck` : "No flashcards yet"}
+          {total > 0 ? `${total} ${total === 1 ? t("card") : t("cards")} ${t("in this deck")}` : t("No flashcards yet")}
         </div>
         {canEdit && (
           <Button size="sm" onClick={openCreate} className="bg-gradient-primary">
             <Plus className="h-4 w-4" />
-            Create Flashcard
+            {t("Create Flashcard")}
           </Button>
         )}
       </div>
@@ -222,14 +230,14 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
       {total === 0 || !card ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
           <p className="text-sm text-muted-foreground">
-            {canEdit ? "Create your first flashcard to start studying." : "No flashcards available."}
+            {canEdit ? t("Create your first flashcard to start studying.") : t("No flashcards available.")}
           </p>
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <span>Card {Math.min(i, total - 1) + 1} of {total}</span>
+              <span>{t("Card")} {Math.min(i, total - 1) + 1} {t("of")} {total}</span>
               {card.timestamp && <TimestampBadge videoId={videoId} timestamp={card.timestamp} />}
             </div>
             <div className="flex items-center gap-2">
@@ -241,7 +249,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   className="h-7 gap-1 text-xs"
                 >
                   <Sparkles className="h-3 w-3" />
-                  Quiz me on this
+                  {t("Quiz me on this")}
                 </Button>
               )}
               {canEdit && (
@@ -250,7 +258,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   size="icon"
                   onClick={() => openEdit(Math.min(i, total - 1))}
                   className="h-7 w-7"
-                  aria-label="Edit flashcard"
+                  aria-label={t("Edit flashcard")}
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
@@ -267,7 +275,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
           >
             <div className="absolute top-4 right-4 text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1">
               <RotateCw className="h-3 w-3" />
-              {flipped ? "Answer" : "Question"}
+              {flipped ? t("Answer") : t("Question")}
             </div>
             {card.timestamp && (
               <div className="absolute top-4 left-4">
@@ -306,7 +314,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button variant="secondary" onClick={() => setFlipped((f) => !f)}>
-              Flip card
+              {t("Flip card")}
             </Button>
             <Button variant="secondary" size="icon" onClick={() => go(1)}>
               <ChevronRight className="h-4 w-4" />
@@ -319,7 +327,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
         <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editor.index === null ? "Create Flashcard" : "Edit Flashcard"}
+              {editor.index === null ? t("Create Flashcard") : t("Edit Flashcard")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -341,8 +349,8 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                         : "border-border bg-background hover:border-primary/30"
                     }`}
                   >
-                    <p className="text-sm font-semibold text-foreground">{opt.label}</p>
-                    <p className="text-[11px] text-muted-foreground">{opt.desc}</p>
+                    <p className="text-sm font-semibold text-foreground">{t(opt.label)}</p>
+                    <p className="text-[11px] text-muted-foreground">{t(opt.desc)}</p>
                   </button>
                 );
               })}
@@ -350,15 +358,15 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
 
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {editor.cardType === "steps" ? "Problem prompt" : "Question"}
+                {editor.cardType === "steps" ? t("Problem prompt") : t("Question")}
               </label>
               <Textarea
                 value={editor.question}
                 onChange={(e) => setEditor((s) => ({ ...s, question: e.target.value }))}
                 placeholder={
                   editor.cardType === "steps"
-                    ? "e.g. Solve a quadratic equation by factoring"
-                    : "What's the question?"
+                    ? t("e.g. Solve a quadratic equation by factoring")
+                    : t("What's the question?")
                 }
                 rows={2}
               />
@@ -368,29 +376,29 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
               <>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Answer
+                    {t("Answer")}
                   </label>
                   <Textarea
                     value={editor.answer}
                     onChange={(e) => setEditor((s) => ({ ...s, answer: e.target.value }))}
-                    placeholder="The correct answer"
+                    placeholder={t("The correct answer")}
                     rows={4}
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                    Formula (optional)
+                    {t("Formula (optional)")}
                     <FormulaBadge />
                   </label>
                   <Textarea
                     value={editor.formula}
                     onChange={(e) => setEditor((s) => ({ ...s, formula: e.target.value }))}
-                    placeholder="e.g. F = m·a"
+                    placeholder={t("e.g. F = m·a")}
                     rows={2}
                     className="font-mono text-base"
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    Cards with a formula appear in Formula Mode quizzes.
+                    {t("Cards with a formula appear in Formula Mode quizzes.")}
                   </p>
                 </div>
               </>
@@ -400,7 +408,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                    Ordered steps
+                    {t("Ordered steps")}
                     <StepSequenceBadge />
                   </label>
                   <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -408,7 +416,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                       checked={editor.multiPath}
                       onCheckedChange={(v) => setEditor((s) => ({ ...s, multiPath: v === true }))}
                     />
-                    Multi-path (any valid order accepted)
+                    {t("Multi-path (any valid order accepted)")}
                   </label>
                 </div>
                 <ol className="space-y-2">
@@ -420,7 +428,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                       <Input
                         value={step}
                         onChange={(e) => updateStep(i, e.target.value)}
-                        placeholder={`Step ${i + 1}`}
+                        placeholder={`${t("Step")} ${i + 1}`}
                         className="flex-1"
                       />
                       <Button
@@ -430,7 +438,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                         className="h-7 w-7"
                         onClick={() => moveStep(i, -1)}
                         disabled={i === 0}
-                        aria-label="Move step up"
+                        aria-label={t("Move step up")}
                       >
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
@@ -441,7 +449,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                         className="h-7 w-7"
                         onClick={() => moveStep(i, 1)}
                         disabled={i === editor.steps.length - 1}
-                        aria-label="Move step down"
+                        aria-label={t("Move step down")}
                       >
                         <ArrowDown className="h-3.5 w-3.5" />
                       </Button>
@@ -452,7 +460,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                         className="h-7 w-7 text-destructive hover:text-destructive"
                         onClick={() => removeStep(i)}
                         disabled={editor.steps.length <= 2}
-                        aria-label="Remove step"
+                        aria-label={t("Remove step")}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -461,10 +469,10 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 </ol>
                 <Button type="button" variant="outline" size="sm" onClick={addStep}>
                   <Plus className="h-3.5 w-3.5" />
-                  Add step
+                  {t("Add step")}
                 </Button>
                 <p className="text-[11px] text-muted-foreground">
-                  Step Sequence cards appear in the quiz's "Step Ordering" mode.
+                  {t("Step Sequence cards appear in the quiz's \"Step Ordering\" mode.")}
                 </p>
               </div>
             )}
@@ -472,7 +480,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Bloom's level
+                  {t("Bloom's level")}
                 </label>
                 <select
                   value={editor.bloom}
@@ -480,18 +488,18 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {BLOOM_LEVELS.map((lvl) => (
-                    <option key={lvl} value={lvl}>{lvl}</option>
+                    <option key={lvl} value={lvl}>{t(lvl)}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Timestamp (optional)
+                  {t("Timestamp (optional)")}
                 </label>
                 <Input
                   value={editor.timestamp}
                   onChange={(e) => setEditor((s) => ({ ...s, timestamp: e.target.value }))}
-                  placeholder="e.g. 3:24"
+                  placeholder={t("e.g. 3:24")}
                 />
               </div>
             </div>
@@ -501,12 +509,12 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
               {editor.index !== null && (
                 <Button variant="ghost" onClick={deleteCurrent} className="text-destructive hover:text-destructive">
                   <Trash2 className="h-4 w-4" />
-                  Delete
+                  {t("Delete")}
                 </Button>
               )}
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" onClick={closeEditor}>Cancel</Button>
+              <Button variant="ghost" onClick={closeEditor}>{t("Cancel")}</Button>
               <Button
                 onClick={saveEditor}
                 disabled={
@@ -517,7 +525,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 }
                 className="bg-gradient-primary"
               >
-                {editor.index === null ? "Create" : "Save"}
+                {editor.index === null ? t("Create") : t("Save")}
               </Button>
             </div>
           </DialogFooter>
