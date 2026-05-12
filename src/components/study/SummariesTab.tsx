@@ -287,11 +287,30 @@ export const SummariesTab = ({
     return items;
   }, [lecture.outline, lecture.searchIndex, lecture.flashcards]);
 
+  const [section, setSection] = useState<SectionId>("profile");
+  const [summaryDepth, setSummaryDepth] = useState<SummaryDepth>("short");
+
+  const sections: { id: SectionId; label: string; show: boolean }[] = [
+    { id: "profile", label: "Lecture Profile", show: profile.total > 0 },
+    { id: "takeaways", label: "Key Takeaways", show: takeaways.length > 0 },
+    { id: "summary", label: "Summary", show: true },
+    { id: "notes", label: "Full Notes", show: !!lecture.summaries.full?.trim() },
+  ];
+  const visibleSections = sections.filter((s) => s.show);
+  const activeSection = visibleSections.some((s) => s.id === section)
+    ? section
+    : visibleSections[0]?.id ?? "summary";
+
   return (
     <div className="space-y-6">
-      <SummariesNav hasProfile={profile.total > 0} hasTakeaways={takeaways.length > 0} />
-      {profile.total > 0 && (
-        <section id="lecture-profile" className="scroll-mt-24 rounded-xl border border-border bg-card p-6 shadow-card space-y-5">
+      <SectionTabs
+        sections={visibleSections}
+        active={activeSection}
+        onChange={(id) => setSection(id)}
+      />
+
+      {activeSection === "profile" && profile.total > 0 && (
+        <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-5">
           <header className="flex items-center gap-2">
             <Compass className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
@@ -433,7 +452,7 @@ export const SummariesTab = ({
           <div>
             <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
               <Lightbulb className="h-3.5 w-3.5 text-primary" />
-              Recommended Tools for This Level
+              Suggested Tools for This Lecture
             </p>
             <ul className="space-y-1.5">
               {profile.tools.map((t, i) => (
@@ -447,8 +466,8 @@ export const SummariesTab = ({
         </section>
       )}
 
-      {takeaways.length > 0 && (
-        <section id="key-takeaways" className="scroll-mt-24 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-card">
+      {activeSection === "takeaways" && takeaways.length > 0 && (
+        <section className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-card">
           <header className="mb-4 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
@@ -469,24 +488,39 @@ export const SummariesTab = ({
         </section>
       )}
 
-      <SummarySection
-        id="summary-90s"
-        title="90 Seconds"
-        body={lecture.summaries.short}
-        format="paragraphs"
-      />
-      <SummarySection
-        id="summary-5min"
-        title="5 Minutes"
-        body={lecture.summaries.medium}
-        format="chunked"
-      />
-      <SummarySection
-        id="summary-full"
-        title="Full Summary"
-        body={lecture.summaries.full}
-        format="headers"
-      />
+      {activeSection === "summary" && (
+        <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-4">
+          <header className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
+              Summary
+            </h3>
+            <DepthToggle depth={summaryDepth} onChange={setSummaryDepth} />
+          </header>
+          {summaryDepth === "short" && (
+            <SummaryBody body={lecture.summaries.short} format="paragraphs" />
+          )}
+          {summaryDepth === "medium" && (
+            <SummaryBody body={lecture.summaries.medium} format="chunked" />
+          )}
+          {summaryDepth === "full" && (
+            <SummaryBody body={lecture.summaries.full} format="paragraphs" />
+          )}
+        </section>
+      )}
+
+      {activeSection === "notes" && (
+        <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-4">
+          <header className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
+              Full Notes
+            </h3>
+            <span className="text-xs text-muted-foreground">
+              Section-by-section breakdown of the lecture.
+            </span>
+          </header>
+          <SummaryBody body={lecture.summaries.full} format="headers" />
+        </section>
+      )}
     </div>
   );
 };
@@ -494,49 +528,88 @@ export const SummariesTab = ({
 
 // --------- subcomponents & helpers below ---------
 
-const NAV_LINKS: { id: string; label: string; key: "profile" | "takeaways" | "any" }[] = [
-  { id: "lecture-profile", label: "Lecture Profile", key: "profile" },
-  { id: "key-takeaways", label: "Key Takeaways", key: "takeaways" },
-  { id: "summary-90s", label: "90 Seconds", key: "any" },
-  { id: "summary-5min", label: "5 Minutes", key: "any" },
-  { id: "summary-full", label: "Full Summary", key: "any" },
+type SectionId = "profile" | "takeaways" | "summary" | "notes";
+type SummaryDepth = "short" | "medium" | "full";
+
+const SectionTabs = ({
+  sections,
+  active,
+  onChange,
+}: {
+  sections: { id: SectionId; label: string }[];
+  active: SectionId;
+  onChange: (id: SectionId) => void;
+}) => (
+  <div
+    role="tablist"
+    aria-label="Analysis sections"
+    className="grid w-full bg-card border border-border h-12 p-1 rounded-md"
+    style={{ gridTemplateColumns: `repeat(${sections.length}, minmax(0, 1fr))` }}
+  >
+    {sections.map((s) => {
+      const isActive = s.id === active;
+      return (
+        <button
+          key={s.id}
+          role="tab"
+          aria-selected={isActive}
+          onClick={() => onChange(s.id)}
+          className={cn(
+            "rounded-sm text-sm font-medium transition-all",
+            isActive
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {s.label}
+        </button>
+      );
+    })}
+  </div>
+);
+
+const DEPTH_OPTIONS: { id: SummaryDepth; label: string }[] = [
+  { id: "short", label: "90 Seconds" },
+  { id: "medium", label: "5 Minutes" },
+  { id: "full", label: "Full" },
 ];
 
-const SummariesNav = ({
-  hasProfile,
-  hasTakeaways,
+const DepthToggle = ({
+  depth,
+  onChange,
 }: {
-  hasProfile: boolean;
-  hasTakeaways: boolean;
-}) => {
-  const links = NAV_LINKS.filter(
-    (l) =>
-      l.key === "any" ||
-      (l.key === "profile" && hasProfile) ||
-      (l.key === "takeaways" && hasTakeaways),
-  );
-  return (
-    <nav
-      aria-label="Summary sections"
-      className="sticky top-2 z-10 flex flex-wrap gap-1.5 rounded-full border border-border bg-background/80 p-1.5 shadow-sm backdrop-blur"
-    >
-      {links.map((l, i) => (
-        <a
-          key={l.id}
-          href={`#${l.id}`}
-          className="rounded-full px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          {l.label}
-          {i < links.length - 1 && (
-            <span className="ml-1.5 text-border" aria-hidden>
-              {""}
-            </span>
+  depth: SummaryDepth;
+  onChange: (d: SummaryDepth) => void;
+}) => (
+  <div
+    role="tablist"
+    aria-label="Summary length"
+    className="inline-flex rounded-lg border border-border bg-background p-1 text-xs"
+  >
+    {DEPTH_OPTIONS.map((d) => {
+      const isActive = depth === d.id;
+      return (
+        <button
+          key={d.id}
+          role="tab"
+          aria-selected={isActive}
+          onClick={() => onChange(d.id)}
+          className={cn(
+            "rounded-md px-3 py-1.5 font-medium transition-colors",
+            isActive
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
-        </a>
-      ))}
-    </nav>
-  );
-};
+        >
+          {d.label}
+        </button>
+      );
+    })}
+  </div>
+);
+
+
+// --------- subcomponents & helpers below ---------
 
 // Split a string into sentences (rough but good-enough for prose summaries).
 const splitSentences = (text: string): string[] => {
@@ -623,61 +696,54 @@ const formatWithHeaders = (text: string): BlockNode[] => {
   return blocks;
 };
 
-const SummarySection = ({
-  id,
-  title,
+const SummaryBody = ({
   body,
   format,
 }: {
-  id: string;
-  title: string;
   body: string;
   format: "paragraphs" | "chunked" | "headers";
 }) => {
   const trimmed = (body ?? "").trim();
+  if (!trimmed) {
+    return <p className="text-sm text-muted-foreground">No summary available.</p>;
+  }
+  if (format === "paragraphs") {
+    return (
+      <div className="space-y-3 text-base leading-relaxed text-foreground/90 whitespace-pre-line">
+        {trimmed.split(/\n\s*\n/).map((p, i) => (
+          <p key={i}>{p.trim()}</p>
+        ))}
+      </div>
+    );
+  }
+  if (format === "chunked") {
+    return (
+      <div className="space-y-4 text-base leading-relaxed text-foreground/90">
+        {groupIntoParagraphs(trimmed, 4).map((p, i, arr) => (
+          <div key={i}>
+            <p>{p}</p>
+            {i < arr.length - 1 && (
+              <div className="mt-4 h-px w-16 bg-border/70" aria-hidden />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
-    <section
-      id={id}
-      className="scroll-mt-24 rounded-xl border border-border bg-card p-6 shadow-card"
-    >
-      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">
-        {title}
-      </h3>
-      {!trimmed ? (
-        <p className="text-sm text-muted-foreground">No summary available.</p>
-      ) : format === "paragraphs" ? (
-        <div className="space-y-3 text-base leading-relaxed text-foreground/90 whitespace-pre-line">
-          {trimmed.split(/\n\s*\n/).map((p, i) => (
-            <p key={i}>{p.trim()}</p>
-          ))}
-        </div>
-      ) : format === "chunked" ? (
-        <div className="space-y-4 text-base leading-relaxed text-foreground/90">
-          {groupIntoParagraphs(trimmed, 4).map((p, i, arr) => (
-            <div key={i}>
-              <p>{p}</p>
-              {i < arr.length - 1 && (
-                <div className="mt-4 h-px w-16 bg-border/70" aria-hidden />
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3 text-base leading-relaxed text-foreground/90">
-          {formatWithHeaders(trimmed).map((b, i) =>
-            b.type === "header" ? (
-              <h4
-                key={i}
-                className="mt-5 text-base font-semibold tracking-tight text-foreground first:mt-0"
-              >
-                {b.text}
-              </h4>
-            ) : (
-              <p key={i}>{b.text}</p>
-            ),
-          )}
-        </div>
+    <div className="space-y-3 text-base leading-relaxed text-foreground/90">
+      {formatWithHeaders(trimmed).map((b, i) =>
+        b.type === "header" ? (
+          <h4
+            key={i}
+            className="mt-5 text-base font-semibold tracking-tight text-foreground first:mt-0"
+          >
+            {b.text}
+          </h4>
+        ) : (
+          <p key={i}>{b.text}</p>
+        ),
       )}
-    </section>
+    </div>
   );
 };
