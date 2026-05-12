@@ -27,7 +27,7 @@ import { MindMapTab } from "@/components/study/MindMapTab";
 import { LoadingScreen } from "@/components/study/LoadingScreen";
 import type { Flashcard } from "@/lib/mockData";
 import { loadFlashcards, saveFlashcards } from "@/lib/flashcardStore";
-import { LanguageProvider, useT, type Language } from "@/lib/i18n";
+import { LanguageProvider, T, useT, type Language } from "@/lib/i18n";
 import { UI_STRINGS } from "@/lib/uiStrings";
 
 const LANGUAGES: readonly Language[] = [
