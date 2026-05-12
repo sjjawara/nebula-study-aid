@@ -642,26 +642,42 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 )}
 
                 {/* Question count */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      {t("Question amount")}
-                    </p>
-                    <span className="text-sm font-semibold text-foreground">{customCount}</span>
-                  </div>
-                  <Slider
-                    min={0}
-                    max={QUESTION_COUNTS.length - 1}
-                    step={1}
-                    value={[QUESTION_COUNTS.indexOf(customCount as 5 | 10 | 15 | 20)]}
-                    onValueChange={(v) => setCustomCount(QUESTION_COUNTS[v[0] ?? 1])}
-                  />
-                  <div className="flex justify-between text-[11px] text-muted-foreground">
-                    {QUESTION_COUNTS.map((n) => (
-                      <span key={n}>{n}</span>
-                    ))}
-                  </div>
-                </div>
+                {(() => {
+                  const totalCards = lecture.flashcards.length;
+                  const sliderMax = Math.max(MIN_QUESTION_COUNT, totalCards);
+                  const sliderValue = Math.max(MIN_QUESTION_COUNT, Math.min(customCount, sliderMax));
+                  // Show 4 evenly-spaced tick labels
+                  const ticks = Array.from(new Set([
+                    MIN_QUESTION_COUNT,
+                    Math.max(MIN_QUESTION_COUNT, Math.round(sliderMax / 3)),
+                    Math.max(MIN_QUESTION_COUNT, Math.round((2 * sliderMax) / 3)),
+                    sliderMax,
+                  ])).sort((a, b) => a - b);
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          {t("Question amount")}
+                        </p>
+                        <span className="text-sm font-semibold text-foreground">
+                          {sliderValue} / {totalCards}
+                        </span>
+                      </div>
+                      <Slider
+                        min={MIN_QUESTION_COUNT}
+                        max={sliderMax}
+                        step={1}
+                        value={[sliderValue]}
+                        onValueChange={(v) => setCustomCount(v[0] ?? MIN_QUESTION_COUNT)}
+                      />
+                      <div className="flex justify-between text-[11px] text-muted-foreground">
+                        {ticks.map((n) => (
+                          <span key={n}>{n}</span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Bloom level filter */}
                 <div className="space-y-2">
