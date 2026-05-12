@@ -458,7 +458,13 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     type="button"
                     role="switch"
                     aria-checked={formulaMode}
-                    onClick={() => setFormulaMode((v) => !v)}
+                    onClick={() =>
+                      setFormulaMode((v) => {
+                        const next = !v;
+                        if (next) setStepOrderingMode(false);
+                        return next;
+                      })
+                    }
                     className={cn(
                       "relative h-6 w-11 shrink-0 rounded-full transition-colors",
                       formulaMode ? "bg-bloom-apply" : "bg-muted",
@@ -468,6 +474,62 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       className={cn(
                         "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
                         formulaMode ? "translate-x-5" : "translate-x-0.5",
+                      )}
+                    />
+                  </button>
+                </div>
+
+                {/* Step Ordering Mode */}
+                <div
+                  className={cn(
+                    "flex items-start justify-between gap-3 rounded-xl border p-3 transition-colors",
+                    stepOrderingMode
+                      ? "border-bloom-analyze/50 bg-bloom-analyze/5"
+                      : "border-border bg-background",
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                        stepOrderingMode
+                          ? "bg-bloom-analyze text-background"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      <ListOrdered className="h-4 w-4" />
+                    </span>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">Step Ordering Mode</p>
+                      <p className="text-xs text-muted-foreground">
+                        Show shuffled steps for a procedure. Drag them into the correct order, then submit
+                        to see what you got right and the reasoning behind each step.
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {stepCardCount} step-sequence card{stepCardCount === 1 ? "" : "s"} in this deck.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={stepOrderingMode}
+                    onClick={() =>
+                      setStepOrderingMode((v) => {
+                        const next = !v;
+                        if (next) setFormulaMode(false);
+                        return next;
+                      })
+                    }
+                    className={cn(
+                      "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                      stepOrderingMode ? "bg-bloom-analyze" : "bg-muted",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
+                        stepOrderingMode ? "translate-x-5" : "translate-x-0.5",
                       )}
                     />
                   </button>
