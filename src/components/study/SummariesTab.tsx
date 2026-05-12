@@ -333,9 +333,9 @@ export const SummariesTab = ({
                     aria-label={`${lvl}: ${profile.pct[lvl]}% — show study tips`}
                     aria-pressed={isActive}
                     className={cn(
-                      "h-full transition-all hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      bloomColor[lvl].split(" ")[0],
-                      isActive ? "ring-2 ring-foreground/40 ring-inset" : "opacity-80",
+                      "h-full transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      BLOOM_SOLID_BG[lvl],
+                      isActive && "ring-2 ring-foreground/40 ring-inset",
                     )}
                     style={{ width: `${profile.pct[lvl]}%` }}
                   />
@@ -354,7 +354,7 @@ export const SummariesTab = ({
                       activeLevel === lvl && "text-foreground font-medium",
                     )}
                   >
-                    <span className={cn("h-2 w-2 rounded-full", bloomColor[lvl].split(" ")[0])} />
+                    <span className={cn("h-2 w-2 rounded-full", BLOOM_SOLID_BG[lvl])} />
                     {lvl} · {profile.pct[lvl]}%
                   </button>
                 ) : null,
