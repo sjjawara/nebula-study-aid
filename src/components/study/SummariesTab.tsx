@@ -109,8 +109,15 @@ const profileFor = (
   };
 };
 
-export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
+export const SummariesTab = ({
+  lecture,
+  onNavigate,
+}: {
+  lecture: Lecture;
+  onNavigate?: (tab: StudyTabId) => void;
+}) => {
   const [depth, setDepth] = useState<typeof depths[number]["id"]>("short");
+  const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
 
   const profile = useMemo(() => {
     const counts: Record<BloomLevel, number> = {
