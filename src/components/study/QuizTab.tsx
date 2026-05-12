@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown } from "lucide-react";
+import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare } from "lucide-react";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -73,6 +73,36 @@ const pickRandom = (lecture: Lecture, exclude?: Flashcard): Flashcard | null => 
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
+/** Rewrite a flashcard's question using one of three formula-specific patterns. */
+const buildFormulaCard = (card: Flashcard, idx: number): Flashcard => {
+  const formula = card.formula?.trim();
+  if (!formula) return card;
+  const concept = card.question.replace(/[?.!]+$/, "").trim();
+  const vars = Array.from(
+    new Set((formula.match(/\b[a-zA-Zα-ωΑ-Ω]\b/g) ?? []).filter((v) => !/^[ivx]$/i.test(v))),
+  );
+  const patterns: Array<() => { question: string; answer: string } | null> = [
+    () => ({ question: `Write the formula for ${concept}.`, answer: formula }),
+    () =>
+      vars.length
+        ? {
+            question: `In the formula  ${formula}  — what does "${vars[idx % vars.length]}" represent?`,
+            answer: card.answer,
+          }
+        : null,
+    () => ({
+      question: `Which formula would you use to solve: ${concept}?`,
+      answer: formula,
+    }),
+  ];
+  const order = [idx % 3, (idx + 1) % 3, (idx + 2) % 3];
+  for (const p of order) {
+    const r = patterns[p]();
+    if (r) return { ...card, question: r.question, answer: r.answer };
+  }
+  return card;
+};
+
 export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [mode, setMode] = useState<QuizMode>("bottom");
   const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>("immediate");
@@ -89,6 +119,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [selectedCardKeys, setSelectedCardKeys] = useState<Set<string>>(() => new Set());
   const [customLecture, setCustomLecture] = useState<Lecture | null>(null);
   const [customAnswered, setCustomAnswered] = useState(0);
+  const [formulaMode, setFormulaMode] = useState(false);
+
+  const formulaCount = useMemo(
+    () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
+    [lecture.flashcards],
+  );
 
   // Stable keys for flashcards (question text is the natural id here)
   const cardKey = (c: Flashcard, i: number) => `${i}::${c.question}`;
@@ -100,9 +136,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
   const filteredCardCount = useMemo(() => {
     return lecture.flashcards.filter((c, i) =>
-      selectedCardKeys.has(cardKey(c, i)) && customLevels.has(c.bloom),
+      selectedCardKeys.has(cardKey(c, i)) &&
+      customLevels.has(c.bloom) &&
+      (!formulaMode || !!c.formula?.trim()),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, customLevels]);
+  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -123,10 +161,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   };
 
   const startCustomQuiz = () => {
-    const pool = lecture.flashcards
-      .filter((c, i) => selectedCardKeys.has(cardKey(c, i)) && customLevels.has(c.bloom))
+    const basePool = lecture.flashcards
+      .filter(
+        (c, i) =>
+          selectedCardKeys.has(cardKey(c, i)) &&
+          customLevels.has(c.bloom) &&
+          (!formulaMode || !!c.formula?.trim()),
+      )
       .slice(0, customCount);
-    if (!pool.length) return;
+    if (!basePool.length) return;
+    const pool = formulaMode
+      ? basePool.map((c, idx) => buildFormulaCard(c, idx))
+      : basePool;
     const customL: Lecture = { ...lecture, flashcards: pool };
     setCustomLecture(customL);
     setCustomAnswered(1);
@@ -355,6 +401,56 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="border-t border-border px-5 py-5 space-y-5">
+                {/* Formula Mode */}
+                <div
+                  className={cn(
+                    "flex items-start justify-between gap-3 rounded-xl border p-3 transition-colors",
+                    formulaMode
+                      ? "border-bloom-apply/50 bg-bloom-apply/5"
+                      : "border-border bg-background",
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                        formulaMode
+                          ? "bg-bloom-apply text-background"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      <FunctionSquare className="h-4 w-4" />
+                    </span>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">Formula Mode</p>
+                      <p className="text-xs text-muted-foreground">
+                        Quiz only on flashcards with a formula, using formula-specific question patterns
+                        (write the formula, identify a variable, pick the right one for a scenario).
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {formulaCount} formula card{formulaCount === 1 ? "" : "s"} in this deck.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formulaMode}
+                    onClick={() => setFormulaMode((v) => !v)}
+                    className={cn(
+                      "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                      formulaMode ? "bg-bloom-apply" : "bg-muted",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
+                        formulaMode ? "translate-x-5" : "translate-x-0.5",
+                      )}
+                    />
+                  </button>
+                </div>
+
                 {/* Question count */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -460,18 +556,21 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <p className="text-xs text-muted-foreground">
                     {filteredCardCount === 0
-                      ? "No cards match the current filters."
-                      : `Quiz will run on up to ${Math.min(customCount, filteredCardCount)} question${
-                          Math.min(customCount, filteredCardCount) === 1 ? "" : "s"
-                        }.`}
+                      ? formulaMode
+                        ? "No formula flashcards match the current filters. Add a formula in the Flashcards tab."
+                        : "No cards match the current filters."
+                      : `${formulaMode ? "Formula Mode — " : ""}Quiz will run on up to ${Math.min(
+                          customCount,
+                          filteredCardCount,
+                        )} question${Math.min(customCount, filteredCardCount) === 1 ? "" : "s"}.`}
                   </p>
                   <Button
                     onClick={startCustomQuiz}
                     disabled={filteredCardCount === 0}
                     className="bg-gradient-primary"
                   >
-                    <Play className="h-4 w-4" />
-                    Generate Custom Quiz
+                    {formulaMode ? <FunctionSquare className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                    {formulaMode ? "Start Formula Quiz" : "Generate Custom Quiz"}
                   </Button>
                 </div>
               </div>

@@ -84,6 +84,7 @@ interface EditorState {
   answer: string;
   bloom: BloomLevel;
   timestamp: string;
+  formula: string;
 }
 
 const emptyEditor: EditorState = {
@@ -93,7 +94,14 @@ const emptyEditor: EditorState = {
   answer: "",
   bloom: "Understand",
   timestamp: "",
+  formula: "",
 };
+
+export const FormulaBadge = () => (
+  <span className="inline-flex items-center rounded-md border border-bloom-apply/40 bg-bloom-apply/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-apply">
+    Formula
+  </span>
+);
 
 export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcards }: FlashcardsTabProps) => {
   const [i, setI] = useState(0);
@@ -134,6 +142,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
       answer: c.answer,
       bloom: c.bloom,
       timestamp: c.timestamp ?? "",
+      formula: c.formula ?? "",
     });
   };
 
@@ -149,6 +158,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
       answer: a,
       bloom: editor.bloom,
       timestamp: editor.timestamp.trim() || undefined,
+      formula: editor.formula.trim() || undefined,
     };
     onUpdateFlashcards((cards) => {
       if (editor.index === null) {
@@ -221,6 +231,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
               )}
+              {card.formula && <FormulaBadge />}
               <BloomBadge level={card.bloom} />
             </div>
           </div>
@@ -238,10 +249,15 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 <TimestampBadge videoId={videoId} timestamp={card.timestamp} />
               </div>
             )}
-            <div className="flex h-full min-h-[220px] items-center justify-center">
+            <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-4">
               <p className="text-xl leading-relaxed text-center text-foreground">
                 {flipped ? card.answer : card.question}
               </p>
+              {card.formula && (
+                <pre className="max-w-full overflow-x-auto rounded-lg border border-border bg-muted/40 px-4 py-3 font-mono text-lg text-foreground whitespace-pre-wrap text-center">
+                  {card.formula}
+                </pre>
+              )}
             </div>
           </button>
 
@@ -288,6 +304,22 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 placeholder="The correct answer"
                 rows={4}
               />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                Formula (optional)
+                <FormulaBadge />
+              </label>
+              <Textarea
+                value={editor.formula}
+                onChange={(e) => setEditor((s) => ({ ...s, formula: e.target.value }))}
+                placeholder="e.g. F = m·a"
+                rows={2}
+                className="font-mono text-base"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Cards with a formula appear in Formula Mode quizzes.
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

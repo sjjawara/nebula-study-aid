@@ -21,6 +21,7 @@ export interface Flashcard {
   answer: string;
   bloom: BloomLevel;
   timestamp?: string;
+  formula?: string;
 }
 
 export interface SearchMoment {
