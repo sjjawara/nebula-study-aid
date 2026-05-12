@@ -231,7 +231,9 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-xs text-muted-foreground">
-          {total > 0 ? `${total} ${total === 1 ? t("card") : t("cards")} ${t("in this deck")}` : t("No flashcards yet")}
+          {totalAll > 0
+            ? `${totalAll} ${totalAll === 1 ? t("card") : t("cards")} ${t("in this deck")}`
+            : t("No flashcards yet")}
         </div>
         {canEdit && (
           <Button size="sm" onClick={openCreate} className="bg-gradient-primary">
@@ -241,10 +243,24 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
         )}
       </div>
 
-      {total === 0 || !card ? (
+      {totalAll > 0 && (
+        <FlashcardFilters
+          filters={filters}
+          visibleCount={total}
+          totalCount={totalAll}
+        />
+      )}
+
+      {totalAll === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
           <p className="text-sm text-muted-foreground">
             {canEdit ? t("Create your first flashcard to start studying.") : t("No flashcards available.")}
+          </p>
+        </div>
+      ) : !card ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            {t("No flashcards match the current filters.")}
           </p>
         </div>
       ) : (
