@@ -142,6 +142,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
       answer: c.answer,
       bloom: c.bloom,
       timestamp: c.timestamp ?? "",
+      formula: c.formula ?? "",
     });
   };
 
