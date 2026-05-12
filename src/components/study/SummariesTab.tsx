@@ -215,6 +215,78 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
 
   return (
     <div className="space-y-6">
+      {profile.total > 0 && (
+        <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-5">
+          <header className="flex items-center gap-2">
+            <Compass className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
+              Lecture Profile
+            </h3>
+          </header>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs text-muted-foreground">Dominant level:</span>
+            <BloomBadge level={profile.dominant} />
+            <span className="text-xs text-muted-foreground">
+              {profile.pct[profile.dominant]}% of {profile.total} chunks
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Bloom's distribution
+            </p>
+            <div className="flex h-3 w-full overflow-hidden rounded-full border border-border bg-muted">
+              {BLOOM_ORDER.map((lvl) => {
+                if (!profile.pct[lvl]) return null;
+                return (
+                  <div
+                    key={lvl}
+                    title={`${lvl} · ${profile.pct[lvl]}%`}
+                    className={cn("h-full", bloomColor[lvl].split(" ")[0])}
+                    style={{ width: `${profile.pct[lvl]}%` }}
+                  />
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {BLOOM_ORDER.map((lvl) =>
+                profile.pct[lvl] > 0 ? (
+                  <span key={lvl} className="inline-flex items-center gap-1.5">
+                    <span className={cn("h-2 w-2 rounded-full", bloomColor[lvl].split(" ")[0])} />
+                    {lvl} · {profile.pct[lvl]}%
+                  </span>
+                ) : null,
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/60 p-4">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+              How to study this lecture
+            </p>
+            <p className="text-sm leading-relaxed text-foreground/90">
+              {profile.recommendation}
+            </p>
+          </div>
+
+          <div>
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
+              <Lightbulb className="h-3.5 w-3.5 text-primary" />
+              Suggested NebulaLearn tools
+            </p>
+            <ul className="space-y-1.5">
+              {profile.tools.map((t, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
       {takeaways.length > 0 && (
         <section className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-6 shadow-card">
           <header className="mb-4 flex items-center gap-2">
