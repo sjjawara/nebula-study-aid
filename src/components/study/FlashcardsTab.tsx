@@ -107,12 +107,23 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
   const [i, setI] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [editor, setEditor] = useState<EditorState>(emptyEditor);
-  const total = lecture.flashcards.length;
+  const filters = useFlashcardFilters(lecture);
+
+  // Filtered view drives the carousel.
+  const filteredEntries = useMemo(
+    () =>
+      lecture.flashcards
+        .map((c, originalIndex) => ({ card: c, originalIndex }))
+        .filter(({ card }) => filters.matches(card)),
+    [lecture.flashcards, filters],
+  );
+  const total = filteredEntries.length;
+  const totalAll = lecture.flashcards.length;
   const videoId = videoUrl ? extractVideoId(videoUrl) : null;
   const canEdit = !!onUpdateFlashcards;
   const { t } = useT();
 
-  // Keep cursor in range when cards are added/removed
+  // Keep cursor in range when cards are added/removed or filters change
   useEffect(() => {
     if (total === 0) {
       setI(0);
@@ -121,7 +132,9 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
     }
   }, [total, i]);
 
-  const card = total > 0 ? lecture.flashcards[Math.min(i, total - 1)] : null;
+  const currentEntry = total > 0 ? filteredEntries[Math.min(i, total - 1)] : null;
+  const card = currentEntry?.card ?? null;
+  const cardOriginalIndex = currentEntry?.originalIndex ?? -1;
 
   const go = (delta: number) => {
     if (!total) return;
