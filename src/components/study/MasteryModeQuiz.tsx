@@ -86,7 +86,9 @@ const explanationFor = (record: Pick<AnswerRecord, "qType" | "correctAnswer" | "
   return `A complete answer would land on: ${record.correctAnswer}.`;
 };
 
-export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }: Props) => {
+export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", questionsPerLevel = 2 }: Props) => {
+  // Consecutive correct answers needed to bump up one full Bloom level.
+  const stepCorrect = 1 / Math.max(1, questionsPerLevel);
   const { t } = useT();
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
