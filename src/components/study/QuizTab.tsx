@@ -809,7 +809,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             )}
           >
             <ArrowUp className="mr-1 inline h-3 w-3" />
-            Bottom Up
+            {t("Bottom Up")}
           </button>
           <button
             onClick={() => setMode("top")}
@@ -819,7 +819,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             )}
           >
             <ArrowDown className="mr-1 inline h-3 w-3" />
-            Top Down
+            {t("Top Down")}
           </button>
           <button
             onClick={() => {
@@ -833,14 +833,14 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             )}
           >
             <Gauge className="mr-1 inline h-3 w-3" />
-            Mastery
+            {t("Mastery")}
           </button>
         </div>
         <div className="flex items-center gap-2">
           <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
           <Button variant="ghost" size="sm" onClick={exit}>
             <X className="h-4 w-4" />
-            Exit
+            {t("Exit")}
           </Button>
         </div>
       </div>
