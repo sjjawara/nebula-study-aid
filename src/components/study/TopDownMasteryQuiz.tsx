@@ -72,9 +72,10 @@ interface Props {
   onNext?: () => void;
   onExit?: () => void;
   onSelectFollowUp?: (c: Flashcard) => void;
+  feedbackMode?: "immediate" | "end";
 }
 
-export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
+export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
   const distractors = useMemo(() => pickDistractors(lecture, card, 3), [lecture, card]);
 
   const mcOptions = useMemo(
