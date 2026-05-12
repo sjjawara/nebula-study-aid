@@ -700,8 +700,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
               <BloomBadge level={lastRecord.level} />
             </div>
             <div className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
-              {explanationFor(lastRecord)}
+              {cleanExplanation(explanationFor(lastRecord), lastRecord.correctAnswer)}
             </div>
             {!wasCorrect && (
               <div className="text-xs text-muted-foreground">
