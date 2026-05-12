@@ -160,6 +160,22 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     );
   }, [lecture.title]);
 
+  // When a special mode is toggled, reset the question count so the slider thumb
+  // isn't pegged at max (which makes the click target overflow the track).
+  useEffect(() => {
+    const modeMax = formulaMode
+      ? formulaCount
+      : stepOrderingMode
+      ? stepCardCount
+      : proofMode
+      ? proofCardCount
+      : lecture.flashcards.length;
+    if (!modeMax) return;
+    setCustomCount((prev) =>
+      Math.max(MIN_QUESTION_COUNT, Math.min(prev, Math.max(MIN_QUESTION_COUNT, Math.floor(modeMax / 2) || modeMax))),
+    );
+  }, [formulaMode, stepOrderingMode, proofMode, formulaCount, stepCardCount, proofCardCount, lecture.flashcards.length]);
+
   const filteredCardCount = useMemo(() => {
     return lecture.flashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
@@ -647,9 +663,21 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 {/* Question count */}
                 {(() => {
                   const totalCards = lecture.flashcards.length;
-                  const sliderMax = Math.max(MIN_QUESTION_COUNT, totalCards);
-                  const sliderValue = Math.max(MIN_QUESTION_COUNT, Math.min(customCount, sliderMax));
-                  // Show 4 evenly-spaced tick labels
+                  // When a special mode is active, scope the slider to that pool.
+                  const modeMax = formulaMode
+                    ? formulaCount
+                    : stepOrderingMode
+                    ? stepCardCount
+                    : proofMode
+                    ? proofCardCount
+                    : totalCards;
+                  const sliderMax = Math.max(MIN_QUESTION_COUNT, modeMax || MIN_QUESTION_COUNT);
+                  const sliderValue = Math.max(
+                    MIN_QUESTION_COUNT,
+                    Math.min(customCount, sliderMax),
+                  );
+                  const disabled = (modeMax || 0) === 0;
+                  // Show evenly-spaced tick labels
                   const ticks = Array.from(new Set([
                     MIN_QUESTION_COUNT,
                     Math.max(MIN_QUESTION_COUNT, Math.round(sliderMax / 3)),
@@ -663,7 +691,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                           {t("Question amount")}
                         </p>
                         <span className="text-sm font-semibold text-foreground">
-                          {sliderValue} / {totalCards}
+                          {sliderValue} / {sliderMax}
                         </span>
                       </div>
                       <Slider
@@ -672,6 +700,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                         step={1}
                         value={[sliderValue]}
                         onValueChange={(v) => setCustomCount(v[0] ?? MIN_QUESTION_COUNT)}
+                        disabled={disabled}
                       />
                       <div className="flex justify-between text-[11px] text-muted-foreground">
                         {ticks.map((n) => (
