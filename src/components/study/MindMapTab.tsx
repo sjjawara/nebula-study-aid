@@ -838,6 +838,19 @@ const NodePopover = ({
           </button>
         </div>
       )}
+      </div>
+      <div
+        role="slider"
+        aria-label="Resize popover"
+        onPointerDown={onResizeDown}
+        onPointerMove={onResizeMove}
+        onPointerUp={onResizeUp}
+        onPointerCancel={onResizeUp}
+        className="absolute bottom-1 right-1 flex h-5 w-5 cursor-nwse-resize items-center justify-center rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground"
+        style={{ touchAction: "none" }}
+      >
+        <GripHorizontal className="h-3.5 w-3.5 -rotate-45" />
+      </div>
     </div>
   );
 };
