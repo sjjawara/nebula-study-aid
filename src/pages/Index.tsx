@@ -83,10 +83,33 @@ const Index = () => {
   const [sessions, setSessions] = useState<StoredSession[]>(() => loadSessions());
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  const displayLecture: Lecture | null =
+  const baseLecture: Lecture | null =
     language === "English"
       ? lecture
       : translations[language] ?? lecture;
+
+  // Per-lecture user-customized flashcards (persisted to localStorage by lecture title)
+  const [customFlashcards, setCustomFlashcards] = useState<Flashcard[] | null>(null);
+
+  useEffect(() => {
+    if (!baseLecture) {
+      setCustomFlashcards(null);
+      return;
+    }
+    setCustomFlashcards(loadFlashcards(baseLecture.title));
+  }, [baseLecture?.title]);
+
+  const displayLecture: Lecture | null = baseLecture
+    ? { ...baseLecture, flashcards: customFlashcards ?? baseLecture.flashcards }
+    : null;
+
+  const updateFlashcards = (updater: (current: Flashcard[]) => Flashcard[]) => {
+    if (!baseLecture) return;
+    const current = customFlashcards ?? baseLecture.flashcards;
+    const next = updater(current);
+    setCustomFlashcards(next);
+    saveFlashcards(baseLecture.title, next);
+  };
 
   const handleLanguageChange = async (next: Language) => {
     setLanguage(next);
