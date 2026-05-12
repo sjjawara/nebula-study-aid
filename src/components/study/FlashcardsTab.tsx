@@ -261,8 +261,6 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
             </div>
           </div>
 
-          {/* (front of card body unchanged below)
-
           <button
             onClick={() => setFlipped((f) => !f)}
             className="group relative w-full min-h-[280px] rounded-2xl border border-border bg-card p-8 shadow-card transition-all hover:border-primary/40 hover:shadow-glow text-left"
