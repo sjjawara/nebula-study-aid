@@ -234,11 +234,11 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
         <div className="flex items-center justify-between gap-3">
           <Button variant="ghost" onClick={reset}>
             <RotateCcw className="h-4 w-4" />
-            Reshuffle
+            {t("Reshuffle")}
           </Button>
           <Button onClick={submit} className="bg-gradient-primary">
             <Check className="h-4 w-4" />
-            Submit order
+            {t("Submit order")}
           </Button>
         </div>
       ) : (
@@ -254,14 +254,14 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
           >
             <p className="text-sm font-semibold text-foreground">
               {isMulti
-                ? "Your approach is valid. Here's another way to think about it:"
+                ? t("Your approach is valid. Here's another way to think about it:")
                 : allCorrect
-                ? "Perfect — every step is in the right place."
-                : `${correctCount} of ${order.length} steps were in the correct position.`}
+                ? t("Perfect — every step is in the right place.")
+                : `${correctCount} ${t("of")} ${order.length} ${t("steps were in the correct position.")}`}
             </p>
             {isMulti && (
               <p className="mt-1 text-xs text-muted-foreground">
-                This problem has multiple correct orderings. Compare your sequence with the canonical one below.
+                {t("This problem has multiple correct orderings. Compare your sequence with the canonical one below.")}
               </p>
             )}
           </div>
@@ -269,7 +269,7 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
           {/* Reference order with explanations */}
           <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {isMulti ? "Alternative sequence" : "Correct sequence"}
+              {isMulti ? t("Alternative sequence") : t("Correct sequence")}
             </p>
             <ol className="space-y-2">
               {correctOrder.map((step, i) => (
@@ -295,14 +295,14 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
           <div className="rounded-2xl border border-border bg-card p-4">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1.5">
               <Sparkles className="h-3 w-3" />
-              Cognitive skill developed
+              {t("Cognitive skill developed")}
             </p>
             <div className="mt-2 flex items-center gap-2">
               <BloomBadge level={skill} />
               <p className="text-sm text-foreground/90">
                 {skill === "Analyze"
-                  ? "Sequencing trains analytical thinking — breaking a procedure into ordered components and reasoning about dependencies."
-                  : "Putting steps in the right order trains application — using a procedure correctly in context."}
+                  ? t("Sequencing trains analytical thinking — breaking a procedure into ordered components and reasoning about dependencies.")
+                  : t("Putting steps in the right order trains application — using a procedure correctly in context.")}
               </p>
             </div>
           </div>
@@ -310,16 +310,16 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
           <div className="flex items-center justify-between gap-3">
             <Button variant="ghost" onClick={reset}>
               <RotateCcw className="h-4 w-4" />
-              Try again
+              {t("Try again")}
             </Button>
             {idx < cards.length - 1 ? (
               <Button onClick={next} className="bg-gradient-primary">
-                Next problem
+                {t("Next problem")}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button onClick={onExit} className="bg-gradient-primary">
-                Finish
+                {t("Finish")}
                 <Check className="h-4 w-4" />
               </Button>
             )}
