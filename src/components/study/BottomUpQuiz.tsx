@@ -149,14 +149,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-primary">
-              Bottom-up build
+              {t("Bottom-up build")}
             </p>
             <h3 className="text-xl font-semibold leading-snug text-foreground">
               {card.question}
             </h3>
             <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
-              Earn your way up Bloom's taxonomy, one level at a time.
-              <InfoTooltip content={tooltipCopy.bloomTaxonomy} label="About Bloom's Taxonomy" />
+              {t("Earn your way up Bloom's taxonomy, one level at a time.")}
+              <InfoTooltip content={tooltipCopy.bloomTaxonomy} label={t("About Bloom's Taxonomy")} />
             </p>
           </div>
           <BloomBadge level={card.bloom} />
@@ -177,9 +177,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
           ))}
         </div>
         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Level {levelIdx + 1} of {LEVELS.length}</span>
+          <span>{t("Level")} {levelIdx + 1} {t("of")} {LEVELS.length}</span>
           <span className="inline-flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" /> {done ? "Mastery achieved" : level}
+            <TrendingUp className="h-3 w-3" /> {done ? t("Mastery achieved") : t(level)}
           </span>
         </div>
       </div>
