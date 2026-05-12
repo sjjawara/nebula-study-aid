@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, Sparkles, Plus, Check, ExternalLink, X, Loader2, Zap } from "lucide-react";
+import { Search, Sparkles, Plus, Check, ExternalLink, X, Loader2, Zap, Play } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
