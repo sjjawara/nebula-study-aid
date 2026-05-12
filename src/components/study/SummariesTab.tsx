@@ -306,10 +306,10 @@ export const SummariesTab = ({
   const [summaryDepth, setSummaryDepth] = useState<SummaryDepth>("short");
 
   const sections: { id: SectionId; label: string; show: boolean }[] = [
-    { id: "profile", label: "Lecture Profile", show: profile.total > 0 },
-    { id: "takeaways", label: "Key Takeaways", show: takeaways.length > 0 },
-    { id: "summary", label: "Summary", show: true },
-    { id: "notes", label: "Full Notes", show: !!lecture.summaries.full?.trim() },
+    { id: "profile", label: t("Lecture Profile"), show: profile.total > 0 },
+    { id: "takeaways", label: t("Key Takeaways"), show: takeaways.length > 0 },
+    { id: "summary", label: t("Summary"), show: true },
+    { id: "notes", label: t("Full Notes"), show: !!lecture.summaries.full?.trim() },
   ];
   const visibleSections = sections.filter((s) => s.show);
   const activeSection = visibleSections.some((s) => s.id === section)
