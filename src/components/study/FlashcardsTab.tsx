@@ -54,29 +54,44 @@ export const TimestampBadge = ({
   );
 };
 
+type CardType = "standard" | "steps";
+
 interface EditorState {
   open: boolean;
   index: number | null; // null = creating
+  cardType: CardType;
   question: string;
   answer: string;
   bloom: BloomLevel;
   timestamp: string;
   formula: string;
+  steps: string[];
+  multiPath: boolean;
 }
 
 const emptyEditor: EditorState = {
   open: false,
   index: null,
+  cardType: "standard",
   question: "",
   answer: "",
   bloom: "Understand",
   timestamp: "",
   formula: "",
+  steps: ["", ""],
+  multiPath: false,
 };
 
 export const FormulaBadge = () => (
   <span className="inline-flex items-center rounded-md border border-bloom-apply/40 bg-bloom-apply/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-apply">
     Formula
+  </span>
+);
+
+export const StepSequenceBadge = () => (
+  <span className="inline-flex items-center gap-1 rounded-md border border-bloom-analyze/40 bg-bloom-analyze/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-analyze">
+    <ListOrdered className="h-3 w-3" />
+    Steps
   </span>
 );
 
