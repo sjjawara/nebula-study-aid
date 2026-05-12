@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Youtube, AlertCircle } from "lucide-react";
+import { Sparkles, Youtube, AlertCircle, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { parseLecture, type Lecture, type ApiResponse } from "@/lib/mockData";
 import { OutlineTab } from "@/components/study/OutlineTab";
 import { SummariesTab } from "@/components/study/SummariesTab";
@@ -11,6 +18,20 @@ import { SearchTab } from "@/components/study/SearchTab";
 import { QuizTab } from "@/components/study/QuizTab";
 import { MindMapTab } from "@/components/study/MindMapTab";
 import type { Flashcard } from "@/lib/mockData";
+
+const LANGUAGES = [
+  "English",
+  "Spanish",
+  "French",
+  "Mandarin",
+  "Arabic",
+  "Portuguese",
+  "Hindi",
+] as const;
+type Language = (typeof LANGUAGES)[number];
+
+const TRANSLATE_URL = "https://nebulalearn-production.up.railway.app/translate";
+
 
 type Stage = "input" | "loading" | "results" | "error";
 
