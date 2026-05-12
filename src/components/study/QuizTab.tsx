@@ -326,6 +326,158 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             )}
           </div>
         </div>
+
+        {/* Advanced Customization */}
+        <Collapsible open={customOpen} onOpenChange={setCustomOpen}>
+          <div className="rounded-2xl border border-border bg-card shadow-sm">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left"
+                aria-expanded={customOpen}
+              >
+                <div className="flex items-center gap-2">
+                  <Settings2 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">
+                    Advanced Customization
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    — pick cards, count, and Bloom's levels
+                  </span>
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 text-muted-foreground transition-transform",
+                    customOpen && "rotate-180",
+                  )}
+                />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="border-t border-border px-5 py-5 space-y-5">
+                {/* Question count */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Question amount
+                    </p>
+                    <span className="text-sm font-semibold text-foreground">{customCount}</span>
+                  </div>
+                  <Slider
+                    min={0}
+                    max={QUESTION_COUNTS.length - 1}
+                    step={1}
+                    value={[QUESTION_COUNTS.indexOf(customCount as 5 | 10 | 15 | 20)]}
+                    onValueChange={(v) => setCustomCount(QUESTION_COUNTS[v[0] ?? 1])}
+                  />
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
+                    {QUESTION_COUNTS.map((n) => (
+                      <span key={n}>{n}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bloom level filter */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Bloom's levels to include
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {BLOOM_LEVELS.map((lvl) => {
+                      const checked = customLevels.has(lvl);
+                      return (
+                        <label
+                          key={lvl}
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs transition-colors",
+                            checked
+                              ? "border-primary/40 bg-primary/5"
+                              : "border-border bg-background hover:border-primary/30",
+                          )}
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => toggleLevel(lvl)}
+                          />
+                          <BloomBadge level={lvl} withInfo={false} className="border-0 px-1 py-0" />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Flashcard selector */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Flashcards ({selectedCardKeys.size}/{lecture.flashcards.length} selected)
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedCardKeys(
+                            new Set(lecture.flashcards.map((c, i) => cardKey(c, i))),
+                          )
+                        }
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Select all
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCardKeys(new Set())}
+                        className="text-xs text-muted-foreground hover:underline"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div className="max-h-56 overflow-y-auto rounded-md border border-border divide-y divide-border">
+                    {lecture.flashcards.map((c, i) => {
+                      const key = cardKey(c, i);
+                      const checked = selectedCardKeys.has(key);
+                      return (
+                        <label
+                          key={key}
+                          className="flex cursor-pointer items-start gap-3 px-3 py-2 hover:bg-muted/40"
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => toggleCard(key)}
+                            className="mt-0.5"
+                          />
+                          <span className="flex-1 text-sm text-foreground/90 line-clamp-2">
+                            {c.question}
+                          </span>
+                          <BloomBadge level={c.bloom} withInfo={false} className="shrink-0" />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <p className="text-xs text-muted-foreground">
+                    {filteredCardCount === 0
+                      ? "No cards match the current filters."
+                      : `Quiz will run on up to ${Math.min(customCount, filteredCardCount)} question${
+                          Math.min(customCount, filteredCardCount) === 1 ? "" : "s"
+                        }.`}
+                  </p>
+                  <Button
+                    onClick={startCustomQuiz}
+                    disabled={filteredCardCount === 0}
+                    className="bg-gradient-primary"
+                  >
+                    <Play className="h-4 w-4" />
+                    Generate Custom Quiz
+                  </Button>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
       </div>
     );
   }
