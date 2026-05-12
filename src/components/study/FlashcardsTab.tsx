@@ -84,6 +84,7 @@ interface EditorState {
   answer: string;
   bloom: BloomLevel;
   timestamp: string;
+  formula: string;
 }
 
 const emptyEditor: EditorState = {
@@ -93,7 +94,14 @@ const emptyEditor: EditorState = {
   answer: "",
   bloom: "Understand",
   timestamp: "",
+  formula: "",
 };
+
+export const FormulaBadge = () => (
+  <span className="inline-flex items-center rounded-md border border-bloom-apply/40 bg-bloom-apply/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-bloom-apply">
+    Formula
+  </span>
+);
 
 export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcards }: FlashcardsTabProps) => {
   const [i, setI] = useState(0);
