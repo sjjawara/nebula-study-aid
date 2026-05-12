@@ -507,7 +507,7 @@ export const SummariesTab = ({
         <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-4">
           <header className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Summary
+              {t("Summary")}
             </h3>
             <DepthToggle depth={summaryDepth} onChange={setSummaryDepth} />
           </header>
