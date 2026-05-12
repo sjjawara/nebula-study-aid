@@ -154,13 +154,13 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                Top-down mastery
+                {t("Top-down mastery")}
               </p>
               <h3 className="text-xl font-semibold leading-snug text-foreground">
                 {card.question}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Start at the top. We scaffold down only if you ask.
+                {t("Start at the top. We scaffold down only if you ask.")}
               </p>
             </div>
             <BloomBadge level="Evaluate" />
