@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
 import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
+import { useT, translateStrings } from "@/lib/i18n";
 
 type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
 
