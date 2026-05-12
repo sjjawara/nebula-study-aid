@@ -393,6 +393,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           lecture={lecture}
           onExit={exit}
           feedbackMode={feedbackMode}
+          questionsPerLevel={questionsPerTopic}
         />
       </div>
     );
