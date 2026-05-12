@@ -85,6 +85,7 @@ const explanationFor = (record: Pick<AnswerRecord, "qType" | "correctAnswer" | "
 };
 
 export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }: Props) => {
+  const { t } = useT();
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [used, setUsed] = useState<Set<string>>(new Set());
