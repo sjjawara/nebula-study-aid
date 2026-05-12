@@ -3,6 +3,7 @@ import { BloomBadge } from "@/components/BloomBadge";
 import { CognitiveLoad } from "@/components/CognitiveLoad";
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 
 type LoadBucket = "low" | "medium" | "high";
 
