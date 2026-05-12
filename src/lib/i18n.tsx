@@ -155,3 +155,13 @@ export const LanguageProvider = ({ language, dictionary, children }: ProviderPro
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 };
+
+/**
+ * Tiny convenience component for sprinkling translated strings into JSX
+ * without destructuring `useT()` every time. Renders the translated text
+ * (or the English fallback) as plain text.
+ */
+export const T = ({ s }: { s: string }) => {
+  const { t } = useT();
+  return <>{t(s)}</>;
+};
