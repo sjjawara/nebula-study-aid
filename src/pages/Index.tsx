@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Youtube, AlertCircle, Globe, Loader2 } from "lucide-react";
+import { Sparkles, Youtube, AlertCircle, Globe, Loader2, History, RotateCcw } from "lucide-react";
+import { SessionHistoryPanel } from "@/components/study/SessionHistoryPanel";
+import {
+  loadSessions,
+  saveSession,
+  removeSession,
+  type StoredSession,
+} from "@/lib/sessionHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
