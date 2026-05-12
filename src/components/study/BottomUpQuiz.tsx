@@ -32,6 +32,7 @@ interface Props {
 }
 
 export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
+  const { t } = useT();
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
