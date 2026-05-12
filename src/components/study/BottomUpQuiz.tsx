@@ -16,6 +16,10 @@ import { cn } from "@/lib/utils";
 import { FollowUpQuestions } from "./FollowUpQuestions";
 import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
 
+const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
+
+const LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate"];
+
 interface Props {
   lecture: Lecture;
   card: Flashcard;
