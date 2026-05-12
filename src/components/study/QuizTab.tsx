@@ -401,6 +401,56 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="border-t border-border px-5 py-5 space-y-5">
+                {/* Formula Mode */}
+                <div
+                  className={cn(
+                    "flex items-start justify-between gap-3 rounded-xl border p-3 transition-colors",
+                    formulaMode
+                      ? "border-bloom-apply/50 bg-bloom-apply/5"
+                      : "border-border bg-background",
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                        formulaMode
+                          ? "bg-bloom-apply text-background"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      <FunctionSquare className="h-4 w-4" />
+                    </span>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">Formula Mode</p>
+                      <p className="text-xs text-muted-foreground">
+                        Quiz only on flashcards with a formula, using formula-specific question patterns
+                        (write the formula, identify a variable, pick the right one for a scenario).
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {formulaCount} formula card{formulaCount === 1 ? "" : "s"} in this deck.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formulaMode}
+                    onClick={() => setFormulaMode((v) => !v)}
+                    className={cn(
+                      "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                      formulaMode ? "bg-bloom-apply" : "bg-muted",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
+                        formulaMode ? "translate-x-5" : "translate-x-0.5",
+                      )}
+                    />
+                  </button>
+                </div>
+
                 {/* Question count */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
