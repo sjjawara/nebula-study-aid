@@ -6,6 +6,7 @@ import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-r
 import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
 import { useT, translateStrings } from "@/lib/i18n";
+import { timestampToSeconds } from "@/lib/timestamp";
 
 type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
 
@@ -233,9 +234,7 @@ export const SummariesTab = ({
 
     const tsToSeconds = (ts?: string) => {
       if (!ts) return null;
-      const parts = ts.split(":").map((p) => parseInt(p, 10));
-      if (parts.some((n) => Number.isNaN(n))) return null;
-      return parts.reduce((acc, n) => acc * 60 + n, 0);
+      return timestampToSeconds(ts);
     };
 
     const tokenize = (s: string) =>
