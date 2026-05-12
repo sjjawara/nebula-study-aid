@@ -740,61 +740,54 @@ const formatWithHeaders = (text: string): BlockNode[] => {
   return blocks;
 };
 
-const SummarySection = ({
-  id,
-  title,
+const SummaryBody = ({
   body,
   format,
 }: {
-  id: string;
-  title: string;
   body: string;
   format: "paragraphs" | "chunked" | "headers";
 }) => {
   const trimmed = (body ?? "").trim();
+  if (!trimmed) {
+    return <p className="text-sm text-muted-foreground">No summary available.</p>;
+  }
+  if (format === "paragraphs") {
+    return (
+      <div className="space-y-3 text-base leading-relaxed text-foreground/90 whitespace-pre-line">
+        {trimmed.split(/\n\s*\n/).map((p, i) => (
+          <p key={i}>{p.trim()}</p>
+        ))}
+      </div>
+    );
+  }
+  if (format === "chunked") {
+    return (
+      <div className="space-y-4 text-base leading-relaxed text-foreground/90">
+        {groupIntoParagraphs(trimmed, 4).map((p, i, arr) => (
+          <div key={i}>
+            <p>{p}</p>
+            {i < arr.length - 1 && (
+              <div className="mt-4 h-px w-16 bg-border/70" aria-hidden />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
-    <section
-      id={id}
-      className="scroll-mt-24 rounded-xl border border-border bg-card p-6 shadow-card"
-    >
-      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-primary">
-        {title}
-      </h3>
-      {!trimmed ? (
-        <p className="text-sm text-muted-foreground">No summary available.</p>
-      ) : format === "paragraphs" ? (
-        <div className="space-y-3 text-base leading-relaxed text-foreground/90 whitespace-pre-line">
-          {trimmed.split(/\n\s*\n/).map((p, i) => (
-            <p key={i}>{p.trim()}</p>
-          ))}
-        </div>
-      ) : format === "chunked" ? (
-        <div className="space-y-4 text-base leading-relaxed text-foreground/90">
-          {groupIntoParagraphs(trimmed, 4).map((p, i, arr) => (
-            <div key={i}>
-              <p>{p}</p>
-              {i < arr.length - 1 && (
-                <div className="mt-4 h-px w-16 bg-border/70" aria-hidden />
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3 text-base leading-relaxed text-foreground/90">
-          {formatWithHeaders(trimmed).map((b, i) =>
-            b.type === "header" ? (
-              <h4
-                key={i}
-                className="mt-5 text-base font-semibold tracking-tight text-foreground first:mt-0"
-              >
-                {b.text}
-              </h4>
-            ) : (
-              <p key={i}>{b.text}</p>
-            ),
-          )}
-        </div>
+    <div className="space-y-3 text-base leading-relaxed text-foreground/90">
+      {formatWithHeaders(trimmed).map((b, i) =>
+        b.type === "header" ? (
+          <h4
+            key={i}
+            className="mt-5 text-base font-semibold tracking-tight text-foreground first:mt-0"
+          >
+            {b.text}
+          </h4>
+        ) : (
+          <p key={i}>{b.text}</p>
+        ),
       )}
-    </section>
+    </div>
   );
 };
