@@ -218,11 +218,27 @@ const Index = () => {
               <p className="text-xs text-muted-foreground -mt-0.5">Turn any lecture into a study environment</p>
             </div>
           </div>
-          {(stage === "results" || stage === "error") && (
-            <Button variant="ghost" size="sm" onClick={reset}>
-              New lecture
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setHistoryOpen(true)}
+              title="Recent sessions"
+            >
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">History</span>
+              {sessions.length > 0 && (
+                <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold text-primary">
+                  {sessions.length}
+                </span>
+              )}
             </Button>
-          )}
+            {(stage === "results" || stage === "error") && (
+              <Button variant="ghost" size="sm" onClick={reset}>
+                New lecture
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
