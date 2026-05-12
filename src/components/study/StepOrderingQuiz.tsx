@@ -84,9 +84,9 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
     return (
       <div className="rounded-2xl border border-border bg-card p-10 text-center space-y-3">
         <p className="text-sm text-muted-foreground">
-          No step-sequence flashcards available. Add one in the Flashcards tab to use Step Ordering mode.
+          {t("No step-sequence flashcards available. Add one in the Flashcards tab to use Step Ordering mode.")}
         </p>
-        <Button variant="ghost" onClick={onExit}>Back</Button>
+        <Button variant="ghost" onClick={onExit}>{t("Back")}</Button>
       </div>
     );
   }
