@@ -442,7 +442,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                         href={link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) => openExternal(e, link)}
+                        onClick={(e) => { openExternal(e, link); showPreview(m.topic, m.timestamp, link); }}
                         className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                       >
                         {card.timestamp}
