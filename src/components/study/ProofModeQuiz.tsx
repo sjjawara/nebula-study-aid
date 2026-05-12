@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
 import { pickDistractors, shuffle } from "@/lib/quizUtils";
+import { useT } from "@/lib/i18n";
 
 export type ProofQuestionType =
   | "justify_step"
