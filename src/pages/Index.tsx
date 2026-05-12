@@ -166,6 +166,9 @@ const Index = () => {
     setUrl("");
     setLecture(null);
     setError(null);
+    setLanguage("English");
+    setTranslations({});
+    setTranslateError(null);
   };
 
   return (
