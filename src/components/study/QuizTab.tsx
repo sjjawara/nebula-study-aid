@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare } from "lucide-react";
+import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare, ListOrdered } from "lucide-react";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +9,7 @@ import { BloomBadge } from "@/components/BloomBadge";
 import { TopDownMasteryQuiz } from "./TopDownMasteryQuiz";
 import { BottomUpQuiz } from "./BottomUpQuiz";
 import { MasteryModeQuiz } from "./MasteryModeQuiz";
+import { StepOrderingQuiz } from "./StepOrderingQuiz";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 
@@ -120,9 +121,15 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [customLecture, setCustomLecture] = useState<Lecture | null>(null);
   const [customAnswered, setCustomAnswered] = useState(0);
   const [formulaMode, setFormulaMode] = useState(false);
+  const [stepOrderingMode, setStepOrderingMode] = useState(false);
+  const [stepOrderingCards, setStepOrderingCards] = useState<Flashcard[] | null>(null);
 
   const formulaCount = useMemo(
     () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
+    [lecture.flashcards],
+  );
+  const stepCardCount = useMemo(
+    () => lecture.flashcards.filter((c) => (c.steps?.length ?? 0) >= 2).length,
     [lecture.flashcards],
   );
 
@@ -138,9 +145,10 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     return lecture.flashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
       customLevels.has(c.bloom) &&
-      (!formulaMode || !!c.formula?.trim()),
+      (!formulaMode || !!c.formula?.trim()) &&
+      (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode]);
+  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode, stepOrderingMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -166,10 +174,16 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
         (c, i) =>
           selectedCardKeys.has(cardKey(c, i)) &&
           customLevels.has(c.bloom) &&
-          (!formulaMode || !!c.formula?.trim()),
+          (!formulaMode || !!c.formula?.trim()) &&
+          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
       )
       .slice(0, customCount);
     if (!basePool.length) return;
+    if (stepOrderingMode) {
+      setStepOrderingCards(basePool);
+      setSessionKey((k) => k + 1);
+      return;
+    }
     const pool = formulaMode
       ? basePool.map((c, idx) => buildFormulaCard(c, idx))
       : basePool;
@@ -231,6 +245,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setMasteryActive(false);
     setCustomLecture(null);
     setCustomAnswered(0);
+    setStepOrderingCards(null);
   };
 
   const ModePill = ({
@@ -281,6 +296,13 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           No questions available for this lecture yet.
         </p>
       </div>
+    );
+  }
+
+  // Active step-ordering session
+  if (stepOrderingCards) {
+    return (
+      <StepOrderingQuiz key={`steps-${sessionKey}`} cards={stepOrderingCards} onExit={exit} />
     );
   }
 
@@ -436,7 +458,13 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     type="button"
                     role="switch"
                     aria-checked={formulaMode}
-                    onClick={() => setFormulaMode((v) => !v)}
+                    onClick={() =>
+                      setFormulaMode((v) => {
+                        const next = !v;
+                        if (next) setStepOrderingMode(false);
+                        return next;
+                      })
+                    }
                     className={cn(
                       "relative h-6 w-11 shrink-0 rounded-full transition-colors",
                       formulaMode ? "bg-bloom-apply" : "bg-muted",
@@ -446,6 +474,62 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       className={cn(
                         "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
                         formulaMode ? "translate-x-5" : "translate-x-0.5",
+                      )}
+                    />
+                  </button>
+                </div>
+
+                {/* Step Ordering Mode */}
+                <div
+                  className={cn(
+                    "flex items-start justify-between gap-3 rounded-xl border p-3 transition-colors",
+                    stepOrderingMode
+                      ? "border-bloom-analyze/50 bg-bloom-analyze/5"
+                      : "border-border bg-background",
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                        stepOrderingMode
+                          ? "bg-bloom-analyze text-background"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      <ListOrdered className="h-4 w-4" />
+                    </span>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">Step Ordering Mode</p>
+                      <p className="text-xs text-muted-foreground">
+                        Show shuffled steps for a procedure. Drag them into the correct order, then submit
+                        to see what you got right and the reasoning behind each step.
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {stepCardCount} step-sequence card{stepCardCount === 1 ? "" : "s"} in this deck.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={stepOrderingMode}
+                    onClick={() =>
+                      setStepOrderingMode((v) => {
+                        const next = !v;
+                        if (next) setFormulaMode(false);
+                        return next;
+                      })
+                    }
+                    className={cn(
+                      "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                      stepOrderingMode ? "bg-bloom-analyze" : "bg-muted",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
+                        stepOrderingMode ? "translate-x-5" : "translate-x-0.5",
                       )}
                     />
                   </button>
@@ -556,21 +640,41 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <p className="text-xs text-muted-foreground">
                     {filteredCardCount === 0
-                      ? formulaMode
+                      ? stepOrderingMode
+                        ? "No step-sequence flashcards match the current filters. Create one in the Flashcards tab."
+                        : formulaMode
                         ? "No formula flashcards match the current filters. Add a formula in the Flashcards tab."
                         : "No cards match the current filters."
-                      : `${formulaMode ? "Formula Mode — " : ""}Quiz will run on up to ${Math.min(
+                      : `${
+                          stepOrderingMode
+                            ? "Step Ordering — "
+                            : formulaMode
+                            ? "Formula Mode — "
+                            : ""
+                        }Quiz will run on up to ${Math.min(
                           customCount,
                           filteredCardCount,
-                        )} question${Math.min(customCount, filteredCardCount) === 1 ? "" : "s"}.`}
+                        )} ${stepOrderingMode ? "problem" : "question"}${
+                          Math.min(customCount, filteredCardCount) === 1 ? "" : "s"
+                        }.`}
                   </p>
                   <Button
                     onClick={startCustomQuiz}
                     disabled={filteredCardCount === 0}
                     className="bg-gradient-primary"
                   >
-                    {formulaMode ? <FunctionSquare className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    {formulaMode ? "Start Formula Quiz" : "Generate Custom Quiz"}
+                    {stepOrderingMode ? (
+                      <ListOrdered className="h-4 w-4" />
+                    ) : formulaMode ? (
+                      <FunctionSquare className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                    {stepOrderingMode
+                      ? "Start Step Ordering"
+                      : formulaMode
+                      ? "Start Formula Quiz"
+                      : "Generate Custom Quiz"}
                   </Button>
                 </div>
               </div>

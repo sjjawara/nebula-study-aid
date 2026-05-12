@@ -22,6 +22,12 @@ export interface Flashcard {
   bloom: BloomLevel;
   timestamp?: string;
   formula?: string;
+  /** Ordered steps for "Step Sequence" cards. Presence marks the card as a step-ordering card. */
+  steps?: string[];
+  /** When true, multiple valid orderings exist; quiz validator should accept any order. */
+  multiPath?: boolean;
+  /** Optional per-step rationale, indexed alongside `steps`. */
+  stepExplanations?: string[];
 }
 
 export interface SearchMoment {
@@ -88,7 +94,16 @@ export interface ApiResponse {
   title?: string;
   outline?: Array<{ timestamp: string; topic: string; bloom_level: string; cognitive_load: number }>;
   summaries?: { ninety_seconds?: string; five_minutes?: string; full?: string };
-  flashcards?: Array<{ question: string; answer: string; bloom_level: string; timestamp?: string }>;
+  flashcards?: Array<{
+    question: string;
+    answer: string;
+    bloom_level: string;
+    timestamp?: string;
+    formula?: string;
+    steps?: string[];
+    multi_path?: boolean;
+    step_explanations?: string[];
+  }>;
   search_index?: Array<{ timestamp: string; topic?: string; keywords?: string[]; summary?: string }>;
 }
 
@@ -110,6 +125,12 @@ export const parseLecture = (data: ApiResponse): Lecture => ({
     answer: f.answer,
     bloom: normalizeBloom(f.bloom_level),
     timestamp: f.timestamp,
+    formula: f.formula,
+    steps: Array.isArray(f.steps) && f.steps.length ? f.steps.map(String) : undefined,
+    multiPath: typeof f.multi_path === "boolean" ? f.multi_path : undefined,
+    stepExplanations: Array.isArray(f.step_explanations) && f.step_explanations.length
+      ? f.step_explanations.map(String)
+      : undefined,
   })),
   searchIndex: (data.search_index ?? []).map((s) => ({
     timestamp: s.timestamp,
