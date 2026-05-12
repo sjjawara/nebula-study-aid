@@ -286,7 +286,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => openEdit(Math.min(i, total - 1))}
+                  onClick={() => openEdit(cardOriginalIndex)}
                   className="h-7 w-7"
                   aria-label={t("Edit flashcard")}
                 >
