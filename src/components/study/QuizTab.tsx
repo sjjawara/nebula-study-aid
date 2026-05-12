@@ -195,8 +195,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           <p className="text-xs font-medium uppercase tracking-wider text-primary">
             Quiz mode
           </p>
-          <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground">
+          <h3 className="mt-2 text-xl font-semibold tracking-tight text-foreground inline-flex items-center gap-1.5">
             How do you want to learn today?
+            <InfoTooltip content={tooltipCopy.bloomTaxonomyQuiz} label="About Bloom's Taxonomy" iconClassName="h-4 w-4" />
           </h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <ModePill
@@ -208,7 +209,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             <ModePill
               value="top"
               icon={ArrowDown}
-              title="Top Down"
+              title="Top Down (Productive Failure)"
               desc="Productive failure — start at Evaluate, scaffold down."
             />
             <ModePill
