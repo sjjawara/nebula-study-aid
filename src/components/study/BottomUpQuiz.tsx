@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
 import { FollowUpQuestions } from "./FollowUpQuestions";
-import { buildTrueFalseStatement, pickDistractors, shuffle } from "@/lib/quizUtils";
+import { buildTrueFalseStatement, cleanExplanation, pickDistractors, shuffle } from "@/lib/quizUtils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 
