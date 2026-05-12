@@ -225,6 +225,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             <Sparkles className="h-5 w-5" />
           </div>
           <h4 className="text-base font-semibold text-foreground">Ready when you are</h4>
+          <div className="flex justify-center">
+            <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
+          </div>
           <p className="text-sm text-muted-foreground">
             {mode === "mastery"
               ? "Mastery Mode adapts to you — start at Remember and climb."
@@ -285,10 +288,13 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
             Mastery
           </button>
         </div>
-        <Button variant="ghost" size="sm" onClick={exit}>
-          <X className="h-4 w-4" />
-          Exit
-        </Button>
+        <div className="flex items-center gap-2">
+          <FeedbackModeToggle mode={feedbackMode} onChange={setFeedbackMode} />
+          <Button variant="ghost" size="sm" onClick={exit}>
+            <X className="h-4 w-4" />
+            Exit
+          </Button>
+        </div>
       </div>
 
       {mode === "top" ? (
@@ -299,6 +305,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           onNext={next}
           onExit={exit}
           onSelectFollowUp={launchSpecific}
+          feedbackMode={feedbackMode}
         />
       ) : (
         <BottomUpQuiz
@@ -308,6 +315,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           onNext={next}
           onExit={exit}
           onSelectFollowUp={launchSpecific}
+          feedbackMode={feedbackMode}
         />
       )}
     </div>
