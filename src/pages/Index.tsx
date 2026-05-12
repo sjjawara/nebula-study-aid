@@ -157,11 +157,27 @@ const Index = () => {
       const trimmedUrl = url.trim();
 
       // 1. Fetch raw transcript array from Supadata
-      const supaRes = await fetch(
-        `${SUPADATA_URL}?url=${encodeURIComponent(trimmedUrl)}&text=false`,
-        { headers: SUPADATA_API_KEY ? { "x-api-key": SUPADATA_API_KEY } : {} }
-      );
-      if (!supaRes.ok) throw new Error(`Transcript fetch failed (${supaRes.status})`);
+      if (!SUPADATA_API_KEY) {
+        throw new Error(
+          "Missing VITE_SUPADATA_API_KEY. Add it as an environment variable so the x-api-key header can be sent."
+        );
+      }
+      const supaHeaders: Record<string, string> = {
+        "x-api-key": SUPADATA_API_KEY,
+        Accept: "application/json",
+      };
+      console.log("[Supadata] Request headers:", {
+        ...supaHeaders,
+        "x-api-key": `${SUPADATA_API_KEY.slice(0, 4)}…${SUPADATA_API_KEY.slice(-4)} (len ${SUPADATA_API_KEY.length})`,
+      });
+      const supaUrl = `${SUPADATA_URL}?url=${encodeURIComponent(trimmedUrl)}&text=false`;
+      console.log("[Supadata] GET", supaUrl);
+      const supaRes = await fetch(supaUrl, { method: "GET", headers: supaHeaders });
+      if (!supaRes.ok) {
+        const body = await supaRes.text().catch(() => "");
+        console.error("[Supadata] Error response:", supaRes.status, body);
+        throw new Error(`Transcript fetch failed (${supaRes.status}): ${body || supaRes.statusText}`);
+      }
       const supaPayload = await supaRes.json();
       const rawItems: TranscriptItem[] = Array.isArray(supaPayload)
         ? supaPayload
