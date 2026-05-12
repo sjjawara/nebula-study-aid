@@ -148,19 +148,19 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wider text-primary inline-flex items-center gap-1.5">
               <Target className="h-3 w-3" />
-              Step Ordering · Card {idx + 1} of {cards.length}
+              {t("Step Ordering · Card")} {idx + 1} {t("of")} {cards.length}
             </p>
             <h3 className="text-lg font-semibold text-foreground">{card.question}</h3>
             <p className="text-xs text-muted-foreground">
-              Drag the steps into the correct order, then submit.
-              {isMulti && " Multiple valid orderings are accepted."}
+              {t("Drag the steps into the correct order, then submit.")}
+              {isMulti && ` ${t("Multiple valid orderings are accepted.")}`}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <BloomBadge level={skill} />
             <Button variant="ghost" size="sm" onClick={onExit}>
               <X className="h-4 w-4" />
-              Exit
+              {t("Exit")}
             </Button>
           </div>
         </div>
