@@ -426,7 +426,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         <div className="flex flex-wrap justify-end gap-2">
           {onExit && (
             <Button variant="ghost" onClick={onExit}>
-              Exit
+              {t("Exit")}
             </Button>
           )}
           <Button
@@ -443,7 +443,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
             className="bg-gradient-primary"
           >
             <RefreshCw className="h-4 w-4" />
-            Start a new run
+            {t("Start a new run")}
           </Button>
         </div>
       </div>
