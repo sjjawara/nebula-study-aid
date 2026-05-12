@@ -162,7 +162,9 @@ const Index = () => {
       if (!raw) throw new Error("Malformed response: missing 'data' field.");
 
       const parsed: ApiResponse = typeof raw === "string" ? JSON.parse(raw) : raw;
-      setLecture(parseLecture(parsed));
+      const parsedLecture = parseLecture(parsed);
+      setLecture(parsedLecture);
+      setSessions(saveSession(parsedLecture, trimmedUrl));
       setStage("results");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -178,6 +180,27 @@ const Index = () => {
     setLanguage("English");
     setTranslations({});
     setTranslateError(null);
+  };
+
+  // Save current session (if any) and return to input screen
+  const processAnother = () => {
+    if (lecture && url) setSessions(saveSession(lecture, url));
+    reset();
+  };
+
+  const loadStored = (s: StoredSession) => {
+    setLecture(s.lecture);
+    setUrl(s.url);
+    setLanguage("English");
+    setTranslations({});
+    setTranslateError(null);
+    setActiveTab("outline");
+    setStage("results");
+    setHistoryOpen(false);
+  };
+
+  const removeStored = (id: string) => {
+    setSessions(removeSession(id));
   };
 
   return (
