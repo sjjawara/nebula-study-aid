@@ -428,6 +428,8 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate", q
           </div>
         </div>
 
+        {peakLevel === "Evaluate" && <GoDeeperCard />}
+
         <div className="flex flex-wrap justify-end gap-2">
           {onExit && (
             <Button variant="ghost" onClick={onExit}>
