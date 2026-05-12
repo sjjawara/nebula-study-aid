@@ -208,7 +208,7 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
                     className="h-7 w-7"
                     onClick={() => move(i, i - 1)}
                     disabled={i === 0}
-                    aria-label="Move up"
+                    aria-label={t("Move up")}
                   >
                     <ArrowUp className="h-3.5 w-3.5" />
                   </Button>
@@ -218,7 +218,7 @@ export const StepOrderingQuiz = ({ cards, onExit }: Props) => {
                     className="h-7 w-7"
                     onClick={() => move(i, i + 1)}
                     disabled={i === order.length - 1}
-                    aria-label="Move down"
+                    aria-label={t("Move down")}
                   >
                     <ArrowDown className="h-3.5 w-3.5" />
                   </Button>
