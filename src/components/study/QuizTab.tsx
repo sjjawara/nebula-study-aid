@@ -13,6 +13,7 @@ import { MasteryModeQuiz } from "./MasteryModeQuiz";
 import { StepOrderingQuiz } from "./StepOrderingQuiz";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { useT } from "@/lib/i18n";
 
 const BLOOM_LEVELS: BloomLevel[] = ["Remember", "Understand", "Apply", "Analyze", "Evaluate", "Create"];
 const QUESTION_COUNTS = [5, 10, 15, 20] as const;
