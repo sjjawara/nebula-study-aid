@@ -6,6 +6,7 @@ import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-r
 import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
 import { useT, translateStrings } from "@/lib/i18n";
+import { timestampToSeconds } from "@/lib/timestamp";
 
 type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
 
