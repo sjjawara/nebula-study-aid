@@ -403,12 +403,12 @@ const Index = () => {
                   disabled={translating}
                 >
                   <SelectTrigger className="h-9 w-[140px] bg-card">
-                    <SelectValue />
+                    <SelectValue>{LANGUAGE_NATIVE_NAMES[language]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {LANGUAGES.map((l) => (
                       <SelectItem key={l} value={l}>
-                        {l}
+                        {LANGUAGE_NATIVE_NAMES[l]}
                       </SelectItem>
                     ))}
                   </SelectContent>
