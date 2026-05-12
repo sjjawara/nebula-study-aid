@@ -557,6 +557,8 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
           </div>
         )}
 
+        {stage === "done" && demonstratedLevel === "Evaluate" && <GoDeeperCard />}
+
         {stage === "done" && onSelectFollowUp && (
           <FollowUpQuestions
             lecture={lecture}
