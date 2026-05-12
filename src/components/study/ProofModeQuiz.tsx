@@ -181,11 +181,11 @@ export const ProofModeQuiz = ({ lecture, cards, onExit }: Props) => {
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-2 rounded-lg border border-bloom-evaluate/40 bg-bloom-evaluate/5 px-3 py-1.5 text-xs font-medium text-bloom-evaluate">
             <ScrollText className="h-3.5 w-3.5" />
-            Full Proof — annotated
+            {t("Full Proof — annotated")}
           </div>
           <Button variant="ghost" size="sm" onClick={onExit}>
             <X className="h-4 w-4" />
-            Exit
+            {t("Exit")}
           </Button>
         </div>
         <div className="space-y-4">
