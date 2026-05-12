@@ -107,6 +107,7 @@ const buildFormulaCard = (card: Flashcard, idx: number): Flashcard => {
 };
 
 export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
+  const { t } = useT();
   const [mode, setMode] = useState<QuizMode>("bottom");
   const [feedbackMode, setFeedbackMode] = useState<FeedbackMode>("immediate");
   const [card, setCard] = useState<Flashcard | null>(null);
