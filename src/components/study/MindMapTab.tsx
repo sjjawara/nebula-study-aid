@@ -680,30 +680,17 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     {hasNote && (
                       <circle cx={w - 6} cy={6} r={4} fill="hsl(var(--primary))" style={{ pointerEvents: "none" }} />
                     )}
-                    {tool === "select" && (
+                    {tool === "select" && hoveredId === n.data.id && (
                       <g
-                        transform={`translate(${w / 2 - 12}, ${h - 12})`}
+                        transform={`translate(${w - 12}, ${h / 2 - 12})`}
                         onClick={(e) => {
                           e.stopPropagation();
                           addChild(n.data.id);
                         }}
                         onPointerDown={(e) => e.stopPropagation()}
-                        onMouseEnter={(e) => {
-                          setHoveredId(n.data.id);
-                          (e.currentTarget as SVGGElement).style.opacity = "1";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as SVGGElement).style.opacity =
-                            hoveredId === n.data.id ? "1" : "0.35";
-                        }}
-                        style={{
-                          cursor: "pointer",
-                          opacity: hoveredId === n.data.id ? 1 : 0.35,
-                          transition: "opacity 150ms ease-out",
-                        }}
+                        style={{ cursor: "pointer" }}
                         aria-label="Add child concept"
                       >
-                        {/* invisible expanded hit area for easier targeting */}
                         <circle cx={12} cy={12} r={16} fill="transparent" />
                         <circle
                           cx={12}
