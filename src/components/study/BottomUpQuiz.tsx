@@ -27,9 +27,10 @@ interface Props {
   onNext?: () => void;
   onExit?: () => void;
   onSelectFollowUp?: (c: Flashcard) => void;
+  feedbackMode?: "immediate" | "end";
 }
 
-export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
+export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, feedbackMode = "immediate" }: Props) => {
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
