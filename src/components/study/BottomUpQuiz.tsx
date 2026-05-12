@@ -485,6 +485,8 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         </div>
       )}
 
+      {done && <GoDeeperCard />}
+
       {done && onSelectFollowUp && (
         <FollowUpQuestions
           lecture={lecture}
