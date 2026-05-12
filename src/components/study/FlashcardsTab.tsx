@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ListOrdered, RotateCw, Sparkles, Play, Pencil, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FlashcardFilters, useFlashcardFilters } from "./FlashcardFilters";
 import { useT } from "@/lib/i18n";
 
 interface FlashcardsTabProps {
@@ -106,12 +107,23 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
   const [i, setI] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [editor, setEditor] = useState<EditorState>(emptyEditor);
-  const total = lecture.flashcards.length;
+  const filters = useFlashcardFilters(lecture);
+
+  // Filtered view drives the carousel.
+  const filteredEntries = useMemo(
+    () =>
+      lecture.flashcards
+        .map((c, originalIndex) => ({ card: c, originalIndex }))
+        .filter(({ card }) => filters.matches(card)),
+    [lecture.flashcards, filters],
+  );
+  const total = filteredEntries.length;
+  const totalAll = lecture.flashcards.length;
   const videoId = videoUrl ? extractVideoId(videoUrl) : null;
   const canEdit = !!onUpdateFlashcards;
   const { t } = useT();
 
-  // Keep cursor in range when cards are added/removed
+  // Keep cursor in range when cards are added/removed or filters change
   useEffect(() => {
     if (total === 0) {
       setI(0);
@@ -120,7 +132,9 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
     }
   }, [total, i]);
 
-  const card = total > 0 ? lecture.flashcards[Math.min(i, total - 1)] : null;
+  const currentEntry = total > 0 ? filteredEntries[Math.min(i, total - 1)] : null;
+  const card = currentEntry?.card ?? null;
+  const cardOriginalIndex = currentEntry?.originalIndex ?? -1;
 
   const go = (delta: number) => {
     if (!total) return;
@@ -217,7 +231,9 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div className="text-xs text-muted-foreground">
-          {total > 0 ? `${total} ${total === 1 ? t("card") : t("cards")} ${t("in this deck")}` : t("No flashcards yet")}
+          {totalAll > 0
+            ? `${totalAll} ${totalAll === 1 ? t("card") : t("cards")} ${t("in this deck")}`
+            : t("No flashcards yet")}
         </div>
         {canEdit && (
           <Button size="sm" onClick={openCreate} className="bg-gradient-primary">
@@ -227,10 +243,24 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
         )}
       </div>
 
-      {total === 0 || !card ? (
+      {totalAll > 0 && (
+        <FlashcardFilters
+          filters={filters}
+          visibleCount={total}
+          totalCount={totalAll}
+        />
+      )}
+
+      {totalAll === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
           <p className="text-sm text-muted-foreground">
             {canEdit ? t("Create your first flashcard to start studying.") : t("No flashcards available.")}
+          </p>
+        </div>
+      ) : !card ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            {t("No flashcards match the current filters.")}
           </p>
         </div>
       ) : (
@@ -256,7 +286,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => openEdit(Math.min(i, total - 1))}
+                  onClick={() => openEdit(cardOriginalIndex)}
                   className="h-7 w-7"
                   aria-label={t("Edit flashcard")}
                 >
