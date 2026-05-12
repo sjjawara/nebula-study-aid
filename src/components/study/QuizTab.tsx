@@ -136,9 +136,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
   const filteredCardCount = useMemo(() => {
     return lecture.flashcards.filter((c, i) =>
-      selectedCardKeys.has(cardKey(c, i)) && customLevels.has(c.bloom),
+      selectedCardKeys.has(cardKey(c, i)) &&
+      customLevels.has(c.bloom) &&
+      (!formulaMode || !!c.formula?.trim()),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, customLevels]);
+  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -159,10 +161,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   };
 
   const startCustomQuiz = () => {
-    const pool = lecture.flashcards
-      .filter((c, i) => selectedCardKeys.has(cardKey(c, i)) && customLevels.has(c.bloom))
+    const basePool = lecture.flashcards
+      .filter(
+        (c, i) =>
+          selectedCardKeys.has(cardKey(c, i)) &&
+          customLevels.has(c.bloom) &&
+          (!formulaMode || !!c.formula?.trim()),
+      )
       .slice(0, customCount);
-    if (!pool.length) return;
+    if (!basePool.length) return;
+    const pool = formulaMode
+      ? basePool.map((c, idx) => buildFormulaCard(c, idx))
+      : basePool;
     const customL: Lecture = { ...lecture, flashcards: pool };
     setCustomLecture(customL);
     setCustomAnswered(1);
