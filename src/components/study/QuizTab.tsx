@@ -184,10 +184,16 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           selectedCardKeys.has(cardKey(c, i)) &&
           customLevels.has(c.bloom) &&
           (!formulaMode || !!c.formula?.trim()) &&
-          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
+          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
+          (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
       )
       .slice(0, customCount);
     if (!basePool.length) return;
+    if (proofMode) {
+      setProofCards(basePool);
+      setSessionKey((k) => k + 1);
+      return;
+    }
     if (stepOrderingMode) {
       setStepOrderingCards(basePool);
       setSessionKey((k) => k + 1);
