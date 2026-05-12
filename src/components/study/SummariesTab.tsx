@@ -145,13 +145,19 @@ export const SummariesTab = ({
   const { language, t } = useT();
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
   const [translatedTakeaways, setTranslatedTakeaways] = useState<string[] | null>(null);
+  const outline = Array.isArray(lecture?.outline) ? lecture.outline : [];
+  const summaries = lecture?.summaries ?? { short: "", medium: "", full: "" };
+  const sourceLecture = englishLecture ?? lecture;
+  const sourceOutline = Array.isArray(sourceLecture?.outline) ? sourceLecture.outline : [];
+  const sourceSearchIndex = Array.isArray(sourceLecture?.searchIndex) ? sourceLecture.searchIndex : [];
+  const sourceFlashcards = Array.isArray(sourceLecture?.flashcards) ? sourceLecture.flashcards : [];
 
   const profile = useMemo(() => {
     const counts: Record<BloomLevel, number> = {
       Remember: 0, Understand: 0, Apply: 0, Analyze: 0, Evaluate: 0, Create: 0,
     };
-    for (const o of lecture.outline) counts[o.bloom] = (counts[o.bloom] ?? 0) + 1;
-    const total = lecture.outline.length || 1;
+    for (const o of outline) counts[o.bloom] = (counts[o.bloom] ?? 0) + 1;
+    const total = outline.length || 1;
     const pct: Record<BloomLevel, number> = {
       Remember: 0, Understand: 0, Apply: 0, Analyze: 0, Evaluate: 0, Create: 0,
     };
@@ -162,7 +168,7 @@ export const SummariesTab = ({
       .sort((a, b) => b[1] - a[1])[0][0];
     const { recommendation, tools } = profileFor(dominant, pct);
     return { counts, pct, dominant, total, recommendation, tools };
-  }, [lecture.outline]);
+  }, [outline]);
 
   useEffect(() => {
     setSelectedLevel((prev) => prev ?? profile.dominant);
@@ -170,17 +176,16 @@ export const SummariesTab = ({
 
   const activeLevel: BloomLevel = selectedLevel ?? profile.dominant;
   const topicsForLevel = useMemo(
-    () => lecture.outline.filter((o) => o.bloom === activeLevel),
-    [lecture.outline, activeLevel],
+    () => outline.filter((o) => o.bloom === activeLevel),
+    [outline, activeLevel],
   );
 
   // Build takeaway sentences from the *English* lecture so we never combine
   // translated topic fragments with English templates. The full sentence array
   // is later sent to /translate as a single batch (see effect below).
   const takeaways = useMemo(() => {
-    const source = englishLecture ?? lecture;
     // Prioritize the highest-order chunks: Analyze + Evaluate first.
-    const highOrder = source.outline.filter(
+    const highOrder = sourceOutline.filter(
       (o) => o.bloom === "Analyze" || o.bloom === "Evaluate",
     );
     const pool =
@@ -188,8 +193,8 @@ export const SummariesTab = ({
         ? highOrder
         : [
             ...highOrder,
-            ...source.outline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
-            ...source.outline.filter((o) => o.bloom === "Understand"),
+            ...sourceOutline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
+            ...sourceOutline.filter((o) => o.bloom === "Understand"),
           ];
 
     const tsToSeconds = (ts?: string) => {
@@ -234,12 +239,12 @@ export const SummariesTab = ({
       };
 
       let best = { text: "", s: -1 };
-      for (const m of source.searchIndex) {
+      for (const m of sourceSearchIndex) {
         const txt = m.excerpt || "";
         const s = score(txt, m.timestamp);
         if (s > best.s) best = { text: txt, s };
       }
-      for (const f of source.flashcards) {
+      for (const f of sourceFlashcards) {
         const txt = f.answer || "";
         const s = score(`${f.question} ${txt}`, f.timestamp);
         if (s > best.s) best = { text: txt, s };
@@ -282,7 +287,7 @@ export const SummariesTab = ({
       if (items.length >= 7) break;
     }
     return items;
-  }, [englishLecture, lecture]);
+  }, [sourceFlashcards, sourceOutline, sourceSearchIndex]);
 
   // Whenever the language or takeaway set changes, send the full English
   // sentences to /translate as one batch and store the translated sentences
@@ -530,13 +535,13 @@ export const SummariesTab = ({
             <DepthToggle depth={summaryDepth} onChange={setSummaryDepth} />
           </header>
           {summaryDepth === "short" && (
-            <SummaryBody body={lecture.summaries.short} format="paragraphs" />
+            <SummaryBody body={summaries.short} format="paragraphs" />
           )}
           {summaryDepth === "medium" && (
-            <SummaryBody body={lecture.summaries.medium} format="chunked" />
+            <SummaryBody body={summaries.medium} format="chunked" />
           )}
           {summaryDepth === "full" && (
-            <SummaryBody body={lecture.summaries.full} format="paragraphs" />
+            <SummaryBody body={summaries.full} format="paragraphs" />
           )}
         </section>
       )}
