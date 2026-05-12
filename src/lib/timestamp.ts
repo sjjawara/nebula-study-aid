@@ -9,31 +9,45 @@
  *   - plain integer seconds
  */
 export const timestampToSeconds = (timestamp: string | number | null | undefined): number => {
-  if (!timestamp && timestamp !== 0) return 0;
-  const str = String(timestamp).trim();
+  if (timestamp === null || timestamp === undefined || timestamp === "") return 0;
+
+  // Numeric input — treat as plain seconds (NOT milliseconds, NOT decimal MM.SS).
+  if (typeof timestamp === "number") {
+    return Number.isFinite(timestamp) ? Math.floor(timestamp) : 0;
+  }
+
+  // Normalize: trim, strip leading "[" / trailing "]" (transcript brackets),
+  // strip trailing "s" / "sec" labels, swap full-width colon for ASCII colon.
+  let str = String(timestamp).trim();
+  str = str.replace(/^\[+|\]+$/g, "").trim();
+  str = str.replace(/[：]/g, ":");
+  str = str.replace(/\s*(seconds?|secs?|s)$/i, "").trim();
   if (!str) return 0;
 
-  // Decimal format like "2.30" — treat as total seconds
-  if (str.includes(".") && !str.includes(":")) {
+  // Support "1h2m3s" / "2m30s" style.
+  const hmsMatch = str.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/i);
+  if (hmsMatch && (hmsMatch[1] || hmsMatch[2] || hmsMatch[3])) {
+    const h = parseInt(hmsMatch[1] ?? "0", 10) || 0;
+    const m = parseInt(hmsMatch[2] ?? "0", 10) || 0;
+    const s = parseInt(hmsMatch[3] ?? "0", 10) || 0;
+    if (h || m || /[hms]/i.test(str)) return h * 3600 + m * 60 + s;
+  }
+
+  // Colon-separated: "M:SS", "MM:SS", "H:MM:SS"
+  if (str.includes(":")) {
+    const parts = str.split(":").map((p) => parseInt(p, 10) || 0);
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 4) return parts[0] * 86400 + parts[1] * 3600 + parts[2] * 60 + parts[3];
+  }
+
+  // Decimal like "2.30" — treat as total seconds, NOT minutes.seconds.
+  if (str.includes(".")) {
     const f = parseFloat(str);
     return Number.isNaN(f) ? 0 : Math.floor(f);
   }
 
-  // "M:SS" or "H:MM:SS"
-  const parts = str.split(":");
-  if (parts.length === 2) {
-    const minutes = parseInt(parts[0], 10) || 0;
-    const seconds = parseInt(parts[1], 10) || 0;
-    return minutes * 60 + seconds;
-  }
-  if (parts.length === 3) {
-    const hours = parseInt(parts[0], 10) || 0;
-    const minutes = parseInt(parts[1], 10) || 0;
-    const seconds = parseInt(parts[2], 10) || 0;
-    return hours * 3600 + minutes * 60 + seconds;
-  }
-
-  // Plain seconds
+  // Plain integer seconds.
   const num = parseInt(str, 10);
   return Number.isNaN(num) ? 0 : num;
 };
