@@ -304,6 +304,7 @@ export const FlashcardsTab = ({ lecture, videoUrl, onQuizCard, onUpdateFlashcard
                 placeholder="The correct answer"
                 rows={4}
               />
+            </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 Formula (optional)
