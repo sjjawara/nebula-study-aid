@@ -440,10 +440,10 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="flex items-center gap-2">
                   <Settings2 className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-foreground">
-                    Advanced Customization
+                    {t("Advanced Customization")}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    — pick cards, count, and Bloom's levels
+                    {t("— pick cards, count, and Bloom's levels")}
                   </span>
                 </div>
                 <ChevronDown
@@ -477,13 +477,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       <FunctionSquare className="h-4 w-4" />
                     </span>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-semibold text-foreground">Formula Mode</p>
+                      <p className="text-sm font-semibold text-foreground">{t("Formula Mode")}</p>
                       <p className="text-xs text-muted-foreground">
-                        Quiz only on flashcards with a formula, using formula-specific question patterns
-                        (write the formula, identify a variable, pick the right one for a scenario).
+                        {t("Quiz only on flashcards with a formula, using formula-specific question patterns (write the formula, identify a variable, pick the right one for a scenario).")}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
-                        {formulaCount} formula card{formulaCount === 1 ? "" : "s"} in this deck.
+                        {t(formulaCount === 1 ? "{n} formula card in this deck." : "{n} formula cards in this deck.").replace("{n}", String(formulaCount))}
                       </p>
                     </div>
                   </div>
@@ -533,13 +532,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       <ListOrdered className="h-4 w-4" />
                     </span>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-semibold text-foreground">Step Ordering Mode</p>
+                      <p className="text-sm font-semibold text-foreground">{t("Step Ordering Mode")}</p>
                       <p className="text-xs text-muted-foreground">
-                        Show shuffled steps for a procedure. Drag them into the correct order, then submit
-                        to see what you got right and the reasoning behind each step.
+                        {t("Show shuffled steps for a procedure. Drag them into the correct order, then submit to see what you got right and the reasoning behind each step.")}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
-                        {stepCardCount} step-sequence card{stepCardCount === 1 ? "" : "s"} in this deck.
+                        {t(stepCardCount === 1 ? "{n} step-sequence card in this deck." : "{n} step-sequence cards in this deck.").replace("{n}", String(stepCardCount))}
                       </p>
                     </div>
                   </div>
@@ -590,14 +588,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                         <ScrollText className="h-4 w-4" />
                       </span>
                       <div className="space-y-0.5">
-                        <p className="text-sm font-semibold text-foreground">Proof Mode</p>
+                        <p className="text-sm font-semibold text-foreground">{t("Proof Mode")}</p>
                         <p className="text-xs text-muted-foreground">
-                          Multiple-choice proof drills: justify a step, predict the next line,
-                          spot the flaw, or pick the right strategy. Always shows the full
-                          explanation, plus the annotated proof at the end.
+                          {t("Multiple-choice proof drills: justify a step, predict the next line, spot the flaw, or pick the right strategy. Always shows the full explanation, plus the annotated proof at the end.")}
                         </p>
                         <p className="text-[11px] text-muted-foreground">
-                          {proofCardCount} Analyze/Evaluate card{proofCardCount === 1 ? "" : "s"} in this deck.
+                          {t(proofCardCount === 1 ? "{n} Analyze/Evaluate card in this deck." : "{n} Analyze/Evaluate cards in this deck.").replace("{n}", String(proofCardCount))}
                         </p>
                       </div>
                     </div>
@@ -634,9 +630,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       <ScrollText className="h-4 w-4" />
                     </span>
                     <div className="space-y-0.5">
-                      <p className="text-sm font-semibold text-foreground">Proof Mode</p>
+                      <p className="text-sm font-semibold text-foreground">{t("Proof Mode")}</p>
                       <p className="text-xs text-muted-foreground">
-                        This lecture does not contain proof-based content.
+                        {t("This lecture does not contain proof-based content.")}
                       </p>
                     </div>
                   </div>
@@ -646,7 +642,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Question amount
+                      {t("Question amount")}
                     </p>
                     <span className="text-sm font-semibold text-foreground">{customCount}</span>
                   </div>
@@ -667,7 +663,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 {/* Bloom level filter */}
                 <div className="space-y-2">
                   <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Bloom's levels to include
+                    {t("Bloom's levels to include")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {BLOOM_LEVELS.map((lvl) => {
@@ -697,7 +693,9 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Flashcards ({selectedCardKeys.size}/{lecture.flashcards.length} selected)
+                      {t("Flashcards ({selected}/{total} selected)")
+                        .replace("{selected}", String(selectedCardKeys.size))
+                        .replace("{total}", String(lecture.flashcards.length))}
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -709,14 +707,14 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                         }
                         className="text-xs text-primary hover:underline"
                       >
-                        Select all
+                        {t("Select all")}
                       </button>
                       <button
                         type="button"
                         onClick={() => setSelectedCardKeys(new Set())}
                         className="text-xs text-muted-foreground hover:underline"
                       >
-                        Clear
+                        {t("Clear")}
                       </button>
                     </div>
                   </div>
@@ -746,28 +744,26 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <p className="text-xs text-muted-foreground">
-                    {filteredCardCount === 0
-                      ? proofMode
-                        ? "No Analyze/Evaluate flashcards match the current filters."
+                    {(() => {
+                      if (filteredCardCount === 0) {
+                        if (proofMode) return t("No Analyze/Evaluate flashcards match the current filters.");
+                        if (stepOrderingMode) return t("No step-sequence flashcards match the current filters. Create one in the Flashcards tab.");
+                        if (formulaMode) return t("No formula flashcards match the current filters. Add a formula in the Flashcards tab.");
+                        return t("No cards match the current filters.");
+                      }
+                      const n = Math.min(customCount, filteredCardCount);
+                      const prefix = proofMode
+                        ? t("Proof Mode — ")
                         : stepOrderingMode
-                        ? "No step-sequence flashcards match the current filters. Create one in the Flashcards tab."
+                        ? t("Step Ordering — ")
                         : formulaMode
-                        ? "No formula flashcards match the current filters. Add a formula in the Flashcards tab."
-                        : "No cards match the current filters."
-                      : `${
-                          proofMode
-                            ? "Proof Mode — "
-                            : stepOrderingMode
-                            ? "Step Ordering — "
-                            : formulaMode
-                            ? "Formula Mode — "
-                            : ""
-                        }Quiz will run on up to ${Math.min(
-                          customCount,
-                          filteredCardCount,
-                        )} ${stepOrderingMode ? "problem" : "question"}${
-                          Math.min(customCount, filteredCardCount) === 1 ? "" : "s"
-                        }.`}
+                        ? t("Formula Mode — ")
+                        : "";
+                      const tail = stepOrderingMode
+                        ? t(n === 1 ? "Quiz will run on up to {n} problem." : "Quiz will run on up to {n} problems.")
+                        : t(n === 1 ? "Quiz will run on up to {n} question." : "Quiz will run on up to {n} questions.");
+                      return prefix + tail.replace("{n}", String(n));
+                    })()}
                   </p>
                   <Button
                     onClick={startCustomQuiz}
@@ -784,12 +780,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       <Play className="h-4 w-4" />
                     )}
                     {proofMode
-                      ? "Start Proof Mode"
+                      ? t("Start Proof Mode")
                       : stepOrderingMode
-                      ? "Start Step Ordering"
+                      ? t("Start Step Ordering")
                       : formulaMode
-                      ? "Start Formula Quiz"
-                      : "Generate Custom Quiz"}
+                      ? t("Start Formula Quiz")
+                      : t("Generate Custom Quiz")}
                   </Button>
                 </div>
               </div>
