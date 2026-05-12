@@ -672,6 +672,7 @@ interface BlockNode {
 }
 
 const formatWithHeaders = (text: string): BlockNode[] => {
+  if (!text) return [];
   const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
   if (!lines.length) return [];
   const blocks: BlockNode[] = [];
