@@ -410,6 +410,14 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
           </div>
         )}
 
+        {stage === "done" && onSelectFollowUp && (
+          <FollowUpQuestions
+            lecture={lecture}
+            current={card}
+            onSelect={onSelectFollowUp}
+          />
+        )}
+
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <DialogContent>
             <DialogHeader>
