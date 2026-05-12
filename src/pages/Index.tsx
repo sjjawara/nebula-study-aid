@@ -495,4 +495,102 @@ const TranslatedInput = ({
   return <Input {...rest} placeholder={t(placeholderKey)} />;
 };
 
+type ErrorKind = "private" | "unlisted" | "no-captions" | "not-found" | "generic";
+
+const ERROR_CONTENT: Record<ErrorKind, { title: string; message: string }> = {
+  private: {
+    title: "This video is private",
+    message:
+      "Only the video owner can access it. Try a public lecture from YouTube or your institution's public channel.",
+  },
+  unlisted: {
+    title: "This video is unlisted",
+    message:
+      "Unlisted videos require the direct link to access — if you have the link, make sure you're pasting the full URL. Note that some unlisted videos may restrict transcript access.",
+  },
+  "no-captions": {
+    title: "This video doesn't have captions",
+    message:
+      "NebulaLearn requires a transcript to process lectures. Try a video that has CC (closed captions) enabled — most university lecture recordings and MIT OpenCourseWare videos do.",
+  },
+  "not-found": {
+    title: "We couldn't find this video",
+    message: "Check that the URL is correct and the video hasn't been deleted.",
+  },
+  generic: {
+    title: "We couldn't process this lecture",
+    message:
+      "Make sure the video is public and has closed captions enabled. Most university lecture recordings on YouTube work well with NebulaLearn.",
+  },
+};
+
+const SUGGESTED_VIDEOS: { label: string; url: string }[] = [
+  {
+    label: "MIT 6.006 — Introduction to Algorithms",
+    url: "https://www.youtube.com/watch?v=ZA-tUyM_y7s",
+  },
+  {
+    label: "MIT 18.06 — Linear Algebra (Gilbert Strang)",
+    url: "https://www.youtube.com/watch?v=ZK3O402wf1c",
+  },
+  {
+    label: "Khan Academy — Intro to Economics",
+    url: "https://www.youtube.com/watch?v=VTjxlj7l7Js",
+  },
+];
+
+const ErrorView = ({
+  kind,
+  fallback,
+  onReset,
+}: {
+  kind: ErrorKind;
+  fallback: string | null;
+  onReset: () => void;
+}) => {
+  const content = ERROR_CONTENT[kind];
+  return (
+    <section className="py-16 flex flex-col items-center gap-6 text-center">
+      <div className="h-14 w-14 rounded-full bg-destructive/15 flex items-center justify-center">
+        <AlertCircle className="h-7 w-7 text-destructive" />
+      </div>
+      <div className="space-y-2 max-w-lg">
+        <h3 className="text-xl font-semibold">
+          <T s={content.title} />
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          <T s={content.message} />
+        </p>
+        {kind === "generic" && fallback && (
+          <p className="text-xs text-muted-foreground/70 pt-1">{fallback}</p>
+        )}
+      </div>
+
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card/60 p-5 text-left space-y-3">
+        <p className="text-xs font-medium text-muted-foreground">
+          <T s="Try one of these instead:" />
+        </p>
+        <ul className="space-y-2">
+          {SUGGESTED_VIDEOS.map((v) => (
+            <li key={v.url}>
+              <a
+                href={v.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm text-primary hover:underline break-all"
+              >
+                {v.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <Button onClick={onReset} className="bg-gradient-primary">
+        <T s="Try another video" />
+      </Button>
+    </section>
+  );
+};
+
 export default Index;
