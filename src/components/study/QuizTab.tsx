@@ -489,7 +489,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     onClick={() =>
                       setFormulaMode((v) => {
                         const next = !v;
-                        if (next) setStepOrderingMode(false);
+                        if (next) { setStepOrderingMode(false); setProofMode(false); }
                         return next;
                       })
                     }
