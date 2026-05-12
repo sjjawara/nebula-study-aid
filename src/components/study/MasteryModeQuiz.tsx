@@ -468,23 +468,23 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wider text-primary">
-              Mastery mode
+              {t("Mastery mode")}
             </p>
             <h3 className="text-lg font-semibold text-foreground">
-              Question {questionNum} · current level: {currentLevel}
+              {t("Question")} {questionNum} · {t("current level:")} {t(currentLevel)}
             </h3>
             <p className="text-xs text-muted-foreground">
-              3 in a row levels you up. One miss drops you back half a level.
+              {t("3 in a row levels you up. One miss drops you back half a level.")}
             </p>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <Flame className={cn("h-3.5 w-3.5", streak > 0 ? "text-orange-500" : "text-muted-foreground")} />
-              Streak {streak}
+              {t("Streak")} {streak}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5" />
-              {accuracy}% acc
+              {accuracy}% {t("acc")}
             </span>
             <Button
               variant="secondary"
@@ -493,12 +493,12 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
               onClick={() => setFinished(true)}
             >
               <Flag className="h-3.5 w-3.5" />
-              End quiz
+              {t("End quiz")}
             </Button>
             {onExit && (
               <Button variant="ghost" size="sm" onClick={onExit}>
                 <X className="h-4 w-4" />
-                Exit
+                {t("Exit")}
               </Button>
             )}
           </div>
@@ -507,7 +507,7 @@ export const MasteryModeQuiz = ({ lecture, onExit, feedbackMode = "immediate" }:
         {feedbackMode === "end" && (
           <div className="mt-4 text-xs text-muted-foreground inline-flex items-center gap-1.5">
             <Sparkles className="h-3 w-3 text-primary" />
-            Answers will be reviewed in one summary at the end.
+            {t("Answers will be reviewed in one summary at the end.")}
           </div>
         )}
 
