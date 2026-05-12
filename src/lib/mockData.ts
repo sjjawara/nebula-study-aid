@@ -94,7 +94,16 @@ export interface ApiResponse {
   title?: string;
   outline?: Array<{ timestamp: string; topic: string; bloom_level: string; cognitive_load: number }>;
   summaries?: { ninety_seconds?: string; five_minutes?: string; full?: string };
-  flashcards?: Array<{ question: string; answer: string; bloom_level: string; timestamp?: string }>;
+  flashcards?: Array<{
+    question: string;
+    answer: string;
+    bloom_level: string;
+    timestamp?: string;
+    formula?: string;
+    steps?: string[];
+    multi_path?: boolean;
+    step_explanations?: string[];
+  }>;
   search_index?: Array<{ timestamp: string; topic?: string; keywords?: string[]; summary?: string }>;
 }
 
