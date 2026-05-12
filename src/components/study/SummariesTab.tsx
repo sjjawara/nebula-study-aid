@@ -721,9 +721,10 @@ const SummaryBody = ({
   body: string;
   format: "paragraphs" | "chunked" | "headers";
 }) => {
+  const { t } = useT();
   const trimmed = (body ?? "").trim();
   if (!trimmed) {
-    return <p className="text-sm text-muted-foreground">No summary available.</p>;
+    return <p className="text-sm text-muted-foreground">{t("No summary available.")}</p>;
   }
   if (format === "paragraphs") {
     return (
