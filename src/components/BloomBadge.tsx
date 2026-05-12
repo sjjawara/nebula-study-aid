@@ -40,14 +40,26 @@ interface BloomBadgeProps {
 
 export const BloomBadge = ({ level, className, withInfo = true, variant = "filled" }: BloomBadgeProps) => {
   if (variant === "dots") {
+    const c = `hsl(var(--bloom-${level.toLowerCase()}))`;
+    const cAlpha = (a: number) => `hsl(var(--bloom-${level.toLowerCase()}) / ${a})`;
     return (
-      <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground", className)}>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
+          className,
+        )}
+        style={{
+          backgroundColor: cAlpha(0.15),
+          borderColor: cAlpha(0.6),
+          color: c,
+        }}
+      >
         <span className="inline-flex items-center gap-0.5">
           {Array.from({ length: bloomDots[level] }).map((_, i) => (
-            <span key={i} className={cn("h-1.5 w-1.5 rounded-full", bloomDotColor[level])} />
+            <span key={i} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
           ))}
         </span>
-        <span className={bloomTextColor[level]}>{level}</span>
+        {level}
         {withInfo && (
           <InfoTooltip
             label={`About the ${level} level`}
