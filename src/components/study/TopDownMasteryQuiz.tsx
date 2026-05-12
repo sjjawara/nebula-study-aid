@@ -77,9 +77,10 @@ interface Props {
   card: Flashcard;
   onNext?: () => void;
   onExit?: () => void;
+  onSelectFollowUp?: (c: Flashcard) => void;
 }
 
-export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit }: Props) => {
+export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
   const distractors = useMemo(() => {
     const others = lecture.flashcards
       .filter((f) => f.answer !== card.answer)
