@@ -783,6 +783,29 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                         </label>
                       );
                     })}
+                    {DISABLED_BLOOM_LEVELS.map((lvl) => (
+                      <Tooltip key={lvl}>
+                        <TooltipTrigger asChild>
+                          <span
+                            aria-disabled="true"
+                            className="flex cursor-not-allowed items-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-2.5 py-1.5 text-xs opacity-50"
+                          >
+                            <Checkbox checked={false} disabled />
+                            <BloomBadge
+                              level={lvl}
+                              withInfo={false}
+                              dotsPosition="after"
+                              className="border-0 px-1 py-0 grayscale"
+                            />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs text-xs">
+                          {t(
+                            "Create-level thinking requires extended project work and cannot be assessed in quiz format. Use the Mind Map to explore connections instead.",
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
                   </div>
                 </div>
 
