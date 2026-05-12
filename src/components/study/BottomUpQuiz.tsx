@@ -84,7 +84,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
     }
   };
 
-  const tfCorrect = tfChoice === true;
+  const tfCorrect = tfChoice !== null && tfChoice === tf.correctValue;
   const mcCorrect = mcChoice === card.answer;
 
   return (
