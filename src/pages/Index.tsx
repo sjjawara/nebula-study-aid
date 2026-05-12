@@ -375,16 +375,7 @@ const Index = () => {
         )}
 
         {stage === "error" && (
-          <section className="py-20 flex flex-col items-center gap-6 text-center">
-            <div className="h-14 w-14 rounded-full bg-destructive/15 flex items-center justify-center">
-              <AlertCircle className="h-7 w-7 text-destructive" />
-            </div>
-            <div className="space-y-2 max-w-md">
-              <h3 className="text-xl font-semibold"><T s="We couldn't process that lecture" /></h3>
-              <p className="text-sm text-muted-foreground">{error ?? "Unknown error."}</p>
-            </div>
-            <Button onClick={reset} className="bg-gradient-primary"><T s="Try another URL" /></Button>
-          </section>
+          <ErrorView kind={errorKind} fallback={error} onReset={reset} />
         )}
 
         {stage === "results" && lecture && displayLecture && (
