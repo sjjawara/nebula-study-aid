@@ -315,6 +315,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     );
   }
 
+  // Active proof-mode session
+  if (proofCards) {
+    return (
+      <ProofModeQuiz
+        key={`proof-${sessionKey}`}
+        lecture={lecture}
+        cards={proofCards}
+        onExit={exit}
+      />
+    );
+  }
+
   // Active step-ordering session
   if (stepOrderingCards) {
     return (
