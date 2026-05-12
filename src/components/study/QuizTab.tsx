@@ -55,6 +55,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setSessionKey((k) => k + 1);
   };
 
+  const launchSpecific = (c: Flashcard) => {
+    setCard(c);
+    setSessionKey((k) => k + 1);
+  };
+
   const exit = () => setCard(null);
 
   const ModePill = ({
