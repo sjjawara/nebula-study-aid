@@ -309,7 +309,6 @@ export const SummariesTab = ({
     { id: "profile", label: t("Lecture Profile"), show: profile.total > 0 },
     { id: "takeaways", label: t("Key Takeaways"), show: takeaways.length > 0 },
     { id: "summary", label: t("Summary"), show: true },
-    { id: "notes", label: t("Full Notes"), show: !!lecture.summaries.full?.trim() },
   ];
   const visibleSections = sections.filter((s) => s.show);
   const activeSection = visibleSections.some((s) => s.id === section)
@@ -523,19 +522,6 @@ export const SummariesTab = ({
         </section>
       )}
 
-      {activeSection === "notes" && (
-        <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-4">
-          <header className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              {t("Full Notes")}
-            </h3>
-            <span className="text-xs text-muted-foreground">
-              {t("Section-by-section breakdown of the lecture.")}
-            </span>
-          </header>
-          <SummaryBody body={lecture.summaries.full} format="headers" />
-        </section>
-      )}
     </div>
   );
 };
