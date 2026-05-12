@@ -296,30 +296,114 @@ export const SummariesTab = ({
 
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Bloom's distribution
+              Bloom's distribution{" "}
+              <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">
+                — click a segment for tailored study tips
+              </span>
             </p>
-            <div className="flex h-3 w-full overflow-hidden rounded-full border border-border bg-muted">
+            <div className="flex h-4 w-full overflow-hidden rounded-full border border-border bg-muted">
               {BLOOM_ORDER.map((lvl) => {
                 if (!profile.pct[lvl]) return null;
+                const isActive = activeLevel === lvl;
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={lvl}
+                    onClick={() => setSelectedLevel(lvl)}
                     title={`${lvl} · ${profile.pct[lvl]}%`}
-                    className={cn("h-full", bloomColor[lvl].split(" ")[0])}
+                    aria-label={`${lvl}: ${profile.pct[lvl]}% — show study tips`}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "h-full transition-all hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      bloomColor[lvl].split(" ")[0],
+                      isActive ? "ring-2 ring-foreground/40 ring-inset" : "opacity-80",
+                    )}
                     style={{ width: `${profile.pct[lvl]}%` }}
                   />
                 );
               })}
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
               {BLOOM_ORDER.map((lvl) =>
                 profile.pct[lvl] > 0 ? (
-                  <span key={lvl} className="inline-flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    key={lvl}
+                    onClick={() => setSelectedLevel(lvl)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded px-1 py-0.5 transition-colors hover:text-foreground",
+                      activeLevel === lvl && "text-foreground font-medium",
+                    )}
+                  >
                     <span className={cn("h-2 w-2 rounded-full", bloomColor[lvl].split(" ")[0])} />
                     {lvl} · {profile.pct[lvl]}%
-                  </span>
+                  </button>
                 ) : null,
               )}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/60 p-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <BloomBadge level={activeLevel} />
+              <span className="text-xs text-muted-foreground">
+                {profile.pct[activeLevel]}% of this lecture · {profile.counts[activeLevel]} chunk
+                {profile.counts[activeLevel] === 1 ? "" : "s"}
+              </span>
+            </div>
+            <p className="text-xs italic text-muted-foreground">
+              {bloomLevelDescriptions[activeLevel]}
+            </p>
+
+            {topicsForLevel.length > 0 && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Topics at this level
+                </p>
+                <ul className="space-y-1">
+                  {topicsForLevel.map((o, i) => (
+                    <li
+                      key={`${o.timestamp}-${i}`}
+                      className="flex items-start gap-2 text-sm text-foreground/90"
+                    >
+                      <span className="mt-0.5 font-mono text-xs text-muted-foreground tabular-nums">
+                        {o.timestamp}
+                      </span>
+                      <span>{o.topic}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div>
+              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                <Lightbulb className="h-3.5 w-3.5 text-primary" />
+                Study tip for {activeLevel}
+              </p>
+              <p className="text-sm leading-relaxed text-foreground/90">
+                {LEVEL_TIPS[activeLevel]}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                Recommended tools
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {LEVEL_TOOLS[activeLevel].map((t) => (
+                  <Button
+                    key={t.label}
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onNavigate?.(t.tab)}
+                    disabled={!onNavigate}
+                  >
+                    {t.label}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
 
