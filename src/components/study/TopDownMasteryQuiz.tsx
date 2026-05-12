@@ -260,10 +260,10 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Narrow it down — which is the strongest answer?
+                  {t("Narrow it down — which is the strongest answer?")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Each option is a plausible read of the question. Pick the one that holds up under scrutiny.
+                  {t("Each option is a plausible read of the question. Pick the one that holds up under scrutiny.")}
                 </p>
               </div>
               <BloomBadge level="Apply" />
