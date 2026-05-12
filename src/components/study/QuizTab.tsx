@@ -299,6 +299,13 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     );
   }
 
+  // Active step-ordering session
+  if (stepOrderingCards) {
+    return (
+      <StepOrderingQuiz key={`steps-${sessionKey}`} cards={stepOrderingCards} onExit={exit} />
+    );
+  }
+
   // Active mastery session
   if (masteryActive) {
     return (
