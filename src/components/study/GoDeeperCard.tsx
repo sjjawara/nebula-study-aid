@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n";
  * a quiz format cannot evaluate.
  */
 export const GoDeeperCard = () => {
-  const t = useT();
+  const { t } = useT();
   return (
     <div className="animate-fade-in rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm">
       <div className="flex items-start gap-3">
