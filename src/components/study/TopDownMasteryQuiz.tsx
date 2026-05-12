@@ -158,51 +158,53 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
         </div>
 
         {/* Level 1 — True/False */}
-        <Section show={unlocked.has("l1") && stage !== "done"} badge="Hint Unlocked">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Foundational check — true or false?
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {tf.question}
-                </p>
+        <Section show={!!tf && unlocked.has("l1") && stage !== "done"} badge="Hint Unlocked">
+          {tf && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Foundational check — true or false?
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {tf.question}
+                  </p>
+                </div>
+                <BloomBadge level="Remember" />
               </div>
-              <BloomBadge level="Remember" />
+              <div className="rounded-lg border border-border bg-background p-3">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
+                  Proposed answer
+                </p>
+                <p className="text-sm text-foreground leading-relaxed">{tf.statement}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "True", value: true },
+                  { label: "False", value: false },
+                ].map((o) => {
+                  const selected = tfChoice === o.value;
+                  const correct = o.value === tf.correctValue;
+                  const showRight = selected && correct;
+                  const showWrong = selected && !correct;
+                  return (
+                    <button
+                      key={o.label}
+                      onClick={() => setTfChoice(o.value)}
+                      className={cn(
+                        "rounded-xl border bg-background p-4 text-sm font-medium transition-all hover:border-primary/40",
+                        !selected && "border-border text-foreground",
+                        showRight && "border-emerald-500/50 bg-emerald-500/5 text-emerald-700",
+                        showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
+                      )}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="rounded-lg border border-border bg-background p-3">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">
-                Proposed answer
-              </p>
-              <p className="text-sm text-foreground leading-relaxed">{tf.statement}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "True", value: true },
-                { label: "False", value: false },
-              ].map((o) => {
-                const selected = tfChoice === o.value;
-                const correct = o.value === tf.correctValue;
-                const showRight = selected && correct;
-                const showWrong = selected && !correct;
-                return (
-                  <button
-                    key={o.label}
-                    onClick={() => setTfChoice(o.value)}
-                    className={cn(
-                      "rounded-xl border bg-background p-4 text-sm font-medium transition-all hover:border-primary/40",
-                      !selected && "border-border text-foreground",
-                      showRight && "border-emerald-500/50 bg-emerald-500/5 text-emerald-700",
-                      showWrong && "border-destructive/50 bg-destructive/5 text-destructive",
-                    )}
-                  >
-                    {o.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          )}
         </Section>
 
         {/* Level 3 — Multiple choice */}

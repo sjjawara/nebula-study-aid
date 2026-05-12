@@ -61,6 +61,27 @@ const isTopicList = (text: string): boolean => {
 const wordCount = (text: string): number =>
   text.trim().split(/\s+/).filter(Boolean).length;
 
+/**
+ * True if the text is a concrete, falsifiable claim — a real sentence with a
+ * verb that asserts something specific about a concept (e.g. "In Python, the
+ * modulo operator returns the quotient of a division"). Fragments, topic
+ * lists, and vague phrasings are rejected.
+ */
+export const isFalsifiableClaim = (text: string): boolean => {
+  const t = text.trim();
+  if (!t) return false;
+  // Must be sentence-like in length (at least 6 words, at most ~35).
+  const words = wordCount(t);
+  if (words < 6 || words > 40) return false;
+  // Must contain an actual verb / predicate so it makes an assertion.
+  const hasPredicate = /\b(is|are|was|were|be|been|being|do|does|did|has|have|had|can|cannot|can't|could|should|must|will|would|may|might|returns?|requires?|produces?|computes?|describes?|defines?|equals?|represents?|means?|maps?|allows?|enables?|prevents?|causes?|happens?|occurs?|stores?|holds?|points? to|behaves?|differs?|implements?|inherits?|raises?|throws?|evaluates?|matches?|contains?|includes?|excludes?)\b/i.test(t);
+  if (!hasPredicate) return false;
+  // Reject question-shaped strings — TF claims must be assertions, not questions.
+  if (/\?\s*$/.test(t)) return false;
+  if (/^(what|why|how|when|where|which|who|is |are |does |do |can |should )/i.test(t)) return false;
+  return true;
+};
+
 /** True if a string reads as a single, atomic claim (good for True/False). */
 export const isSingleClaim = (text: string): boolean => {
   const t = text.trim();
@@ -74,6 +95,8 @@ export const isSingleClaim = (text: string): boolean => {
   // Multiple coordinating " and " clauses → likely compound
   const ands = (t.match(/\b and \b/gi) || []).length;
   if (ands >= 2) return false;
+  // Must read as a real, falsifiable assertion.
+  if (!isFalsifiableClaim(t)) return false;
   return true;
 };
 
@@ -160,24 +183,22 @@ export const pickDistractors = (
 export const buildTrueFalseStatement = (
   lecture: Lecture,
   card: Flashcard,
-): { question: string; statement: string; correctValue: boolean } => {
+): { question: string; statement: string; correctValue: boolean } | null => {
   const correctIsAtomic = isSingleClaim(card.answer);
 
-  // Try to source a single-claim distractor that contextually fits the question.
+  // Source a single, atomic, falsifiable distractor that fits the question.
   const distractors = pickDistractors(lecture, card, 6).filter(isSingleClaim);
+  const falseClaim = distractors[0];
 
-  const showTrue = correctIsAtomic ? Math.random() < 0.5 : false;
+  // Need at least one valid concrete claim to build a TF question.
+  if (!correctIsAtomic && !falseClaim) return null;
 
-  if (showTrue) {
+  // If we can do both, randomize. Otherwise use whichever side is valid.
+  const useTrue = correctIsAtomic && (!falseClaim || Math.random() < 0.5);
+  if (useTrue) {
     return { question: card.question, statement: card.answer, correctValue: true };
   }
-
-  const fallback = distractors[0];
-  if (fallback) {
-    return { question: card.question, statement: fallback, correctValue: false };
-  }
-  // No good false statement available — fall back to truthful presentation.
-  return { question: card.question, statement: card.answer, correctValue: true };
+  return { question: card.question, statement: falseClaim, correctValue: false };
 };
 
 export const BLOOM_ORDER: BloomLevel[] = [

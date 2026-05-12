@@ -123,12 +123,16 @@ export const MasteryModeQuiz = ({ lecture, onExit }: Props) => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [openFeedback, setOpenFeedback] = useState<string | null>(null);
 
-  const qType: QType = card ? typeForLevel(currentLevel) : "tf";
+  const baseQType: QType = card ? typeForLevel(currentLevel) : "tf";
 
   const tf = useMemo(
-    () => (card && qType === "tf" ? buildTrueFalseStatement(lecture, card) : null),
-    [card, qType, lecture],
+    () => (card && baseQType === "tf" ? buildTrueFalseStatement(lecture, card) : null),
+    [card, baseQType, lecture],
   );
+
+  // If TF can't be built into a valid falsifiable claim for this card, silently
+  // fall back to MCQ rather than showing a malformed question.
+  const qType: QType = baseQType === "tf" && !tf ? "mcq" : baseQType;
 
   const mcOptions = useMemo(() => {
     if (!card || qType !== "mcq") return [] as string[];
