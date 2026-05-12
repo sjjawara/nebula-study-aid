@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare, ListOrdered } from "lucide-react";
+import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare, ListOrdered, ScrollText } from "lucide-react";
+import { ProofModeQuiz } from "./ProofModeQuiz";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -123,6 +124,8 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [formulaMode, setFormulaMode] = useState(false);
   const [stepOrderingMode, setStepOrderingMode] = useState(false);
   const [stepOrderingCards, setStepOrderingCards] = useState<Flashcard[] | null>(null);
+  const [proofMode, setProofMode] = useState(false);
+  const [proofCards, setProofCards] = useState<Flashcard[] | null>(null);
 
   const formulaCount = useMemo(
     () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
@@ -132,6 +135,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     () => lecture.flashcards.filter((c) => (c.steps?.length ?? 0) >= 2).length,
     [lecture.flashcards],
   );
+  const proofCardCount = useMemo(
+    () => lecture.flashcards.filter((c) => c.bloom === "Analyze" || c.bloom === "Evaluate").length,
+    [lecture.flashcards],
+  );
+  const proofEligible = proofCardCount > 0;
 
   // Stable keys for flashcards (question text is the natural id here)
   const cardKey = (c: Flashcard, i: number) => `${i}::${c.question}`;
@@ -146,9 +154,10 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       selectedCardKeys.has(cardKey(c, i)) &&
       customLevels.has(c.bloom) &&
       (!formulaMode || !!c.formula?.trim()) &&
-      (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
+      (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
+      (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode, stepOrderingMode]);
+  }, [lecture.flashcards, selectedCardKeys, customLevels, formulaMode, stepOrderingMode, proofMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -175,10 +184,16 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           selectedCardKeys.has(cardKey(c, i)) &&
           customLevels.has(c.bloom) &&
           (!formulaMode || !!c.formula?.trim()) &&
-          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
+          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
+          (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
       )
       .slice(0, customCount);
     if (!basePool.length) return;
+    if (proofMode) {
+      setProofCards(basePool);
+      setSessionKey((k) => k + 1);
+      return;
+    }
     if (stepOrderingMode) {
       setStepOrderingCards(basePool);
       setSessionKey((k) => k + 1);
@@ -246,6 +261,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setCustomLecture(null);
     setCustomAnswered(0);
     setStepOrderingCards(null);
+    setProofCards(null);
   };
 
   const ModePill = ({
@@ -296,6 +312,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           No questions available for this lecture yet.
         </p>
       </div>
+    );
+  }
+
+  // Active proof-mode session
+  if (proofCards) {
+    return (
+      <ProofModeQuiz
+        key={`proof-${sessionKey}`}
+        lecture={lecture}
+        cards={proofCards}
+        onExit={exit}
+      />
     );
   }
 
@@ -461,7 +489,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     onClick={() =>
                       setFormulaMode((v) => {
                         const next = !v;
-                        if (next) setStepOrderingMode(false);
+                        if (next) { setStepOrderingMode(false); setProofMode(false); }
                         return next;
                       })
                     }
@@ -517,7 +545,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     onClick={() =>
                       setStepOrderingMode((v) => {
                         const next = !v;
-                        if (next) setFormulaMode(false);
+                        if (next) { setFormulaMode(false); setProofMode(false); }
                         return next;
                       })
                     }
@@ -534,6 +562,80 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     />
                   </button>
                 </div>
+
+                {/* Proof Mode */}
+                {proofEligible ? (
+                  <div
+                    className={cn(
+                      "flex items-start justify-between gap-3 rounded-xl border p-3 transition-colors",
+                      proofMode
+                        ? "border-bloom-evaluate/50 bg-bloom-evaluate/5"
+                        : "border-border bg-background",
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={cn(
+                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                          proofMode
+                            ? "bg-bloom-evaluate text-background"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        <ScrollText className="h-4 w-4" />
+                      </span>
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-semibold text-foreground">Proof Mode</p>
+                        <p className="text-xs text-muted-foreground">
+                          Multiple-choice proof drills: justify a step, predict the next line,
+                          spot the flaw, or pick the right strategy. Always shows the full
+                          explanation, plus the annotated proof at the end.
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {proofCardCount} Analyze/Evaluate card{proofCardCount === 1 ? "" : "s"} in this deck.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={proofMode}
+                      onClick={() =>
+                        setProofMode((v) => {
+                          const next = !v;
+                          if (next) {
+                            setFormulaMode(false);
+                            setStepOrderingMode(false);
+                          }
+                          return next;
+                        })
+                      }
+                      className={cn(
+                        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+                        proofMode ? "bg-bloom-evaluate" : "bg-muted",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform",
+                          proofMode ? "translate-x-5" : "translate-x-0.5",
+                        )}
+                      />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-start gap-3 rounded-xl border border-dashed border-border bg-background/40 p-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <ScrollText className="h-4 w-4" />
+                    </span>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">Proof Mode</p>
+                      <p className="text-xs text-muted-foreground">
+                        This lecture does not contain proof-based content.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Question count */}
                 <div className="space-y-2">
@@ -640,13 +742,17 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                   <p className="text-xs text-muted-foreground">
                     {filteredCardCount === 0
-                      ? stepOrderingMode
+                      ? proofMode
+                        ? "No Analyze/Evaluate flashcards match the current filters."
+                        : stepOrderingMode
                         ? "No step-sequence flashcards match the current filters. Create one in the Flashcards tab."
                         : formulaMode
                         ? "No formula flashcards match the current filters. Add a formula in the Flashcards tab."
                         : "No cards match the current filters."
                       : `${
-                          stepOrderingMode
+                          proofMode
+                            ? "Proof Mode — "
+                            : stepOrderingMode
                             ? "Step Ordering — "
                             : formulaMode
                             ? "Formula Mode — "
@@ -663,14 +769,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     disabled={filteredCardCount === 0}
                     className="bg-gradient-primary"
                   >
-                    {stepOrderingMode ? (
+                    {proofMode ? (
+                      <ScrollText className="h-4 w-4" />
+                    ) : stepOrderingMode ? (
                       <ListOrdered className="h-4 w-4" />
                     ) : formulaMode ? (
                       <FunctionSquare className="h-4 w-4" />
                     ) : (
                       <Play className="h-4 w-4" />
                     )}
-                    {stepOrderingMode
+                    {proofMode
+                      ? "Start Proof Mode"
+                      : stepOrderingMode
                       ? "Start Step Ordering"
                       : formulaMode
                       ? "Start Formula Quiz"
