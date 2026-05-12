@@ -772,6 +772,7 @@ const NodePopover = ({
   onDelete,
   containerRef,
 }: NodePopoverProps) => {
+  const { t } = useT();
   const isCustom = !!node.isCustom;
   const [size, setSize] = useState({ width: popoverState.width, height: popoverState.height });
   const [position, setPosition] = useState<{ x: number; y: number } | null>(popoverState.position);
@@ -905,7 +906,7 @@ const NodePopover = ({
           </div>
           <div className="min-w-0">
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1">
-              {isCustom ? "Your concept" : node.kind === "root" ? "Lecture" : node.kind === "branch" ? "Topic" : "Concept"}
+              {isCustom ? t("Your concept") : node.kind === "root" ? t("Lecture") : node.kind === "branch" ? t("Topic") : t("Concept")}
               {!maximized && <Move className="h-2.5 w-2.5 opacity-50" />}
             </p>
             {isCustom ? (
@@ -913,7 +914,7 @@ const NodePopover = ({
                 value={currentLabel}
                 onChange={(e) => onLabelChange(e.target.value)}
                 className="mt-0.5 h-7 text-sm font-semibold"
-                placeholder="Concept name"
+                placeholder={t("Concept name")}
                 onPointerDown={(e) => e.stopPropagation()}
               />
             ) : (
@@ -925,8 +926,8 @@ const NodePopover = ({
           <button
             type="button"
             onClick={toggleMaximize}
-            aria-label={maximized ? "Restore popover" : "Maximize popover"}
-            title={maximized ? "Restore" : "Maximize"}
+            aria-label={maximized ? t("Restore") : t("Maximize")}
+            title={maximized ? t("Restore") : t("Maximize")}
             className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             {maximized ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
@@ -951,19 +952,19 @@ const NodePopover = ({
 
         <div className="mt-3 flex flex-1 min-h-0 flex-col">
           <label className="shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Your notes
+            {t("Your notes")}
           </label>
           <Textarea
             value={note}
             onChange={(e) => onNoteChange(e.target.value)}
-            placeholder="Add your thoughts, connections, or study notes…"
+            placeholder={t("Add your thoughts, connections, or study notes…")}
             className="mt-1 flex-1 min-h-[80px] resize-none text-xs"
           />
         </div>
 
         {timestamp && ytLink && (
           <div className="mt-3 flex shrink-0 items-center justify-between border-t border-border pt-3">
-            <span className="text-[11px] text-muted-foreground">Jump to Video</span>
+            <span className="text-[11px] text-muted-foreground">{t("Jump to Video")}</span>
             <button
               type="button"
               onClick={() => window.open(ytLink, "_blank", "noopener,noreferrer")}
@@ -983,7 +984,7 @@ const NodePopover = ({
               className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
             >
               <Trash2 className="h-3 w-3" />
-              Delete concept
+              {t("Delete concept")}
             </button>
           </div>
         )}
