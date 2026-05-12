@@ -167,17 +167,8 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
   const [aiResults, setAiResults] = useState<RankedMoment[] | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<{ topic: string; timestamp: string; link: string; videoId: string | null } | null>(null);
+  const videoId = videoUrl ? extractVideoId(videoUrl) : null;
 
-  const showPreview = (topic: string | undefined, timestamp: string, link: string | null) => {
-    if (!link) return;
-    setPreview({
-      topic: topic ?? "Lecture moment",
-      timestamp,
-      link,
-      videoId: videoUrl ? extractVideoId(videoUrl) : null,
-    });
-  };
 
   // Instant keyword fallback — also serves as the baseline before AI returns
   const keywordResults = useMemo<RankedMoment[]>(() => {
@@ -336,12 +327,33 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                   isOpen ? "border-primary/60" : "border-border hover:border-primary/40"
                 }`}
               >
+                {videoId && m.timestamp ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const seconds = timestampToSeconds(m.timestamp);
+                      window.open(
+                        `https://www.youtube.com/watch?v=${videoId}&t=${seconds}s`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }}
+                    className="inline-flex items-center gap-1 self-start rounded-md bg-primary/10 px-2 py-1 font-mono text-xs text-primary tabular-nums hover:bg-primary/20 transition-colors shrink-0"
+                    aria-label={`Open YouTube at ${m.timestamp}`}
+                  >
+                    <Play className="h-3 w-3 fill-current" />
+                    {m.timestamp}
+                  </button>
+                ) : (
+                  <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
+                )}
                 <button
                   type="button"
                   onClick={() => setOpenIdx(isOpen ? null : idx)}
                   className="flex gap-4 flex-1 text-left"
                 >
-                  <span className="font-mono text-sm text-primary tabular-nums shrink-0">{m.timestamp}</span>
+
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center justify-between gap-3">
                       {m.topic && <p className="text-sm font-medium text-foreground">{m.topic}</p>}
@@ -430,7 +442,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                     {link ? (
                       <button
                         type="button"
-                        onClick={() => { openExternal(link); showPreview(m.topic, m.timestamp, link); }}
+                        onClick={() => openExternal(link)}
                         className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                       >
                         {card.timestamp}
@@ -490,7 +502,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
                 {modalLink && modalCard.card.timestamp ? (
                   <button
                     type="button"
-                    onClick={() => { openExternal(modalLink); showPreview(undefined, modalCard.card.timestamp ?? "", modalLink); }}
+                    onClick={() => openExternal(modalLink)}
                     className="inline-flex items-center gap-1.5 text-sm font-mono text-primary hover:underline"
                   >
                     {modalCard.card.timestamp}
@@ -517,71 +529,6 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
           )}
         </DialogContent>
       </Dialog>
-
-      {preview && (
-        <aside className="fixed right-4 top-24 z-40 w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-primary/40 bg-card/95 backdrop-blur shadow-glow animate-in fade-in slide-in-from-right-4 duration-200">
-          <div className="flex items-start justify-between gap-2 px-4 pt-3">
-            <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-primary font-medium">
-              <Sparkles className="h-3.5 w-3.5" /> Moment preview
-            </div>
-            <button
-              type="button"
-              onClick={() => setPreview(null)}
-              className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              aria-label="Close preview"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="px-4 pb-4 pt-2 space-y-3">
-            <button
-              type="button"
-              onClick={() => openExternal(preview.link)}
-              className="relative block w-full aspect-video overflow-hidden rounded-lg border border-border bg-muted group text-left"
-            >
-              {preview.videoId ? (
-                <img
-                  src={`https://img.youtube.com/vi/${preview.videoId}/maxresdefault.jpg`}
-                  alt={preview.topic}
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  onError={(e) => {
-                    const el = e.currentTarget;
-                    if (preview.videoId && !el.src.includes("hqdefault")) {
-                      el.src = `https://img.youtube.com/vi/${preview.videoId}/hqdefault.jpg`;
-                    }
-                  }}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
-                  No thumbnail
-                </div>
-              )}
-              <div className="absolute inset-0 flex items-center justify-center bg-background/0 group-hover:bg-background/20 transition-colors">
-                <span className="rounded-full bg-background/80 p-2 shadow-card">
-                  <Play className="h-5 w-5 text-primary" />
-                </span>
-              </div>
-              <span className="absolute bottom-2 right-2 rounded bg-background/80 px-1.5 py-0.5 font-mono text-[11px] text-primary tabular-nums">
-                {preview.timestamp}
-              </span>
-            </button>
-
-            <div>
-              <p className="text-sm font-medium text-foreground leading-snug line-clamp-2">{preview.topic}</p>
-              <p className="font-mono text-xs text-muted-foreground tabular-nums mt-0.5">{preview.timestamp}</p>
-            </div>
-
-            <Button
-              size="sm"
-              className="w-full bg-gradient-primary hover:opacity-90"
-              onClick={() => openExternal(preview.link)}
-            >
-              <Play className="h-4 w-4 mr-1.5 fill-current" /> Watch this moment
-            </Button>
-          </div>
-        </aside>
-      )}
     </div>
   );
 };
