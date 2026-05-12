@@ -119,6 +119,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [selectedCardKeys, setSelectedCardKeys] = useState<Set<string>>(() => new Set());
   const [customLecture, setCustomLecture] = useState<Lecture | null>(null);
   const [customAnswered, setCustomAnswered] = useState(0);
+  const [formulaMode, setFormulaMode] = useState(false);
+
+  const formulaCount = useMemo(
+    () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
+    [lecture.flashcards],
+  );
 
   // Stable keys for flashcards (question text is the natural id here)
   const cardKey = (c: Flashcard, i: number) => `${i}::${c.question}`;
