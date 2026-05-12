@@ -139,7 +139,7 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
         <BloomBadge level={bloom} />
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">
-        <span className="font-medium text-foreground">{t("Why:")}</span> {why}
+        {cleanExplanation(why, correctAnswer)}
       </p>
       {correct === false && correctAnswer && (
         <p className="text-xs text-muted-foreground">
