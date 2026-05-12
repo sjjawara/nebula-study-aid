@@ -1,11 +1,55 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Lecture, BloomLevel } from "@/lib/mockData";
 import { bloomColor } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Sparkles, CheckCircle2, Compass, Lightbulb } from "lucide-react";
-import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
+import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
+
+type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
+
+const LEVEL_TIPS: Record<BloomLevel, string> = {
+  Remember:
+    "Use the Flashcards tab to drill definitions. Focus on the 90-second summary first to anchor the vocabulary.",
+  Understand:
+    "Read the full summary section for these topics, then try explaining each one out loud in your own words.",
+  Apply:
+    "Use the Bottom Up quiz mode for these topics and work through the worked examples in the outline.",
+  Analyze:
+    "Use the Mind Map to draw connections between these concepts, then try the Top Down quiz mode.",
+  Evaluate:
+    "Use Mastery Mode and push through to the open-ended justification questions for these topics.",
+  Create:
+    "These are the highest-order concepts in the lecture. After quizzing, try adding your own nodes to the Mind Map.",
+};
+
+const LEVEL_TOOLS: Record<BloomLevel, { label: string; tab: StudyTabId }[]> = {
+  Remember: [
+    { label: "Open Flashcards", tab: "flashcards" },
+    { label: "Read 90-sec summary", tab: "summaries" },
+  ],
+  Understand: [
+    { label: "Read full summary", tab: "summaries" },
+    { label: "Browse Outline", tab: "outline" },
+  ],
+  Apply: [
+    { label: "Start Bottom Up quiz", tab: "quiz" },
+    { label: "Jump to Outline examples", tab: "outline" },
+  ],
+  Analyze: [
+    { label: "Open Mind Map", tab: "mindmap" },
+    { label: "Try Top Down quiz", tab: "quiz" },
+  ],
+  Evaluate: [
+    { label: "Start Mastery Mode", tab: "quiz" },
+    { label: "Search lecture moments", tab: "search" },
+  ],
+  Create: [
+    { label: "Open Mind Map", tab: "mindmap" },
+    { label: "Start Mastery Mode", tab: "quiz" },
+  ],
+};
 
 const depths = [
   { id: "short", label: "90 seconds" },
@@ -65,8 +109,15 @@ const profileFor = (
   };
 };
 
-export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
+export const SummariesTab = ({
+  lecture,
+  onNavigate,
+}: {
+  lecture: Lecture;
+  onNavigate?: (tab: StudyTabId) => void;
+}) => {
   const [depth, setDepth] = useState<typeof depths[number]["id"]>("short");
+  const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
 
   const profile = useMemo(() => {
     const counts: Record<BloomLevel, number> = {
@@ -85,6 +136,16 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
     const { recommendation, tools } = profileFor(dominant, pct);
     return { counts, pct, dominant, total, recommendation, tools };
   }, [lecture.outline]);
+
+  useEffect(() => {
+    setSelectedLevel((prev) => prev ?? profile.dominant);
+  }, [profile.dominant]);
+
+  const activeLevel: BloomLevel = selectedLevel ?? profile.dominant;
+  const topicsForLevel = useMemo(
+    () => lecture.outline.filter((o) => o.bloom === activeLevel),
+    [lecture.outline, activeLevel],
+  );
 
   const takeaways = useMemo(() => {
     // Prioritize the highest-order chunks: Analyze + Evaluate first.
@@ -235,30 +296,114 @@ export const SummariesTab = ({ lecture }: { lecture: Lecture }) => {
 
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Bloom's distribution
+              Bloom's distribution{" "}
+              <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">
+                — click a segment for tailored study tips
+              </span>
             </p>
-            <div className="flex h-3 w-full overflow-hidden rounded-full border border-border bg-muted">
+            <div className="flex h-4 w-full overflow-hidden rounded-full border border-border bg-muted">
               {BLOOM_ORDER.map((lvl) => {
                 if (!profile.pct[lvl]) return null;
+                const isActive = activeLevel === lvl;
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={lvl}
+                    onClick={() => setSelectedLevel(lvl)}
                     title={`${lvl} · ${profile.pct[lvl]}%`}
-                    className={cn("h-full", bloomColor[lvl].split(" ")[0])}
+                    aria-label={`${lvl}: ${profile.pct[lvl]}% — show study tips`}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "h-full transition-all hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      bloomColor[lvl].split(" ")[0],
+                      isActive ? "ring-2 ring-foreground/40 ring-inset" : "opacity-80",
+                    )}
                     style={{ width: `${profile.pct[lvl]}%` }}
                   />
                 );
               })}
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
               {BLOOM_ORDER.map((lvl) =>
                 profile.pct[lvl] > 0 ? (
-                  <span key={lvl} className="inline-flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    key={lvl}
+                    onClick={() => setSelectedLevel(lvl)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded px-1 py-0.5 transition-colors hover:text-foreground",
+                      activeLevel === lvl && "text-foreground font-medium",
+                    )}
+                  >
                     <span className={cn("h-2 w-2 rounded-full", bloomColor[lvl].split(" ")[0])} />
                     {lvl} · {profile.pct[lvl]}%
-                  </span>
+                  </button>
                 ) : null,
               )}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border bg-background/60 p-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <BloomBadge level={activeLevel} />
+              <span className="text-xs text-muted-foreground">
+                {profile.pct[activeLevel]}% of this lecture · {profile.counts[activeLevel]} chunk
+                {profile.counts[activeLevel] === 1 ? "" : "s"}
+              </span>
+            </div>
+            <p className="text-xs italic text-muted-foreground">
+              {bloomLevelDescriptions[activeLevel]}
+            </p>
+
+            {topicsForLevel.length > 0 && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Topics at this level
+                </p>
+                <ul className="space-y-1">
+                  {topicsForLevel.map((o, i) => (
+                    <li
+                      key={`${o.timestamp}-${i}`}
+                      className="flex items-start gap-2 text-sm text-foreground/90"
+                    >
+                      <span className="mt-0.5 font-mono text-xs text-muted-foreground tabular-nums">
+                        {o.timestamp}
+                      </span>
+                      <span>{o.topic}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div>
+              <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                <Lightbulb className="h-3.5 w-3.5 text-primary" />
+                Study tip for {activeLevel}
+              </p>
+              <p className="text-sm leading-relaxed text-foreground/90">
+                {LEVEL_TIPS[activeLevel]}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                Recommended tools
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {LEVEL_TOOLS[activeLevel].map((t) => (
+                  <Button
+                    key={t.label}
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => onNavigate?.(t.tab)}
+                    disabled={!onNavigate}
+                  >
+                    {t.label}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
 
