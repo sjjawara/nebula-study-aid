@@ -209,7 +209,6 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       .filter(
         (c, i) =>
           selectedCardKeys.has(cardKey(c, i)) &&
-          customLevels.has(c.bloom) &&
           (!formulaMode || !!c.formula?.trim()) &&
           (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
           (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
@@ -226,9 +225,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       setSessionKey((k) => k + 1);
       return;
     }
-    const pool = formulaMode
+    // Override each card's bloom level using the user's chosen target levels —
+    // questions are generated AT those cognitive levels regardless of the
+    // source flashcard's original level.
+    const targetLevels = Array.from(customLevels);
+    const overrideBloom = (c: Flashcard, idx: number): Flashcard =>
+      targetLevels.length === 0
+        ? c
+        : { ...c, bloom: targetLevels[idx % targetLevels.length] };
+    const pool = (formulaMode
       ? basePool.map((c, idx) => buildFormulaCard(c, idx))
-      : basePool;
+      : basePool
+    ).map(overrideBloom);
     const customL: Lecture = { ...lecture, flashcards: pool };
     setCustomLecture(customL);
     setCustomAnswered(1);
