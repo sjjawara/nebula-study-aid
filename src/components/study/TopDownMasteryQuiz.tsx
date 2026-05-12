@@ -227,25 +227,25 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFoll
                       {tfChoice === tf.correctValue ? (
                         <>
                           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                          <span className="text-emerald-700">Correct</span>
+                          <span className="text-emerald-700">{t("Correct")}</span>
                         </>
                       ) : (
                         <>
                           <XCircle className="h-4 w-4 text-destructive" />
-                          <span className="text-destructive">Not quite</span>
+                          <span className="text-destructive">{t("Not quite")}</span>
                         </>
                       )}
                     </p>
                     <BloomBadge level="Remember" />
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Why:</span>{" "}
+                    <span className="font-medium text-foreground">{t("Why:")}</span>{" "}
                     The lecture grounds the claim "{card.answer}". This Remember-level check confirms recognition.
                   </p>
                   {tfChoice !== tf.correctValue && (
                     <p className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">Correct answer:</span>{" "}
-                      {tf.correctValue ? "True" : "False"}
+                      <span className="font-medium text-foreground">{t("Correct answer:")}</span>{" "}
+                      {tf.correctValue ? t("True") : t("False")}
                     </p>
                   )}
                 </div>
