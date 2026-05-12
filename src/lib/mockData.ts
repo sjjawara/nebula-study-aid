@@ -53,7 +53,33 @@ const normalizeBloom = (v: unknown): BloomLevel => {
 };
 
 const clampLoad = (n: unknown): 1 | 2 | 3 | 4 | 5 => {
-  const v = Math.round(Number(n) || 1);
+  // String labels: "very low" | "low" | "medium" | "high" | "very high"
+  if (typeof n === "string") {
+    const s = n.trim().toLowerCase();
+    const labelMap: Record<string, 1 | 2 | 3 | 4 | 5> = {
+      "very low": 1,
+      minimal: 1,
+      low: 2,
+      moderate: 3,
+      medium: 3,
+      mid: 3,
+      high: 4,
+      "very high": 5,
+      extreme: 5,
+    };
+    if (labelMap[s]) return labelMap[s];
+    const parsed = Number(s);
+    if (!Number.isNaN(parsed)) {
+      // Accept 0-1 floats by scaling to 1-5
+      const v = parsed <= 1 ? Math.round(parsed * 4) + 1 : Math.round(parsed);
+      return Math.min(5, Math.max(1, v)) as 1 | 2 | 3 | 4 | 5;
+    }
+    return 3;
+  }
+  const num = Number(n);
+  if (!Number.isFinite(num)) return 3;
+  // Accept 0-1 floats by scaling to 1-5
+  const v = num > 0 && num <= 1 ? Math.round(num * 4) + 1 : Math.round(num);
   return Math.min(5, Math.max(1, v)) as 1 | 2 | 3 | 4 | 5;
 };
 
