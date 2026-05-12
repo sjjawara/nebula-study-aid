@@ -295,8 +295,9 @@ export const SummariesTab = ({
 
   return (
     <div className="space-y-6">
+      <SummariesNav hasProfile={profile.total > 0} hasTakeaways={takeaways.length > 0} />
       {profile.total > 0 && (
-        <section className="rounded-xl border border-border bg-card p-6 shadow-card space-y-5">
+        <section id="lecture-profile" className="scroll-mt-24 rounded-xl border border-border bg-card p-6 shadow-card space-y-5">
           <header className="flex items-center gap-2">
             <Compass className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
