@@ -125,12 +125,21 @@ const profileFor = (
 
 export const SummariesTab = ({
   lecture,
+  englishLecture,
   onNavigate,
 }: {
   lecture: Lecture;
+  /**
+   * Untranslated lecture used to construct Key Takeaway sentences.
+   * Sentences are built in English, then sent in full to /translate so
+   * we never combine translated topics with English templates.
+   */
+  englishLecture?: Lecture;
   onNavigate?: (tab: StudyTabId) => void;
 }) => {
+  const { language, t } = useT();
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
+  const [translatedTakeaways, setTranslatedTakeaways] = useState<string[] | null>(null);
 
   const profile = useMemo(() => {
     const counts: Record<BloomLevel, number> = {
