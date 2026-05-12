@@ -1,11 +1,55 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Lecture, BloomLevel } from "@/lib/mockData";
 import { bloomColor } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Sparkles, CheckCircle2, Compass, Lightbulb } from "lucide-react";
-import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
+import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
+import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
+
+type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
+
+const LEVEL_TIPS: Record<BloomLevel, string> = {
+  Remember:
+    "Use the Flashcards tab to drill definitions. Focus on the 90-second summary first to anchor the vocabulary.",
+  Understand:
+    "Read the full summary section for these topics, then try explaining each one out loud in your own words.",
+  Apply:
+    "Use the Bottom Up quiz mode for these topics and work through the worked examples in the outline.",
+  Analyze:
+    "Use the Mind Map to draw connections between these concepts, then try the Top Down quiz mode.",
+  Evaluate:
+    "Use Mastery Mode and push through to the open-ended justification questions for these topics.",
+  Create:
+    "These are the highest-order concepts in the lecture. After quizzing, try adding your own nodes to the Mind Map.",
+};
+
+const LEVEL_TOOLS: Record<BloomLevel, { label: string; tab: StudyTabId }[]> = {
+  Remember: [
+    { label: "Open Flashcards", tab: "flashcards" },
+    { label: "Read 90-sec summary", tab: "summaries" },
+  ],
+  Understand: [
+    { label: "Read full summary", tab: "summaries" },
+    { label: "Browse Outline", tab: "outline" },
+  ],
+  Apply: [
+    { label: "Start Bottom Up quiz", tab: "quiz" },
+    { label: "Jump to Outline examples", tab: "outline" },
+  ],
+  Analyze: [
+    { label: "Open Mind Map", tab: "mindmap" },
+    { label: "Try Top Down quiz", tab: "quiz" },
+  ],
+  Evaluate: [
+    { label: "Start Mastery Mode", tab: "quiz" },
+    { label: "Search lecture moments", tab: "search" },
+  ],
+  Create: [
+    { label: "Open Mind Map", tab: "mindmap" },
+    { label: "Start Mastery Mode", tab: "quiz" },
+  ],
+};
 
 const depths = [
   { id: "short", label: "90 seconds" },
