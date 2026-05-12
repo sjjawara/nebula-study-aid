@@ -100,8 +100,9 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
             <h3 className="text-xl font-semibold leading-snug text-foreground">
               {card.question}
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
               Earn your way up Bloom's taxonomy, one level at a time.
+              <InfoTooltip content={tooltipCopy.bloomTaxonomy} label="About Bloom's Taxonomy" />
             </p>
           </div>
           <BloomBadge level={card.bloom} />
