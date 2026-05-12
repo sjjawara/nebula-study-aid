@@ -27,8 +27,10 @@ import { MindMapTab } from "@/components/study/MindMapTab";
 import { LoadingScreen } from "@/components/study/LoadingScreen";
 import type { Flashcard } from "@/lib/mockData";
 import { loadFlashcards, saveFlashcards } from "@/lib/flashcardStore";
+import { LanguageProvider, useT, type Language } from "@/lib/i18n";
+import { UI_STRINGS } from "@/lib/uiStrings";
 
-const LANGUAGES = [
+const LANGUAGES: readonly Language[] = [
   "English",
   "Spanish",
   "French",
@@ -37,7 +39,6 @@ const LANGUAGES = [
   "Portuguese",
   "Hindi",
 ] as const;
-type Language = (typeof LANGUAGES)[number];
 
 const TRANSLATE_URL = "https://nebulalearn-production.up.railway.app/translate";
 
