@@ -134,19 +134,22 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }
             <div>
               <p className="text-sm font-medium text-foreground">Recall</p>
               <p className="text-xs text-muted-foreground">
-                True or false: <span className="text-foreground">{card.answer}</span>
+                Is the following claim correct?
               </p>
             </div>
             <BloomBadge level="Remember" />
           </div>
+          <p className="rounded-lg border border-border bg-background p-3 text-sm text-foreground leading-relaxed">
+            {tf.statement}
+          </p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: "True", value: true },
               { label: "False", value: false },
             ].map((o) => {
               const selected = tfChoice === o.value;
-              const showRight = selected && o.value === true;
-              const showWrong = selected && o.value !== true;
+              const showRight = selected && o.value === tf.correctValue;
+              const showWrong = selected && o.value !== tf.correctValue;
               return (
                 <button
                   key={o.label}
