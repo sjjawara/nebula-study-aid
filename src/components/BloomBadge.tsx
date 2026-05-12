@@ -11,33 +11,81 @@ const bloomDots: Record<BloomLevel, number> = {
   Create: 6,
 };
 
+const bloomDotColor: Record<BloomLevel, string> = {
+  Remember: "bg-bloom-remember",
+  Understand: "bg-bloom-understand",
+  Apply: "bg-bloom-apply",
+  Analyze: "bg-bloom-analyze",
+  Evaluate: "bg-bloom-evaluate",
+  Create: "bg-bloom-create",
+};
+
+const bloomTextColor: Record<BloomLevel, string> = {
+  Remember: "text-bloom-remember",
+  Understand: "text-bloom-understand",
+  Apply: "text-bloom-apply",
+  Analyze: "text-bloom-analyze",
+  Evaluate: "text-bloom-evaluate",
+  Create: "text-bloom-create",
+};
+
 interface BloomBadgeProps {
   level: BloomLevel;
   className?: string;
   /** Show an inline ℹ️ tooltip with this Bloom level's description. Default: true */
   withInfo?: boolean;
+  /** "filled" = colored pill (default). "dots" = minimal colored dots + label only. */
+  variant?: "filled" | "dots";
 }
 
-export const BloomBadge = ({ level, className, withInfo = true }: BloomBadgeProps) => (
-  <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", bloomColor[level], className)}>
-    <span className="inline-flex items-center gap-0.5">
-      {Array.from({ length: bloomDots[level] }).map((_, i) => (
-        <span key={i} className="h-1.5 w-1.5 rounded-full bg-current" />
-      ))}
+export const BloomBadge = ({ level, className, withInfo = true, variant = "filled" }: BloomBadgeProps) => {
+  if (variant === "dots") {
+    return (
+      <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground", className)}>
+        <span className="inline-flex items-center gap-0.5">
+          {Array.from({ length: bloomDots[level] }).map((_, i) => (
+            <span key={i} className={cn("h-1.5 w-1.5 rounded-full", bloomDotColor[level])} />
+          ))}
+        </span>
+        <span className={bloomTextColor[level]}>{level}</span>
+        {withInfo && (
+          <InfoTooltip
+            label={`About the ${level} level`}
+            content={
+              <span>
+                <span className="font-semibold">{level}.</span>{" "}
+                {bloomLevelDescriptions[level]}
+              </span>
+            }
+            iconClassName="h-3 w-3"
+            className="-mr-0.5 opacity-70 hover:opacity-100"
+          />
+        )}
+      </span>
+    );
+  }
+
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", bloomColor[level], className)}>
+      <span className="inline-flex items-center gap-0.5">
+        {Array.from({ length: bloomDots[level] }).map((_, i) => (
+          <span key={i} className="h-1.5 w-1.5 rounded-full bg-current" />
+        ))}
+      </span>
+      {level}
+      {withInfo && (
+        <InfoTooltip
+          label={`About the ${level} level`}
+          content={
+            <span>
+              <span className="font-semibold">{level}.</span>{" "}
+              {bloomLevelDescriptions[level]}
+            </span>
+          }
+          iconClassName="h-3 w-3"
+          className="-mr-0.5 opacity-70 hover:opacity-100"
+        />
+      )}
     </span>
-    {level}
-    {withInfo && (
-      <InfoTooltip
-        label={`About the ${level} level`}
-        content={
-          <span>
-            <span className="font-semibold">{level}.</span>{" "}
-            {bloomLevelDescriptions[level]}
-          </span>
-        }
-        iconClassName="h-3 w-3"
-        className="-mr-0.5 opacity-70 hover:opacity-100"
-      />
-    )}
-  </span>
-);
+  );
+};
