@@ -10,6 +10,7 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
+import { FollowUpQuestions } from "./FollowUpQuestions";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,9 +78,10 @@ interface Props {
   card: Flashcard;
   onNext?: () => void;
   onExit?: () => void;
+  onSelectFollowUp?: (c: Flashcard) => void;
 }
 
-export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit }: Props) => {
+export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
   const distractors = useMemo(() => {
     const others = lecture.flashcards
       .filter((f) => f.answer !== card.answer)
@@ -406,6 +408,14 @@ export const TopDownMasteryQuiz = ({ lecture, card, onNext, onExit }: Props) => 
               )}
             </div>
           </div>
+        )}
+
+        {stage === "done" && onSelectFollowUp && (
+          <FollowUpQuestions
+            lecture={lecture}
+            current={card}
+            onSelect={onSelectFollowUp}
+          />
         )}
 
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>

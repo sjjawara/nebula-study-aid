@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { BloomBadge } from "@/components/BloomBadge";
 import { cn } from "@/lib/utils";
+import { FollowUpQuestions } from "./FollowUpQuestions";
 
 const EVAL_URL = "https://nebulalearn-production.up.railway.app/evaluate-response";
 
@@ -32,9 +33,10 @@ interface Props {
   card: Flashcard;
   onNext?: () => void;
   onExit?: () => void;
+  onSelectFollowUp?: (c: Flashcard) => void;
 }
 
-export const BottomUpQuiz = ({ lecture, card, onNext, onExit }: Props) => {
+export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp }: Props) => {
   const [levelIdx, setLevelIdx] = useState(0);
   const level = LEVELS[levelIdx];
 
@@ -381,6 +383,14 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit }: Props) => {
             )}
           </div>
         </div>
+      )}
+
+      {done && onSelectFollowUp && (
+        <FollowUpQuestions
+          lecture={lecture}
+          current={{ ...card, bloom: "Evaluate" }}
+          onSelect={onSelectFollowUp}
+        />
       )}
     </div>
   );

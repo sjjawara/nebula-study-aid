@@ -55,6 +55,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setSessionKey((k) => k + 1);
   };
 
+  const launchSpecific = (c: Flashcard) => {
+    setCard(c);
+    setSessionKey((k) => k + 1);
+  };
+
   const exit = () => setCard(null);
 
   const ModePill = ({
@@ -194,6 +199,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           card={card}
           onNext={next}
           onExit={exit}
+          onSelectFollowUp={launchSpecific}
         />
       ) : (
         <BottomUpQuiz
@@ -202,6 +208,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           card={card}
           onNext={next}
           onExit={exit}
+          onSelectFollowUp={launchSpecific}
         />
       )}
     </div>
