@@ -264,6 +264,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     baseY: number;
     moved: boolean;
     descendants: { id: string; dx: number; dy: number }[];
+    lerpIds: Set<string>;
   } | null>(null);
   // Latest laid-out nodes (with positions) so pointer handlers can find descendants.
   const nodesRef = useRef<d3.HierarchyNode<TreeDatum>[]>([]);
