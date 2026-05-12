@@ -9,6 +9,7 @@ import { SummariesTab } from "@/components/study/SummariesTab";
 import { FlashcardsTab } from "@/components/study/FlashcardsTab";
 import { SearchTab } from "@/components/study/SearchTab";
 import { QuizTab } from "@/components/study/QuizTab";
+import { MindMapTab } from "@/components/study/MindMapTab";
 import type { Flashcard } from "@/lib/mockData";
 
 type Stage = "input" | "loading" | "results" | "error";
@@ -210,12 +211,13 @@ const Index = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 bg-card border border-border h-12 p-1">
+              <TabsList className="grid w-full grid-cols-6 bg-card border border-border h-12 p-1">
                 <TabsTrigger value="outline">Outline</TabsTrigger>
                 <TabsTrigger value="summaries">Summaries</TabsTrigger>
                 <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
                 <TabsTrigger value="search">Search</TabsTrigger>
                 <TabsTrigger value="quiz">Quiz</TabsTrigger>
+                <TabsTrigger value="mindmap">Mind Map</TabsTrigger>
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
                 <OutlineTab lecture={lecture} />
@@ -249,6 +251,9 @@ const Index = () => {
                   initialCard={quizSeed}
                   onConsumedInitial={() => setQuizSeed(null)}
                 />
+              </TabsContent>
+              <TabsContent value="mindmap" className="mt-6">
+                <MindMapTab lecture={lecture} />
               </TabsContent>
             </Tabs>
           </section>
