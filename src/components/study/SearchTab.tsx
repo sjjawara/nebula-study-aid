@@ -3,6 +3,7 @@ import type { Lecture, Flashcard, BloomLevel, SearchMoment } from "@/lib/mockDat
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { BloomBadge } from "@/components/BloomBadge";
+import { useT } from "@/lib/i18n";
 import {
   Dialog,
   DialogContent,
@@ -136,6 +137,7 @@ const generateKeywordFlashcard = (
 type RankedMoment = SearchMoment & { score?: number };
 
 export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps) => {
+  const { t } = useT();
   const [q, setQ] = useState("");
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [savedKeys, setSavedKeys] = useState<Set<string>>(new Set());
@@ -250,7 +252,7 @@ export const SearchTab = ({ lecture, videoUrl, onSaveFlashcard }: SearchTabProps
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Ask a question or search lecture content..."
+          placeholder={t("Ask a question or search lecture content...")}
           className="pl-10 h-12 bg-card"
         />
         {aiLoading && (

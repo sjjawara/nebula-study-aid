@@ -1,6 +1,7 @@
 import { bloomColor, type BloomLevel } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, bloomLevelDescriptions } from "@/components/InfoTooltip";
+import { useT } from "@/lib/i18n";
 
 const bloomDots: Record<BloomLevel, number> = {
   Remember: 1,
@@ -41,6 +42,8 @@ interface BloomBadgeProps {
 }
 
 export const BloomBadge = ({ level, className, withInfo = true, variant = "dots", dotsPosition = "before" }: BloomBadgeProps) => {
+  const { t } = useT();
+  const label = t(level);
   if (variant === "dots") {
     const c = `hsl(var(--bloom-${level.toLowerCase()}))`;
     const cAlpha = (a: number) => `hsl(var(--bloom-${level.toLowerCase()}) / ${a})`;
@@ -64,14 +67,14 @@ export const BloomBadge = ({ level, className, withInfo = true, variant = "dots"
         }}
       >
         {dotsPosition === "before" && dots}
-        {level}
+        {label}
         {dotsPosition === "after" && dots}
         {withInfo && (
           <InfoTooltip
             label={`About the ${level} level`}
             content={
               <span>
-                <span className="font-semibold">{level}.</span>{" "}
+                <span className="font-semibold">{label}.</span>{" "}
                 {bloomLevelDescriptions[level]}
               </span>
             }
@@ -90,13 +93,13 @@ export const BloomBadge = ({ level, className, withInfo = true, variant = "dots"
           <span key={i} className="h-1.5 w-1.5 rounded-full bg-current" />
         ))}
       </span>
-      {level}
+      {label}
       {withInfo && (
         <InfoTooltip
           label={`About the ${level} level`}
           content={
             <span>
-              <span className="font-semibold">{level}.</span>{" "}
+              <span className="font-semibold">{label}.</span>{" "}
               {bloomLevelDescriptions[level]}
             </span>
           }

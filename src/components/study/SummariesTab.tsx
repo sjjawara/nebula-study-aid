@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
 import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
+import { useT, translateStrings } from "@/lib/i18n";
 
 type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
 
@@ -125,12 +126,21 @@ const profileFor = (
 
 export const SummariesTab = ({
   lecture,
+  englishLecture,
   onNavigate,
 }: {
   lecture: Lecture;
+  /**
+   * Untranslated lecture used to construct Key Takeaway sentences.
+   * Sentences are built in English, then sent in full to /translate so
+   * we never combine translated topics with English templates.
+   */
+  englishLecture?: Lecture;
   onNavigate?: (tab: StudyTabId) => void;
 }) => {
+  const { language, t } = useT();
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
+  const [translatedTakeaways, setTranslatedTakeaways] = useState<string[] | null>(null);
 
   const profile = useMemo(() => {
     const counts: Record<BloomLevel, number> = {
@@ -160,9 +170,13 @@ export const SummariesTab = ({
     [lecture.outline, activeLevel],
   );
 
+  // Build takeaway sentences from the *English* lecture so we never combine
+  // translated topic fragments with English templates. The full sentence array
+  // is later sent to /translate as a single batch (see effect below).
   const takeaways = useMemo(() => {
+    const source = englishLecture ?? lecture;
     // Prioritize the highest-order chunks: Analyze + Evaluate first.
-    const highOrder = lecture.outline.filter(
+    const highOrder = source.outline.filter(
       (o) => o.bloom === "Analyze" || o.bloom === "Evaluate",
     );
     const pool =
@@ -170,11 +184,10 @@ export const SummariesTab = ({
         ? highOrder
         : [
             ...highOrder,
-            ...lecture.outline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
-            ...lecture.outline.filter((o) => o.bloom === "Understand"),
+            ...source.outline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
+            ...source.outline.filter((o) => o.bloom === "Understand"),
           ];
 
-    // Helpers to find supporting context for each topic.
     const tsToSeconds = (ts?: string) => {
       if (!ts) return null;
       const parts = ts.split(":").map((p) => parseInt(p, 10));
@@ -190,23 +203,8 @@ export const SummariesTab = ({
         .filter((w) => w.length > 3);
 
     const stopish = new Set([
-      "with",
-      "from",
-      "this",
-      "that",
-      "into",
-      "your",
-      "their",
-      "they",
-      "them",
-      "what",
-      "which",
-      "where",
-      "while",
-      "about",
-      "between",
-      "using",
-      "based",
+      "with", "from", "this", "that", "into", "your", "their", "they", "them",
+      "what", "which", "where", "while", "about", "between", "using", "based",
     ]);
 
     const firstSentence = (text: string) => {
@@ -232,12 +230,12 @@ export const SummariesTab = ({
       };
 
       let best = { text: "", s: -1 };
-      for (const m of lecture.searchIndex) {
+      for (const m of source.searchIndex) {
         const txt = m.excerpt || "";
         const s = score(txt, m.timestamp);
         if (s > best.s) best = { text: txt, s };
       }
-      for (const f of lecture.flashcards) {
+      for (const f of source.flashcards) {
         const txt = f.answer || "";
         const s = score(`${f.question} ${txt}`, f.timestamp);
         if (s > best.s) best = { text: txt, s };
@@ -247,15 +245,10 @@ export const SummariesTab = ({
 
     const lowerTopic = (topic: string) => {
       const t = topic.trim().replace(/[.!?]+$/, "");
-      // Keep acronyms / proper-noun-ish words capitalized.
       return /^[A-Z]{2,}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1);
     };
 
-    const frame = (
-      topic: string,
-      bloom: string,
-      context: string,
-    ): string => {
+    const frame = (topic: string, bloom: string, context: string): string => {
       const t = lowerTopic(topic);
       const ctx = context ? ` — ${context}.` : ".";
       if (bloom === "Evaluate") {
@@ -285,16 +278,38 @@ export const SummariesTab = ({
       if (items.length >= 7) break;
     }
     return items;
-  }, [lecture.outline, lecture.searchIndex, lecture.flashcards]);
+  }, [englishLecture, lecture]);
+
+  // Whenever the language or takeaway set changes, send the full English
+  // sentences to /translate as one batch and store the translated sentences
+  // for direct rendering (no template reconstruction).
+  useEffect(() => {
+    let cancelled = false;
+    if (language === "English" || takeaways.length === 0) {
+      setTranslatedTakeaways(null);
+      return;
+    }
+    translateStrings(language, takeaways.map((t) => t.sentence))
+      .then((arr) => {
+        if (!cancelled) setTranslatedTakeaways(arr);
+      })
+      .catch((err) => {
+        console.error("[SummariesTab] takeaway translation failed", err);
+        if (!cancelled) setTranslatedTakeaways(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [language, takeaways]);
 
   const [section, setSection] = useState<SectionId>("profile");
   const [summaryDepth, setSummaryDepth] = useState<SummaryDepth>("short");
 
   const sections: { id: SectionId; label: string; show: boolean }[] = [
-    { id: "profile", label: "Lecture Profile", show: profile.total > 0 },
-    { id: "takeaways", label: "Key Takeaways", show: takeaways.length > 0 },
-    { id: "summary", label: "Summary", show: true },
-    { id: "notes", label: "Full Notes", show: !!lecture.summaries.full?.trim() },
+    { id: "profile", label: t("Lecture Profile"), show: profile.total > 0 },
+    { id: "takeaways", label: t("Key Takeaways"), show: takeaways.length > 0 },
+    { id: "summary", label: t("Summary"), show: true },
+    { id: "notes", label: t("Full Notes"), show: !!lecture.summaries.full?.trim() },
   ];
   const visibleSections = sections.filter((s) => s.show);
   const activeSection = visibleSections.some((s) => s.id === section)
@@ -314,13 +329,13 @@ export const SummariesTab = ({
           <header className="flex items-center gap-2">
             <Compass className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Lecture Profile
+              {t("Lecture Profile")}
             </h3>
             <InfoTooltip content={tooltipCopy.bloomTaxonomyProfile} label="About Bloom's Taxonomy" />
           </header>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs text-muted-foreground">Dominant level:</span>
+            <span className="text-xs text-muted-foreground">{t("Dominant level:")}</span>
             <BloomBadge level={profile.dominant} />
             <span className="text-xs text-muted-foreground">
               {profile.pct[profile.dominant]}% of {profile.total} segments
@@ -329,9 +344,9 @@ export const SummariesTab = ({
 
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Bloom's distribution{" "}
+              {t("Bloom's distribution")}{" "}
               <span className="ml-1 normal-case tracking-normal text-muted-foreground/70">
-                — click a segment for tailored study tips
+                {t("— click a segment for tailored study tips")}
               </span>
             </p>
             <div className="flex h-4 w-full overflow-hidden rounded-full border border-border bg-muted">
@@ -369,7 +384,7 @@ export const SummariesTab = ({
                     )}
                   >
                     <span className={cn("h-2 w-2 rounded-full", BLOOM_SOLID_BG[lvl])} />
-                    {lvl} · {profile.pct[lvl]}%
+                    {t(lvl)} · {profile.pct[lvl]}%
                   </button>
                 ) : null,
               )}
@@ -391,7 +406,7 @@ export const SummariesTab = ({
             {topicsForLevel.length > 0 && (
               <div>
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                  Topics at this level
+                  {t("Topics at this level")}
                 </p>
                 <ul className="space-y-1">
                   {topicsForLevel.map((o, i) => (
@@ -412,27 +427,27 @@ export const SummariesTab = ({
             <div>
               <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
                 <Lightbulb className="h-3.5 w-3.5 text-primary" />
-                Study Tips for {BLOOM_GERUND[activeLevel]}
+                {t("Study Tips for")} {t(BLOOM_GERUND[activeLevel])}
               </p>
               <p className="text-sm leading-relaxed text-foreground/90">
-                {LEVEL_TIPS[activeLevel]}
+                {t(LEVEL_TIPS[activeLevel])}
               </p>
             </div>
 
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-                Recommended Tools for This Level
+                {t("Recommended Tools for This Level")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {LEVEL_TOOLS[activeLevel].map((t) => (
+                {LEVEL_TOOLS[activeLevel].map((tool) => (
                   <Button
-                    key={t.label}
+                    key={tool.label}
                     size="sm"
                     variant="secondary"
-                    onClick={() => onNavigate?.(t.tab)}
+                    onClick={() => onNavigate?.(tool.tab)}
                     disabled={!onNavigate}
                   >
-                    {t.label}
+                    {t(tool.label)}
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 ))}
@@ -442,23 +457,23 @@ export const SummariesTab = ({
 
           <div className="rounded-lg border border-border bg-background/60 p-4">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
-              How to study this lecture
+              {t("How to study this lecture")}
             </p>
             <p className="text-sm leading-relaxed text-foreground/90">
-              {profile.recommendation}
+              {t(profile.recommendation)}
             </p>
           </div>
 
           <div>
             <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
               <Lightbulb className="h-3.5 w-3.5 text-primary" />
-              Suggested Tools for This Lecture
+              {t("Suggested Tools for This Lecture")}
             </p>
             <ul className="space-y-1.5">
-              {profile.tools.map((t, i) => (
+              {profile.tools.map((tool, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <span>{t}</span>
+                  <span>{t(tool)}</span>
                 </li>
               ))}
             </ul>
@@ -471,16 +486,16 @@ export const SummariesTab = ({
           <header className="mb-4 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Key Takeaways
+              {t("Key Takeaways")}
             </h3>
             <InfoTooltip content={tooltipCopy.keyTakeaways} label="About Key Takeaways" />
           </header>
           <ul className="space-y-2.5">
-            {takeaways.map((t, i) => (
-              <li key={`${t.timestamp}-${i}`} className="flex gap-3 items-start">
+            {takeaways.map((tk, i) => (
+              <li key={`${tk.timestamp}-${i}`} className="flex gap-3 items-start">
                 <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <p className="text-sm leading-relaxed text-foreground/90">
-                  {t.sentence}
+                  {translatedTakeaways?.[i] ?? tk.sentence}
                 </p>
               </li>
             ))}

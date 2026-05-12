@@ -27,8 +27,10 @@ import { MindMapTab } from "@/components/study/MindMapTab";
 import { LoadingScreen } from "@/components/study/LoadingScreen";
 import type { Flashcard } from "@/lib/mockData";
 import { loadFlashcards, saveFlashcards } from "@/lib/flashcardStore";
+import { LanguageProvider, T, useT, type Language } from "@/lib/i18n";
+import { UI_STRINGS } from "@/lib/uiStrings";
 
-const LANGUAGES = [
+const LANGUAGES: readonly Language[] = [
   "English",
   "Spanish",
   "French",
@@ -37,7 +39,6 @@ const LANGUAGES = [
   "Portuguese",
   "Hindi",
 ] as const;
-type Language = (typeof LANGUAGES)[number];
 
 const TRANSLATE_URL = "https://nebulalearn-production.up.railway.app/translate";
 
@@ -272,6 +273,7 @@ const Index = () => {
   };
 
   return (
+    <LanguageProvider language={language} dictionary={UI_STRINGS}>
     <div className="relative min-h-screen bg-background">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] bg-gradient-glow" />
 
@@ -283,7 +285,7 @@ const Index = () => {
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight">NebulaLearn</h1>
-              <p className="text-xs text-muted-foreground -mt-0.5">Turn any lecture into a study environment</p>
+              <p className="text-xs text-muted-foreground -mt-0.5"><T s="Turn any lecture into a study environment" /></p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -294,7 +296,7 @@ const Index = () => {
               title="Recent sessions"
             >
               <History className="h-4 w-4" />
-              <span className="hidden sm:inline">History</span>
+              <span className="hidden sm:inline"><T s="History" /></span>
               {sessions.length > 0 && (
                 <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold text-primary">
                   {sessions.length}
@@ -303,7 +305,7 @@ const Index = () => {
             </Button>
             {(stage === "results" || stage === "error") && (
               <Button variant="ghost" size="sm" onClick={reset}>
-                New lecture
+                <T s="New lecture" />
               </Button>
             )}
           </div>
@@ -326,10 +328,10 @@ const Index = () => {
             <form onSubmit={handleSubmit} className="space-y-3 max-w-2xl mx-auto">
               <div className="relative">
                 <Youtube className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
+                <TranslatedInput
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Paste a YouTube lecture URL..."
+                  placeholderKey="Paste a YouTube lecture URL..."
                   className="h-16 pl-12 pr-4 text-base bg-card border-border shadow-card focus-visible:ring-primary/40"
                 />
               </div>
@@ -337,7 +339,7 @@ const Index = () => {
                 type="submit"
                 className="h-12 w-full text-base bg-gradient-primary hover:opacity-90 shadow-glow"
               >
-                Generate Study Environment
+                <T s="Generate Study Environment" />
               </Button>
             </form>
           </section>
@@ -353,10 +355,10 @@ const Index = () => {
               <AlertCircle className="h-7 w-7 text-destructive" />
             </div>
             <div className="space-y-2 max-w-md">
-              <h3 className="text-xl font-semibold">We couldn't process that lecture</h3>
+              <h3 className="text-xl font-semibold"><T s="We couldn't process that lecture" /></h3>
               <p className="text-sm text-muted-foreground">{error ?? "Unknown error."}</p>
             </div>
-            <Button onClick={reset} className="bg-gradient-primary">Try another URL</Button>
+            <Button onClick={reset} className="bg-gradient-primary"><T s="Try another URL" /></Button>
           </section>
         )}
 
@@ -364,13 +366,13 @@ const Index = () => {
           <section className="space-y-8">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-wider text-primary font-medium">Lecture loaded</p>
+                <p className="text-xs uppercase tracking-wider text-primary font-medium"><T s="Lecture loaded" /></p>
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{displayLecture.title}</h2>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Button variant="outline" size="sm" onClick={processAnother}>
                   <RotateCcw className="h-4 w-4" />
-                  Process another lecture
+                  <T s="Process another lecture" />
                 </Button>
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <Select
@@ -403,7 +405,7 @@ const Index = () => {
               <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card py-20">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Translating to {language}...
+                  <T s="Translating to" /> {language}...
                 </p>
               </div>
             )}
@@ -411,18 +413,18 @@ const Index = () => {
             {!translating && (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-6 bg-card border border-border h-12 p-1">
-                <TabsTrigger value="outline">Outline</TabsTrigger>
-                <TabsTrigger value="summaries">Analysis</TabsTrigger>
-                <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
-                <TabsTrigger value="search">Search</TabsTrigger>
-                <TabsTrigger value="quiz">Quiz</TabsTrigger>
-                <TabsTrigger value="mindmap">Mind Map</TabsTrigger>
+                <TabsTrigger value="outline"><T s="Outline" /></TabsTrigger>
+                <TabsTrigger value="summaries"><T s="Analysis" /></TabsTrigger>
+                <TabsTrigger value="flashcards"><T s="Flashcards" /></TabsTrigger>
+                <TabsTrigger value="search"><T s="Search" /></TabsTrigger>
+                <TabsTrigger value="quiz"><T s="Quiz" /></TabsTrigger>
+                <TabsTrigger value="mindmap"><T s="Mind Map" /></TabsTrigger>
               </TabsList>
               <TabsContent value="outline" className="mt-6 max-h-[600px] overflow-y-auto pr-2">
                 <OutlineTab lecture={displayLecture} videoUrl={url} />
               </TabsContent>
               <TabsContent value="summaries" className="mt-6">
-                <SummariesTab lecture={displayLecture} onNavigate={setActiveTab} />
+                <SummariesTab lecture={displayLecture} englishLecture={lecture} onNavigate={setActiveTab} />
               </TabsContent>
               <TabsContent value="flashcards" className="mt-6">
                 <FlashcardsTab
@@ -468,7 +470,17 @@ const Index = () => {
         onRemove={removeStored}
       />
     </div>
+    </LanguageProvider>
   );
+};
+
+// Input that translates its placeholder via the LanguageProvider context.
+const TranslatedInput = ({
+  placeholderKey,
+  ...rest
+}: React.ComponentProps<typeof Input> & { placeholderKey: string }) => {
+  const { t } = useT();
+  return <Input {...rest} placeholder={t(placeholderKey)} />;
 };
 
 export default Index;
