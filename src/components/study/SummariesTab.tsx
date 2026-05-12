@@ -170,9 +170,13 @@ export const SummariesTab = ({
     [lecture.outline, activeLevel],
   );
 
+  // Build takeaway sentences from the *English* lecture so we never combine
+  // translated topic fragments with English templates. The full sentence array
+  // is later sent to /translate as a single batch (see effect below).
   const takeaways = useMemo(() => {
+    const source = englishLecture ?? lecture;
     // Prioritize the highest-order chunks: Analyze + Evaluate first.
-    const highOrder = lecture.outline.filter(
+    const highOrder = source.outline.filter(
       (o) => o.bloom === "Analyze" || o.bloom === "Evaluate",
     );
     const pool =
@@ -180,11 +184,10 @@ export const SummariesTab = ({
         ? highOrder
         : [
             ...highOrder,
-            ...lecture.outline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
-            ...lecture.outline.filter((o) => o.bloom === "Understand"),
+            ...source.outline.filter((o) => o.bloom === "Apply" || o.bloom === "Create"),
+            ...source.outline.filter((o) => o.bloom === "Understand"),
           ];
 
-    // Helpers to find supporting context for each topic.
     const tsToSeconds = (ts?: string) => {
       if (!ts) return null;
       const parts = ts.split(":").map((p) => parseInt(p, 10));
@@ -200,23 +203,8 @@ export const SummariesTab = ({
         .filter((w) => w.length > 3);
 
     const stopish = new Set([
-      "with",
-      "from",
-      "this",
-      "that",
-      "into",
-      "your",
-      "their",
-      "they",
-      "them",
-      "what",
-      "which",
-      "where",
-      "while",
-      "about",
-      "between",
-      "using",
-      "based",
+      "with", "from", "this", "that", "into", "your", "their", "they", "them",
+      "what", "which", "where", "while", "about", "between", "using", "based",
     ]);
 
     const firstSentence = (text: string) => {
@@ -242,12 +230,12 @@ export const SummariesTab = ({
       };
 
       let best = { text: "", s: -1 };
-      for (const m of lecture.searchIndex) {
+      for (const m of source.searchIndex) {
         const txt = m.excerpt || "";
         const s = score(txt, m.timestamp);
         if (s > best.s) best = { text: txt, s };
       }
-      for (const f of lecture.flashcards) {
+      for (const f of source.flashcards) {
         const txt = f.answer || "";
         const s = score(`${f.question} ${txt}`, f.timestamp);
         if (s > best.s) best = { text: txt, s };
@@ -257,15 +245,10 @@ export const SummariesTab = ({
 
     const lowerTopic = (topic: string) => {
       const t = topic.trim().replace(/[.!?]+$/, "");
-      // Keep acronyms / proper-noun-ish words capitalized.
       return /^[A-Z]{2,}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1);
     };
 
-    const frame = (
-      topic: string,
-      bloom: string,
-      context: string,
-    ): string => {
+    const frame = (topic: string, bloom: string, context: string): string => {
       const t = lowerTopic(topic);
       const ctx = context ? ` — ${context}.` : ".";
       if (bloom === "Evaluate") {
@@ -295,7 +278,29 @@ export const SummariesTab = ({
       if (items.length >= 7) break;
     }
     return items;
-  }, [lecture.outline, lecture.searchIndex, lecture.flashcards]);
+  }, [englishLecture, lecture]);
+
+  // Whenever the language or takeaway set changes, send the full English
+  // sentences to /translate as one batch and store the translated sentences
+  // for direct rendering (no template reconstruction).
+  useEffect(() => {
+    let cancelled = false;
+    if (language === "English" || takeaways.length === 0) {
+      setTranslatedTakeaways(null);
+      return;
+    }
+    translateStrings(language, takeaways.map((t) => t.sentence))
+      .then((arr) => {
+        if (!cancelled) setTranslatedTakeaways(arr);
+      })
+      .catch((err) => {
+        console.error("[SummariesTab] takeaway translation failed", err);
+        if (!cancelled) setTranslatedTakeaways(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [language, takeaways]);
 
   const [section, setSection] = useState<SectionId>("profile");
   const [summaryDepth, setSummaryDepth] = useState<SummaryDepth>("short");
