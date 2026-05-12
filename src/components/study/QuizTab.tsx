@@ -124,6 +124,8 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [formulaMode, setFormulaMode] = useState(false);
   const [stepOrderingMode, setStepOrderingMode] = useState(false);
   const [stepOrderingCards, setStepOrderingCards] = useState<Flashcard[] | null>(null);
+  const [proofMode, setProofMode] = useState(false);
+  const [proofCards, setProofCards] = useState<Flashcard[] | null>(null);
 
   const formulaCount = useMemo(
     () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
@@ -133,6 +135,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     () => lecture.flashcards.filter((c) => (c.steps?.length ?? 0) >= 2).length,
     [lecture.flashcards],
   );
+  const proofCardCount = useMemo(
+    () => lecture.flashcards.filter((c) => c.bloom === "Analyze" || c.bloom === "Evaluate").length,
+    [lecture.flashcards],
+  );
+  const proofEligible = proofCardCount > 0;
 
   // Stable keys for flashcards (question text is the natural id here)
   const cardKey = (c: Flashcard, i: number) => `${i}::${c.question}`;
