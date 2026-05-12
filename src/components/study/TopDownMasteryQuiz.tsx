@@ -11,6 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { FollowUpQuestions } from "./FollowUpQuestions";
+import { GoDeeperCard } from "./GoDeeperCard";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
