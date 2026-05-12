@@ -42,7 +42,7 @@ export const tooltipCopy = {
   keyTakeaways:
     "Derived from the highest Bloom's level chunks in this lecture — the concepts that require the most sophisticated thinking.",
   masteryMode:
-    "Mastery Mode is based on Benjamin Bloom's Learning for Mastery model (1968), which found that 95% of students can achieve high levels of learning when given adequate time and appropriate instruction. Combined with spaced repetition principles (Ebbinghaus, 1885), the adaptive difficulty in Mastery Mode ensures concepts are reinforced at increasing cognitive depth — mirroring how long-term memory consolidation actually works.",
+    "Use Mastery Mode for a challenge that grows with you — questions start simple and get harder as you prove you're ready. It's the closest thing to how your brain actually builds expertise: small wins that compound into deep understanding.",
 };
 
 interface InfoTooltipProps {
