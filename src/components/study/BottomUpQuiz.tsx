@@ -88,6 +88,57 @@ export const BottomUpQuiz = ({ lecture, card, onNext, onExit, onSelectFollowUp, 
 
   const tfCorrect = tfChoice !== null && tfChoice === tf.correctValue;
   const mcCorrect = mcChoice === card.answer;
+  const showImmediate = feedbackMode === "immediate";
+
+  const FeedbackPanel = ({
+    correct,
+    bloom,
+    why,
+    correctAnswer,
+  }: {
+    correct: boolean | null;
+    bloom: BloomLevel;
+    why: string;
+    correctAnswer?: string;
+  }) => (
+    <div
+      className={cn(
+        "rounded-xl border p-4 space-y-2 animate-fade-in",
+        correct === true && "border-emerald-500/40 bg-emerald-500/5",
+        correct === false && "border-destructive/40 bg-destructive/5",
+        correct === null && "border-border bg-muted/30",
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-semibold">
+          {correct === true && (
+            <>
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <span className="text-emerald-700">Correct</span>
+            </>
+          )}
+          {correct === false && (
+            <>
+              <XCircle className="h-4 w-4 text-destructive" />
+              <span className="text-destructive">Not quite</span>
+            </>
+          )}
+          {correct === null && (
+            <span className="text-foreground">Answer recorded</span>
+          )}
+        </p>
+        <BloomBadge level={bloom} />
+      </div>
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        <span className="font-medium text-foreground">Why:</span> {why}
+      </p>
+      {correct === false && correctAnswer && (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Correct answer:</span> {correctAnswer}
+        </p>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-5">
