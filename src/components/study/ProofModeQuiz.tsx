@@ -3,13 +3,15 @@ import { Loader2, ScrollText, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Lecture, Flashcard } from "@/lib/mockData";
 
+const API_BASE = "https://nebulalearn-production.up.railway.app";
+
 export const ProofModeQuiz = ({ lecture, cards, onExit }: { lecture: Lecture, cards: Flashcard[], onExit: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [quiz, setQuiz] = useState<any>(null);
 
   useEffect(() => {
     const fetchProof = async () => {
-      const res = await fetch("https://nebulalearn-production.up.railway.app/generate-proof-quiz", {
+      const res = await fetch(`${API_BASE}/generate-proof-quiz`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -12,6 +12,8 @@ import { TopDownMasteryQuiz } from "./TopDownMasteryQuiz";
 import { BottomUpQuiz } from "./BottomUpQuiz";
 import { MasteryModeQuiz } from "./MasteryModeQuiz";
 import { StepOrderingQuiz } from "./StepOrderingQuiz";
+import { InfiniteGenerator } from "./InfiniteGenerator";
+import { FormulaModeQuiz } from "./FormulaModeQuiz";
 import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
@@ -85,36 +87,6 @@ const pickRandom = (lecture: Lecture, exclude?: Flashcard): Flashcard | null => 
   return pool[Math.floor(Math.random() * pool.length)];
 };
 
-/** Rewrite a flashcard's question using one of three formula-specific patterns. */
-const buildFormulaCard = (card: Flashcard, idx: number): Flashcard => {
-  const formula = card.formula?.trim();
-  if (!formula) return card;
-  const concept = card.question.replace(/[?.!]+$/, "").trim();
-  const vars = Array.from(
-    new Set((formula.match(/\b[a-zA-Zα-ωΑ-Ω]\b/g) ?? []).filter((v) => !/^[ivx]$/i.test(v))),
-  );
-  const patterns: Array<() => { question: string; answer: string } | null> = [
-    () => ({ question: `Write the formula for ${concept}.`, answer: formula }),
-    () =>
-      vars.length
-        ? {
-            question: `In the formula  ${formula}  — what does "${vars[idx % vars.length]}" represent?`,
-            answer: card.answer,
-          }
-        : null,
-    () => ({
-      question: `Which formula would you use to solve: ${concept}?`,
-      answer: formula,
-    }),
-  ];
-  const order = [idx % 3, (idx + 1) % 3, (idx + 2) % 3];
-  for (const p of order) {
-    const r = patterns[p]();
-    if (r) return { ...card, question: r.question, answer: r.answer };
-  }
-  return card;
-};
-
 export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const { t } = useT();
   const [mode, setMode] = useState<QuizMode>("bottom");
@@ -140,19 +112,31 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [proofMode, setProofMode] = useState(false);
   const [proofCards, setProofCards] = useState<Flashcard[] | null>(null);
   const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2);
+  const [customCards, setCustomCards] = useState<Flashcard[]>([]);
+  const [formulaQuizCards, setFormulaQuizCards] = useState<Flashcard[] | null>(null);
   const cardListFilters = useFlashcardFilters(lecture);
 
+  const allFlashcards = useMemo(
+    () => [...lecture.flashcards, ...customCards],
+    [lecture.flashcards, customCards],
+  );
+
+  const generatorBloom = useMemo(() => {
+    const first = Array.from(customLevels)[0];
+    return first ?? "Apply";
+  }, [customLevels]);
+
   const formulaCount = useMemo(
-    () => lecture.flashcards.filter((c) => !!c.formula?.trim()).length,
-    [lecture.flashcards],
+    () => allFlashcards.filter((c) => !!c.formula?.trim()).length,
+    [allFlashcards],
   );
   const stepCardCount = useMemo(
-    () => lecture.flashcards.filter((c) => (c.steps?.length ?? 0) >= 2).length,
-    [lecture.flashcards],
+    () => allFlashcards.filter((c) => (c.steps?.length ?? 0) >= 2).length,
+    [allFlashcards],
   );
   const proofCardCount = useMemo(
-    () => lecture.flashcards.filter((c) => c.bloom === "Analyze" || c.bloom === "Evaluate").length,
-    [lecture.flashcards],
+    () => allFlashcards.filter((c) => c.bloom === "Analyze" || c.bloom === "Evaluate").length,
+    [allFlashcards],
   );
   const proofEligible = proofCardCount > 0;
 
@@ -161,6 +145,8 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
   // Initialize selected cards on first render / when the lecture changes.
   useEffect(() => {
+    setCustomCards([]);
+    setFormulaQuizCards(null);
     setSelectedCardKeys(new Set(lecture.flashcards.map((c, i) => cardKey(c, i))));
     setCustomCount(
       Math.max(MIN_QUESTION_COUNT, Math.min(DEFAULT_QUESTION_COUNT, lecture.flashcards.length || DEFAULT_QUESTION_COUNT)),
@@ -176,21 +162,21 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       ? stepCardCount
       : proofMode
       ? proofCardCount
-      : lecture.flashcards.length;
+      : allFlashcards.length;
     if (!modeMax) return;
     setCustomCount((prev) =>
       Math.max(MIN_QUESTION_COUNT, Math.min(prev, Math.max(MIN_QUESTION_COUNT, Math.floor(modeMax / 2) || modeMax))),
     );
-  }, [formulaMode, stepOrderingMode, proofMode, formulaCount, stepCardCount, proofCardCount, lecture.flashcards.length]);
+  }, [formulaMode, stepOrderingMode, proofMode, formulaCount, stepCardCount, proofCardCount, allFlashcards.length]);
 
   const filteredCardCount = useMemo(() => {
-    return lecture.flashcards.filter((c, i) =>
+    return allFlashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
       (!formulaMode || !!c.formula?.trim()) &&
       (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
       (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
     ).length;
-  }, [lecture.flashcards, selectedCardKeys, formulaMode, stepOrderingMode, proofMode]);
+  }, [allFlashcards, selectedCardKeys, formulaMode, stepOrderingMode, proofMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -211,7 +197,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   };
 
   const startCustomQuiz = () => {
-    const basePool = lecture.flashcards
+    const basePool = allFlashcards
       .filter(
         (c, i) =>
           selectedCardKeys.has(cardKey(c, i)) &&
@@ -231,6 +217,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       setSessionKey((k) => k + 1);
       return;
     }
+    if (formulaMode) {
+      setFormulaQuizCards(basePool);
+      setSessionKey((k) => k + 1);
+      return;
+    }
     // Override each card's bloom level using the user's chosen target levels —
     // questions are generated AT those cognitive levels regardless of the
     // source flashcard's original level.
@@ -239,10 +230,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       targetLevels.length === 0
         ? c
         : { ...c, bloom: targetLevels[idx % targetLevels.length] };
-    const pool = (formulaMode
-      ? basePool.map((c, idx) => buildFormulaCard(c, idx))
-      : basePool
-    ).map(overrideBloom);
+    const pool = basePool.map(overrideBloom);
     const customL: Lecture = { ...lecture, flashcards: pool };
     setCustomLecture(customL);
     setCustomAnswered(1);
@@ -303,6 +291,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setCustomAnswered(0);
     setStepOrderingCards(null);
     setProofCards(null);
+    setFormulaQuizCards(null);
   };
 
   const ModePill = ({
@@ -363,6 +352,18 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
         key={`proof-${sessionKey}`}
         lecture={lecture}
         cards={proofCards}
+        onExit={exit}
+      />
+    );
+  }
+
+  // Active formula-mode session (API-backed formula quiz)
+  if (formulaQuizCards) {
+    return (
+      <FormulaModeQuiz
+        key={`formula-${sessionKey}`}
+        lecture={lecture}
+        cards={formulaQuizCards}
         onExit={exit}
       />
     );
@@ -677,7 +678,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
                 {/* Question count */}
                 {(() => {
-                  const totalCards = lecture.flashcards.length;
+                  const totalCards = allFlashcards.length;
                   // When a special mode is active, scope the slider to that pool.
                   const modeMax = formulaMode
                     ? formulaCount
@@ -817,7 +818,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                       {t("Flashcards ({selected}/{total} selected)")
                         .replace("{selected}", String(selectedCardKeys.size))
-                        .replace("{total}", String(lecture.flashcards.length))}
+                        .replace("{total}", String(allFlashcards.length))}
                     </p>
                     <button
                       type="button"
@@ -830,8 +831,8 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
                   <FlashcardFilters
                     filters={cardListFilters}
-                    visibleCount={lecture.flashcards.filter((c) => cardListFilters.matches(c)).length}
-                    totalCount={lecture.flashcards.length}
+                    visibleCount={allFlashcards.filter((c) => cardListFilters.matches(c)).length}
+                    totalCount={allFlashcards.length}
                   />
 
                   <div className="flex gap-2">
@@ -840,7 +841,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       onClick={() =>
                         setSelectedCardKeys((prev) => {
                           const next = new Set(prev);
-                          lecture.flashcards.forEach((c, i) => {
+                          allFlashcards.forEach((c, i) => {
                             if (cardListFilters.matches(c)) next.add(cardKey(c, i));
                           });
                           return next;
@@ -855,7 +856,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       onClick={() =>
                         setSelectedCardKeys((prev) => {
                           const next = new Set(prev);
-                          lecture.flashcards.forEach((c, i) => {
+                          allFlashcards.forEach((c, i) => {
                             if (cardListFilters.matches(c)) next.delete(cardKey(c, i));
                           });
                           return next;
@@ -869,7 +870,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
 
                   <div className="max-h-56 overflow-y-auto rounded-md border border-border divide-y divide-border">
                     {(() => {
-                      const visibleRows = lecture.flashcards
+                      const visibleRows = allFlashcards
                         .map((c, i) => ({ c, i }))
                         .filter(({ c }) => cardListFilters.matches(c));
                       if (visibleRows.length === 0) {
@@ -901,6 +902,27 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                       });
                     })()}
                   </div>
+
+                  <InfiniteGenerator
+                    topic={
+                      lecture.outline.find((o) => o.topic.trim())?.topic?.trim() || lecture.title || "Lecture"
+                    }
+                    bloomLevel={generatorBloom}
+                    lectureContext={
+                      lecture.summaries.full || lecture.summaries.medium || lecture.summaries.short
+                    }
+                    onCardsGenerated={(generated) => {
+                      setCustomCards((prev) => {
+                        const offset = lecture.flashcards.length + prev.length;
+                        setSelectedCardKeys((keys) => {
+                          const nk = new Set(keys);
+                          generated.forEach((c, i) => nk.add(cardKey(c, offset + i)));
+                          return nk;
+                        });
+                        return [...prev, ...generated];
+                      });
+                    }}
+                  />
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
