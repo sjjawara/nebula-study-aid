@@ -500,6 +500,7 @@ const Index = () => {
         onLoad={loadStored}
         onRemove={removeStored}
       />
+      {stage === "results" && url && <YoutubePlayer videoUrl={url} />}
     </div>
     </LanguageProvider>
   );
