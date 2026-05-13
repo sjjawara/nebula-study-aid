@@ -5,19 +5,23 @@ import {
   Pencil,
   Download,
   RotateCcw,
-  MousePointer2,
   ZoomIn,
   ZoomOut,
   X,
   ExternalLink,
   Sparkles,
-  Plus,
   Trash2,
   GripHorizontal,
   Maximize2,
   Minimize2,
   Move,
+  Search as SearchIcon,
+  ArrowLeft,
+  ArrowRight,
+  Undo2,
+  Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { Lecture, SearchMoment } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import {
