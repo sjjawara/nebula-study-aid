@@ -516,49 +516,57 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     }, 0);
   };
 
-  const deleteCustomNode = (id: string) => {
-    // Recursively delete this node and any custom descendants
-    const toDelete = new Set<string>([id]);
-    let changed = true;
-    while (changed) {
-      changed = false;
+  const deleteNode = (id: string) => {
+    if (id === "root") {
+      toast.error("Can't delete the root node");
+      return;
+    }
+    pushHistory();
+    // Find node label for toast
+    const target = nodesRef.current.find((n) => n.data.id === id);
+    const label = target?.data.name ?? "Node";
+
+    // Collect custom descendants to remove
+    const customToRemove = new Set<string>();
+    const queue = [id];
+    while (queue.length) {
+      const cur = queue.shift()!;
       for (const c of customNodes) {
-        if (toDelete.has(c.parentId) && !toDelete.has(c.id)) {
-          toDelete.add(c.id);
-          changed = true;
+        if (c.parentId === cur && !customToRemove.has(c.id)) {
+          customToRemove.add(c.id);
+          queue.push(c.id);
         }
       }
     }
-    setCustomNodes((prev) => prev.filter((c) => !toDelete.has(c.id)));
-    setNotes((prev) => {
-      const next = { ...prev };
-      for (const idd of toDelete) delete next[idd];
-      return next;
-    });
-    setLabels((prev) => {
-      const next = { ...prev };
-      for (const idd of toDelete) delete next[idd];
-      return next;
-    });
-    setPositions((prev) => {
-      const next = { ...prev };
-      for (const idd of toDelete) delete next[idd];
-      return next;
-    });
+    if (id.startsWith("c:")) customToRemove.add(id);
+
+    if (customToRemove.size) {
+      setCustomNodes((prev) => prev.filter((c) => !customToRemove.has(c.id)));
+    }
+    if (!id.startsWith("c:")) {
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+    }
     setSelected(null);
+
+    toast(`${label} deleted`, {
+      duration: 10000,
+      action: {
+        label: "Undo",
+        onClick: () => undoLast(),
+      },
+    });
   };
 
-  const resetPositions = () => {
-    setPositions({});
-  };
-
-  const resetNotes = () => {
-    setNotes({});
-  };
+  const resetPositions = () => { pushHistory(); setPositions({}); };
+  const resetNotes = () => { pushHistory(); setNotes({}); };
 
   const resetCustomNodes = () => {
+    pushHistory();
     setCustomNodes([]);
-    // Drop any positions/notes/labels keyed to custom node ids
     setPositions((prev) => {
       const next: Record<string, { x: number; y: number }> = {};
       for (const k of Object.keys(prev)) if (!k.startsWith("c:")) next[k] = prev[k];
@@ -578,10 +586,12 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   };
 
   const resetEverything = () => {
+    pushHistory();
     setLabels({});
     setNotes({});
     setCustomNodes([]);
     setPositions({});
+    setDeletedIds(new Set());
     setSelected(null);
   };
 
@@ -601,6 +611,64 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const zoomBy = (factor: number) => {
     if (!svgRef.current || !zoomRef.current) return;
     d3.select(svgRef.current).transition().duration(150).call(zoomRef.current.scaleBy, factor);
+  };
+
+  // ---- Search ----
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchIds = useMemo(() => {
+    if (!normalizedQuery) return [] as string[];
+    const ids: string[] = [];
+    for (const n of nodes) {
+      const hay = `${n.data.name} ${notes[n.data.id] ?? ""}`.toLowerCase();
+      if (hay.includes(normalizedQuery)) ids.push(n.data.id);
+    }
+    return ids;
+  }, [normalizedQuery, nodes, notes]);
+  const matchSet = useMemo(() => new Set(matchIds), [matchIds]);
+
+  const focusNode = useCallback((id: string) => {
+    if (!svgRef.current || !zoomRef.current || !containerRef.current) return;
+    const node = nodesRef.current.find((n) => n.data.id === id);
+    if (!node) return;
+    const x = (node as unknown as { _x: number })._x;
+    const y = (node as unknown as { _y: number })._y;
+    const cw = containerRef.current.clientWidth;
+    const ch = containerRef.current.clientHeight;
+    const currentK = transformRef.current.k || 1;
+    const targetK = Math.min(2.5, Math.max(0.6, currentK * 1.5));
+    const tx = cw / 2 - x * targetK;
+    const ty = ch / 2 - y * targetK;
+    const target = d3.zoomIdentity.translate(tx, ty).scale(targetK);
+    d3.select(svgRef.current).transition().duration(400).ease(d3.easeCubicInOut).call(zoomRef.current.transform, target);
+    setPulseId(id);
+    window.setTimeout(() => setPulseId((p) => (p === id ? null : p)), 900);
+  }, []);
+
+  // When matches change, auto-focus first if exactly one; reset index otherwise.
+  useEffect(() => {
+    if (!normalizedQuery) {
+      // Restore previous viewport when search cleared
+      if (previousTransformRef.current && svgRef.current && zoomRef.current) {
+        d3.select(svgRef.current).transition().duration(400).ease(d3.easeCubicInOut).call(zoomRef.current.transform, previousTransformRef.current);
+        previousTransformRef.current = null;
+      }
+      setMatchIndex(0);
+      return;
+    }
+    if (!previousTransformRef.current) {
+      previousTransformRef.current = transformRef.current;
+    }
+    setMatchIndex(0);
+    if (matchIds.length === 1) {
+      focusNode(matchIds[0]);
+    }
+  }, [normalizedQuery, matchIds, focusNode]);
+
+  const cycleMatch = (delta: number) => {
+    if (!matchIds.length) return;
+    const next = (matchIndex + delta + matchIds.length) % matchIds.length;
+    setMatchIndex(next);
+    focusNode(matchIds[next]);
   };
 
   if (!lecture.outline.length) {
