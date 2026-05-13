@@ -981,8 +981,29 @@ const NodePopover = ({
   const [size, setSize] = useState({ width: popoverState.width, height: popoverState.height });
   const [position, setPosition] = useState<{ x: number; y: number } | null>(popoverState.position);
   const [maximized, setMaximized] = useState(false);
+  // Custom nodes start in edit mode so the user can name them right away.
+  const [isEditing, setIsEditing] = useState(isCustom);
+  const [draftLabel, setDraftLabel] = useState(currentLabel);
+  const [draftNote, setDraftNote] = useState(note);
   const resizeState = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
   const moveState = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+
+  const beginEdit = () => {
+    setDraftLabel(currentLabel);
+    setDraftNote(note);
+    setIsEditing(true);
+  };
+  const saveEdit = () => {
+    const trimmed = draftLabel.trim();
+    if (trimmed && trimmed !== currentLabel) onLabelChange(trimmed);
+    if (draftNote !== note) onNoteChange(draftNote);
+    setIsEditing(false);
+  };
+  const cancelEdit = () => {
+    setDraftLabel(currentLabel);
+    setDraftNote(note);
+    setIsEditing(false);
+  };
   const popoverRef = useRef<HTMLDivElement>(null);
 
   const clampPosition = (x: number, y: number, w: number, h: number) => {
