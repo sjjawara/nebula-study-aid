@@ -5,19 +5,23 @@ import {
   Pencil,
   Download,
   RotateCcw,
-  MousePointer2,
   ZoomIn,
   ZoomOut,
   X,
   ExternalLink,
   Sparkles,
-  Plus,
   Trash2,
   GripHorizontal,
   Maximize2,
   Minimize2,
   Move,
+  Search as SearchIcon,
+  ArrowLeft,
+  ArrowRight,
+  Undo2,
+  Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { Lecture, SearchMoment } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +36,6 @@ import { cn } from "@/lib/utils";
 import { buildYoutubeUrl } from "@/lib/timestamp";
 import { useT } from "@/lib/i18n";
 
-type Tool = "select" | "relabel";
-
 interface CustomNode {
   id: string;
   parentId: string;
@@ -45,6 +47,7 @@ interface PersistedState {
   notes: Record<string, string>;
   customNodes: CustomNode[];
   positions: Record<string, { x: number; y: number }>;
+  deletedIds: string[];
 }
 
 interface TreeDatum {
@@ -96,11 +99,13 @@ const buildTree = (
   lecture: Lecture,
   labelOverrides: Record<string, string>,
   customNodes: CustomNode[],
+  deletedIds: Set<string>,
 ): TreeDatum => {
   const labelOf = (id: string, fallback: string) => labelOverrides[id] ?? fallback;
 
   const customByParent = new Map<string, CustomNode[]>();
   for (const c of customNodes) {
+    if (deletedIds.has(c.id)) continue;
     const arr = customByParent.get(c.parentId) ?? [];
     arr.push(c);
     customByParent.set(c.parentId, arr);
@@ -119,43 +124,48 @@ const buildTree = (
     }));
   };
 
-  const branches: TreeDatum[] = lecture.outline.map((o, i) => {
-    const branchId = `b:${o.timestamp}-${i}`;
-    const keywordPool = new Set<string>();
-    for (const m of lecture.searchIndex) {
-      if (m.timestamp === o.timestamp || (m.topic && m.topic === o.topic)) {
-        for (const k of m.keywords ?? []) {
-          if (k && k.trim()) keywordPool.add(k.trim());
+  const branches: TreeDatum[] = lecture.outline
+    .map((o, i) => {
+      const branchId = `b:${o.timestamp}-${i}`;
+      if (deletedIds.has(branchId)) return null;
+      const keywordPool = new Set<string>();
+      for (const m of lecture.searchIndex) {
+        if (m.timestamp === o.timestamp || (m.topic && m.topic === o.topic)) {
+          for (const k of m.keywords ?? []) {
+            if (k && k.trim()) keywordPool.add(k.trim());
+          }
         }
       }
-    }
-    const leaves: TreeDatum[] = Array.from(keywordPool)
-      .filter((k) => k.toLowerCase() !== o.topic.toLowerCase())
-      .slice(0, 5)
-      .map((k, j) => {
-        const id = `${branchId}:l:${j}`;
-        return {
+      const leaves: TreeDatum[] = Array.from(keywordPool)
+        .filter((k) => k.toLowerCase() !== o.topic.toLowerCase())
+        .slice(0, 5)
+        .map((k, j) => {
+          const id = `${branchId}:l:${j}`;
+          return { id, k, j };
+        })
+        .filter((x) => !deletedIds.has(x.id))
+        .map(({ id, k }) => ({
           id,
           name: labelOf(id, k),
-          kind: "leaf",
+          kind: "leaf" as const,
           keyword: k,
           topic: o.topic,
           timestamp: o.timestamp,
           children: attachCustom(id, o.topic, o.timestamp),
-        };
-      });
-    const branchCustomChildren = attachCustom(branchId, o.topic, o.timestamp);
-    return {
-      id: branchId,
-      name: labelOf(branchId, o.topic),
-      kind: "branch",
-      topic: o.topic,
-      timestamp: o.timestamp,
-      children: [...leaves, ...branchCustomChildren].length
-        ? [...leaves, ...branchCustomChildren]
-        : undefined,
-    };
-  });
+        }));
+      const branchCustomChildren = attachCustom(branchId, o.topic, o.timestamp);
+      return {
+        id: branchId,
+        name: labelOf(branchId, o.topic),
+        kind: "branch" as const,
+        topic: o.topic,
+        timestamp: o.timestamp,
+        children: [...leaves, ...branchCustomChildren].length
+          ? [...leaves, ...branchCustomChildren]
+          : undefined,
+      } as TreeDatum;
+    })
+    .filter((b): b is TreeDatum => b !== null);
 
   const rootCustom = attachCustom("root");
   return {
@@ -249,13 +259,51 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const transformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
 
-  const [tool, setTool] = useState<Tool>("select");
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [customNodes, setCustomNodes] = useState<CustomNode[]>([]);
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<TreeDatum | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [matchIndex, setMatchIndex] = useState(0);
+  const [pulseId, setPulseId] = useState<string | null>(null);
+  const previousTransformRef = useRef<d3.ZoomTransform | null>(null);
+  // History for undo (snapshots of full state). Up to 5 entries.
+  const historyRef = useRef<PersistedState[]>([]);
+  const [historyVersion, setHistoryVersion] = useState(0);
+
+  const snapshot = useCallback((): PersistedState => ({
+    labels: { ...labels },
+    notes: { ...notes },
+    customNodes: customNodes.map((c) => ({ ...c })),
+    positions: { ...positions },
+    deletedIds: Array.from(deletedIds),
+  }), [labels, notes, customNodes, positions, deletedIds]);
+
+  const pushHistory = useCallback(() => {
+    historyRef.current = [snapshot(), ...historyRef.current].slice(0, 5);
+    setHistoryVersion((v) => v + 1);
+  }, [snapshot]);
+
+  const restoreSnapshot = (s: PersistedState) => {
+    setLabels(s.labels ?? {});
+    setNotes(s.notes ?? {});
+    setCustomNodes(s.customNodes ?? []);
+    setPositions(s.positions ?? {});
+    setDeletedIds(new Set(s.deletedIds ?? []));
+  };
+
+  const undoLast = () => {
+    const [prev, ...rest] = historyRef.current;
+    if (!prev) return;
+    historyRef.current = rest;
+    setHistoryVersion((v) => v + 1);
+    restoreSnapshot(prev);
+    toast.success("Undid last action");
+  };
+
   const draggingRef = useRef<{
     id: string;
     startX: number;
@@ -266,12 +314,13 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     descendants: { id: string; dx: number; dy: number }[];
     lerpIds: Set<string>;
   } | null>(null);
-  // Latest laid-out nodes (with positions) so pointer handlers can find descendants.
   const nodesRef = useRef<d3.HierarchyNode<TreeDatum>[]>([]);
 
   // Load persisted state on lecture change
   useEffect(() => {
     setSelected(null);
+    setQuery("");
+    historyRef.current = [];
     try {
       const raw = localStorage.getItem(storageKey(lecture));
       if (raw) {
@@ -280,6 +329,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
         setNotes(parsed.notes ?? {});
         setCustomNodes(parsed.customNodes ?? []);
         setPositions(parsed.positions ?? {});
+        setDeletedIds(new Set(parsed.deletedIds ?? []));
         return;
       }
     } catch {
@@ -289,19 +339,20 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     setNotes({});
     setCustomNodes([]);
     setPositions({});
+    setDeletedIds(new Set());
   }, [lecture]);
 
   // Persist state
   useEffect(() => {
     try {
-      const data: PersistedState = { labels, notes, customNodes, positions };
+      const data: PersistedState = { labels, notes, customNodes, positions, deletedIds: Array.from(deletedIds) };
       localStorage.setItem(storageKey(lecture), JSON.stringify(data));
     } catch {
       /* ignore */
     }
-  }, [lecture, labels, notes, customNodes, positions]);
+  }, [lecture, labels, notes, customNodes, positions, deletedIds]);
 
-  const treeData = useMemo(() => buildTree(lecture, labels, customNodes), [lecture, labels, customNodes]);
+  const treeData = useMemo(() => buildTree(lecture, labels, customNodes, deletedIds), [lecture, labels, customNodes, deletedIds]);
 
   const wrappedById = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -392,16 +443,10 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const { t } = useT();
   const handleNodeClick = (datum: TreeDatum) => {
     if (draggingRef.current?.moved) return;
-    if (tool === "relabel" && !datum.isCustom) {
-      const next = window.prompt(t("Rename this concept"), datum.name);
-      if (next && next.trim()) setLabels((prev) => ({ ...prev, [datum.id]: next.trim() }));
-      return;
-    }
     setSelected(datum);
   };
 
   const handleNodePointerDown = (e: React.PointerEvent<SVGGElement>, datum: TreeDatum, baseX: number, baseY: number) => {
-    if (tool !== "select") return;
     e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
 
@@ -471,49 +516,57 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     }, 0);
   };
 
-  const deleteCustomNode = (id: string) => {
-    // Recursively delete this node and any custom descendants
-    const toDelete = new Set<string>([id]);
-    let changed = true;
-    while (changed) {
-      changed = false;
+  const deleteNode = (id: string) => {
+    if (id === "root") {
+      toast.error("Can't delete the root node");
+      return;
+    }
+    pushHistory();
+    // Find node label for toast
+    const target = nodesRef.current.find((n) => n.data.id === id);
+    const label = target?.data.name ?? "Node";
+
+    // Collect custom descendants to remove
+    const customToRemove = new Set<string>();
+    const queue = [id];
+    while (queue.length) {
+      const cur = queue.shift()!;
       for (const c of customNodes) {
-        if (toDelete.has(c.parentId) && !toDelete.has(c.id)) {
-          toDelete.add(c.id);
-          changed = true;
+        if (c.parentId === cur && !customToRemove.has(c.id)) {
+          customToRemove.add(c.id);
+          queue.push(c.id);
         }
       }
     }
-    setCustomNodes((prev) => prev.filter((c) => !toDelete.has(c.id)));
-    setNotes((prev) => {
-      const next = { ...prev };
-      for (const idd of toDelete) delete next[idd];
-      return next;
-    });
-    setLabels((prev) => {
-      const next = { ...prev };
-      for (const idd of toDelete) delete next[idd];
-      return next;
-    });
-    setPositions((prev) => {
-      const next = { ...prev };
-      for (const idd of toDelete) delete next[idd];
-      return next;
-    });
+    if (id.startsWith("c:")) customToRemove.add(id);
+
+    if (customToRemove.size) {
+      setCustomNodes((prev) => prev.filter((c) => !customToRemove.has(c.id)));
+    }
+    if (!id.startsWith("c:")) {
+      setDeletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+    }
     setSelected(null);
+
+    toast(`${label} deleted`, {
+      duration: 10000,
+      action: {
+        label: "Undo",
+        onClick: () => undoLast(),
+      },
+    });
   };
 
-  const resetPositions = () => {
-    setPositions({});
-  };
-
-  const resetNotes = () => {
-    setNotes({});
-  };
+  const resetPositions = () => { pushHistory(); setPositions({}); };
+  const resetNotes = () => { pushHistory(); setNotes({}); };
 
   const resetCustomNodes = () => {
+    pushHistory();
     setCustomNodes([]);
-    // Drop any positions/notes/labels keyed to custom node ids
     setPositions((prev) => {
       const next: Record<string, { x: number; y: number }> = {};
       for (const k of Object.keys(prev)) if (!k.startsWith("c:")) next[k] = prev[k];
@@ -533,10 +586,12 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   };
 
   const resetEverything = () => {
+    pushHistory();
     setLabels({});
     setNotes({});
     setCustomNodes([]);
     setPositions({});
+    setDeletedIds(new Set());
     setSelected(null);
   };
 
@@ -556,6 +611,64 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const zoomBy = (factor: number) => {
     if (!svgRef.current || !zoomRef.current) return;
     d3.select(svgRef.current).transition().duration(150).call(zoomRef.current.scaleBy, factor);
+  };
+
+  // ---- Search ----
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchIds = useMemo(() => {
+    if (!normalizedQuery) return [] as string[];
+    const ids: string[] = [];
+    for (const n of nodes) {
+      const hay = `${n.data.name} ${notes[n.data.id] ?? ""}`.toLowerCase();
+      if (hay.includes(normalizedQuery)) ids.push(n.data.id);
+    }
+    return ids;
+  }, [normalizedQuery, nodes, notes]);
+  const matchSet = useMemo(() => new Set(matchIds), [matchIds]);
+
+  const focusNode = useCallback((id: string) => {
+    if (!svgRef.current || !zoomRef.current || !containerRef.current) return;
+    const node = nodesRef.current.find((n) => n.data.id === id);
+    if (!node) return;
+    const x = (node as unknown as { _x: number })._x;
+    const y = (node as unknown as { _y: number })._y;
+    const cw = containerRef.current.clientWidth;
+    const ch = containerRef.current.clientHeight;
+    const currentK = transformRef.current.k || 1;
+    const targetK = Math.min(2.5, Math.max(0.6, currentK * 1.5));
+    const tx = cw / 2 - x * targetK;
+    const ty = ch / 2 - y * targetK;
+    const target = d3.zoomIdentity.translate(tx, ty).scale(targetK);
+    d3.select(svgRef.current).transition().duration(400).ease(d3.easeCubicInOut).call(zoomRef.current.transform, target);
+    setPulseId(id);
+    window.setTimeout(() => setPulseId((p) => (p === id ? null : p)), 900);
+  }, []);
+
+  // When matches change, auto-focus first if exactly one; reset index otherwise.
+  useEffect(() => {
+    if (!normalizedQuery) {
+      // Restore previous viewport when search cleared
+      if (previousTransformRef.current && svgRef.current && zoomRef.current) {
+        d3.select(svgRef.current).transition().duration(400).ease(d3.easeCubicInOut).call(zoomRef.current.transform, previousTransformRef.current);
+        previousTransformRef.current = null;
+      }
+      setMatchIndex(0);
+      return;
+    }
+    if (!previousTransformRef.current) {
+      previousTransformRef.current = transformRef.current;
+    }
+    setMatchIndex(0);
+    if (matchIds.length === 1) {
+      focusNode(matchIds[0]);
+    }
+  }, [normalizedQuery, matchIds, focusNode]);
+
+  const cycleMatch = (delta: number) => {
+    if (!matchIds.length) return;
+    const next = (matchIndex + delta + matchIds.length) % matchIds.length;
+    setMatchIndex(next);
+    focusNode(matchIds[next]);
   };
 
   if (!lecture.outline.length) {
@@ -581,29 +694,58 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3">
-        <button
-          onClick={() => setTool("select")}
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-            tool === "select" ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card text-foreground hover:border-primary/30",
-          )}
-        >
-          <MousePointer2 className="h-3.5 w-3.5" />
-          {t("Explore")}
-        </button>
-        <button
-          onClick={() => setTool("relabel")}
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-            tool === "relabel" ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card text-foreground hover:border-primary/30",
-          )}
-        >
-          <Pencil className="h-3.5 w-3.5" />
-          {t("Relabel")}
-        </button>
+        <div className="relative flex items-center">
+          <SearchIcon className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && matchIds.length) {
+                e.preventDefault();
+                cycleMatch(1);
+              } else if (e.key === "Escape") {
+                setQuery("");
+              }
+            }}
+            placeholder={t("Search nodes & notes…")}
+            className="h-9 w-56 pl-8 pr-2 text-xs"
+          />
+        </div>
+        {normalizedQuery && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>
+              {matchIds.length === 0
+                ? t("No matches")
+                : matchIds.length === 1
+                ? t("1 match")
+                : `${matchIndex + 1} / ${matchIds.length} ${t("matches")}`}
+            </span>
+            {matchIds.length > 1 && (
+              <>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => cycleMatch(-1)} aria-label="Previous match">
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => cycleMatch(1)} aria-label="Next match">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)}><ZoomOut className="h-3.5 w-3.5" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)}><ZoomIn className="h-3.5 w-3.5" /></Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={undoLast}
+            disabled={historyRef.current.length === 0}
+            aria-label="Undo"
+            title={t("Undo last action")}
+          >
+            <Undo2 className="h-3.5 w-3.5" />
+            {t("Undo")}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)} aria-label="Zoom out"><ZoomOut className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)} aria-label="Zoom in"><ZoomIn className="h-3.5 w-3.5" /></Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
@@ -637,7 +779,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
           width="100%"
           height="100%"
           className="block bg-white"
-          style={{ cursor: tool === "relabel" ? "pointer" : "grab" }}
+          style={{ cursor: "grab" }}
         >
           <g ref={gRef}>
             <g className="links" fill="none" stroke="#cbd5e1" strokeWidth={1.4}>
@@ -654,7 +796,8 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                 const x1 = tx - tRect.w / 2;
                 const midX = (x0 + x1) / 2;
                 const d = `M${x0},${sy} C${midX},${sy} ${midX},${ty} ${x1},${ty}`;
-                return <path key={i} d={d} strokeDasharray={t.data.isCustom ? "4 3" : undefined} />;
+                const dim = normalizedQuery && !(matchSet.has(s.data.id) && matchSet.has(t.data.id));
+                return <path key={i} d={d} strokeDasharray={t.data.isCustom ? "4 3" : undefined} style={{ opacity: dim ? 0.2 : 1, transition: "opacity 200ms" }} />;
               })}
             </g>
 
@@ -696,11 +839,26 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     onMouseEnter={() => setHoveredId(n.data.id)}
                     onMouseLeave={() => setHoveredId((cur) => (cur === n.data.id ? null : cur))}
                     style={{
-                      cursor: tool === "relabel" ? "pointer" : "grab",
+                      cursor: "grab",
                       touchAction: "none",
-                      transition: shouldLerp ? "transform 150ms ease-out" : undefined,
+                      transition: shouldLerp ? "transform 150ms ease-out" : "opacity 200ms",
+                      opacity: normalizedQuery && !matchSet.has(n.data.id) ? 0.2 : 1,
                     }}
                   >
+                    {pulseId === n.data.id && (
+                      <rect
+                        x={-4}
+                        y={-4}
+                        width={w + 8}
+                        height={h + 8}
+                        rx={12}
+                        ry={12}
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        style={{ animation: "pulse 1s ease-out 2" }}
+                      />
+                    )}
                     <rect
                       width={w}
                       height={h}
@@ -728,7 +886,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     {hasNote && (
                       <circle cx={w - 6} cy={6} r={4} fill="hsl(var(--primary))" style={{ pointerEvents: "none" }} />
                     )}
-                    {tool === "select" && hoveredId === n.data.id && (
+                    {hoveredId === n.data.id && (
                       <g
                         transform={`translate(${w - 12}, ${h / 2 - 12})`}
                         onClick={(e) => {
@@ -771,7 +929,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
             onClose={() => setSelected(null)}
             onNoteChange={(v) => setNotes((prev) => ({ ...prev, [selected.id]: v }))}
             onLabelChange={(v) => setLabels((prev) => ({ ...prev, [selected.id]: v }))}
-            onDelete={selected.isCustom ? () => deleteCustomNode(selected.id) : undefined}
+            onDelete={() => deleteNode(selected.id)}
             containerRef={containerRef}
           />
         )}
@@ -823,8 +981,29 @@ const NodePopover = ({
   const [size, setSize] = useState({ width: popoverState.width, height: popoverState.height });
   const [position, setPosition] = useState<{ x: number; y: number } | null>(popoverState.position);
   const [maximized, setMaximized] = useState(false);
+  // Custom nodes start in edit mode so the user can name them right away.
+  const [isEditing, setIsEditing] = useState(isCustom);
+  const [draftLabel, setDraftLabel] = useState(currentLabel);
+  const [draftNote, setDraftNote] = useState(note);
   const resizeState = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
   const moveState = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+
+  const beginEdit = () => {
+    setDraftLabel(currentLabel);
+    setDraftNote(note);
+    setIsEditing(true);
+  };
+  const saveEdit = () => {
+    const trimmed = draftLabel.trim();
+    if (trimmed && trimmed !== currentLabel) onLabelChange(trimmed);
+    if (draftNote !== note) onNoteChange(draftNote);
+    setIsEditing(false);
+  };
+  const cancelEdit = () => {
+    setDraftLabel(currentLabel);
+    setDraftNote(note);
+    setIsEditing(false);
+  };
   const popoverRef = useRef<HTMLDivElement>(null);
 
   const clampPosition = (x: number, y: number, w: number, h: number) => {
@@ -955,13 +1134,14 @@ const NodePopover = ({
               {isCustom ? t("Your concept") : node.kind === "root" ? t("Lecture") : node.kind === "branch" ? t("Topic") : t("Concept")}
               {!maximized && <Move className="h-2.5 w-2.5 opacity-50" />}
             </p>
-            {isCustom ? (
+            {isEditing ? (
               <Input
-                value={currentLabel}
-                onChange={(e) => onLabelChange(e.target.value)}
+                value={draftLabel}
+                onChange={(e) => setDraftLabel(e.target.value)}
                 className="mt-0.5 h-7 text-sm font-semibold"
                 placeholder={t("Concept name")}
                 onPointerDown={(e) => e.stopPropagation()}
+                autoFocus
               />
             ) : (
               <h4 className="text-sm font-semibold leading-tight text-foreground truncate">{currentLabel}</h4>
@@ -969,6 +1149,28 @@ const NodePopover = ({
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={beginEdit}
+              aria-label={t("Edit")}
+              title={t("Edit")}
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {onDelete && !isEditing && (
+            <button
+              type="button"
+              onClick={onDelete}
+              aria-label={t("Delete")}
+              title={t("Delete")}
+              className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleMaximize}
@@ -990,7 +1192,7 @@ const NodePopover = ({
       </div>
 
       <div className="flex flex-1 min-h-0 flex-col p-4">
-        {!isCustom && explanation && (
+        {!isCustom && explanation && !isEditing && (
           <p className="shrink-0 max-h-[40%] overflow-y-auto text-xs leading-relaxed text-foreground/90 whitespace-pre-line">
             {explanation}
           </p>
@@ -1001,12 +1203,22 @@ const NodePopover = ({
             {t("Your notes")}
           </label>
           <Textarea
-            value={note}
-            onChange={(e) => onNoteChange(e.target.value)}
+            value={isEditing ? draftNote : note}
+            onChange={(e) => (isEditing ? setDraftNote(e.target.value) : onNoteChange(e.target.value))}
             placeholder={t("Add your thoughts, connections, or study notes…")}
             className="mt-1 flex-1 min-h-[80px] resize-none text-xs"
           />
         </div>
+
+        {isEditing && (
+          <div className="mt-3 flex shrink-0 items-center justify-end gap-2 border-t border-border pt-3">
+            <Button variant="ghost" size="sm" onClick={cancelEdit}>{t("Cancel")}</Button>
+            <Button size="sm" onClick={saveEdit} className="bg-gradient-primary">
+              <Check className="h-3.5 w-3.5" />
+              {t("Save")}
+            </Button>
+          </div>
+        )}
 
         {timestamp && ytLink && (
           <div className="mt-3 flex shrink-0 items-center justify-between border-t border-border pt-3">
@@ -1022,18 +1234,6 @@ const NodePopover = ({
           </div>
         )}
 
-        {onDelete && (
-          <div className="mt-3 shrink-0 border-t border-border pt-3">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-3 w-3" />
-              {t("Delete concept")}
-            </button>
-          </div>
-        )}
       </div>
 
       {!maximized && (
