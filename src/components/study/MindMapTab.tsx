@@ -36,8 +36,6 @@ import { cn } from "@/lib/utils";
 import { buildYoutubeUrl } from "@/lib/timestamp";
 import { useT } from "@/lib/i18n";
 
-type Tool = "select" | "relabel";
-
 interface CustomNode {
   id: string;
   parentId: string;
@@ -49,6 +47,7 @@ interface PersistedState {
   notes: Record<string, string>;
   customNodes: CustomNode[];
   positions: Record<string, { x: number; y: number }>;
+  deletedIds: string[];
 }
 
 interface TreeDatum {
