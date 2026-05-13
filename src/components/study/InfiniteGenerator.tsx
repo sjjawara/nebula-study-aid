@@ -81,11 +81,16 @@ export const InfiniteGenerator = ({ topic, bloomLevel, lectureContext, onCardsGe
       className="w-full border-dashed border-primary/50 hover:border-primary hover:bg-primary/5 gap-2 h-12"
     >
       {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Generating {bloomLevel} cards...</span>
+        </>
       ) : (
-        <Sparkles className="h-4 w-4 text-primary" />
+        <>
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span>Generate More {bloomLevel} Cards</span>
+        </>
       )}
-      {loading ? "Vibecoding New Cards..." : `Generate More ${bloomLevel} Cards`}
     </Button>
   );
 };

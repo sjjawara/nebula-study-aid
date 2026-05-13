@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare, ListOrdered, ScrollText } from "lucide-react";
-import { ProofModeQuiz } from "./ProofModeQuiz";
+import { Sparkles, ArrowDown, ArrowUp, Play, X, Gauge, Settings2, ChevronDown, FunctionSquare, ListOrdered } from "lucide-react";
 import type { Lecture, Flashcard, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -109,8 +108,6 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [formulaMode, setFormulaMode] = useState(false);
   const [stepOrderingMode, setStepOrderingMode] = useState(false);
   const [stepOrderingCards, setStepOrderingCards] = useState<Flashcard[] | null>(null);
-  const [proofMode, setProofMode] = useState(false);
-  const [proofCards, setProofCards] = useState<Flashcard[] | null>(null);
   const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2);
   const [customCards, setCustomCards] = useState<Flashcard[]>([]);
   const [formulaQuizCards, setFormulaQuizCards] = useState<Flashcard[] | null>(null);
@@ -121,7 +118,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     [lecture.flashcards, customCards],
   );
 
-  const generatorBloom = useMemo(() => {
+  const selectedLevel = useMemo(() => {
     const first = Array.from(customLevels)[0];
     return first ?? "Apply";
   }, [customLevels]);
@@ -134,11 +131,6 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     () => allFlashcards.filter((c) => (c.steps?.length ?? 0) >= 2).length,
     [allFlashcards],
   );
-  const proofCardCount = useMemo(
-    () => allFlashcards.filter((c) => c.bloom === "Analyze" || c.bloom === "Evaluate").length,
-    [allFlashcards],
-  );
-  const proofEligible = proofCardCount > 0;
 
   // Stable keys for flashcards (question text is the natural id here)
   const cardKey = (c: Flashcard, i: number) => `${i}::${c.question}`;
@@ -160,23 +152,20 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       ? formulaCount
       : stepOrderingMode
       ? stepCardCount
-      : proofMode
-      ? proofCardCount
       : allFlashcards.length;
     if (!modeMax) return;
     setCustomCount((prev) =>
       Math.max(MIN_QUESTION_COUNT, Math.min(prev, Math.max(MIN_QUESTION_COUNT, Math.floor(modeMax / 2) || modeMax))),
     );
-  }, [formulaMode, stepOrderingMode, proofMode, formulaCount, stepCardCount, proofCardCount, allFlashcards.length]);
+  }, [formulaMode, stepOrderingMode, formulaCount, stepCardCount, allFlashcards.length]);
 
   const filteredCardCount = useMemo(() => {
     return allFlashcards.filter((c, i) =>
       selectedCardKeys.has(cardKey(c, i)) &&
       (!formulaMode || !!c.formula?.trim()) &&
-      (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
-      (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
+      (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
     ).length;
-  }, [allFlashcards, selectedCardKeys, formulaMode, stepOrderingMode, proofMode]);
+  }, [allFlashcards, selectedCardKeys, formulaMode, stepOrderingMode]);
 
   const toggleCard = (key: string) => {
     setSelectedCardKeys((prev) => {
@@ -202,16 +191,10 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
         (c, i) =>
           selectedCardKeys.has(cardKey(c, i)) &&
           (!formulaMode || !!c.formula?.trim()) &&
-          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2) &&
-          (!proofMode || c.bloom === "Analyze" || c.bloom === "Evaluate"),
+          (!stepOrderingMode || (c.steps?.length ?? 0) >= 2),
       )
       .slice(0, customCount);
     if (!basePool.length) return;
-    if (proofMode) {
-      setProofCards(basePool);
-      setSessionKey((k) => k + 1);
-      return;
-    }
     if (stepOrderingMode) {
       setStepOrderingCards(basePool);
       setSessionKey((k) => k + 1);
@@ -290,7 +273,6 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setCustomLecture(null);
     setCustomAnswered(0);
     setStepOrderingCards(null);
-    setProofCards(null);
     setFormulaQuizCards(null);
   };
 
@@ -345,24 +327,11 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     );
   }
 
-  // Active proof-mode session
-  if (proofCards) {
-    return (
-      <ProofModeQuiz
-        key={`proof-${sessionKey}`}
-        lecture={lecture}
-        cards={proofCards}
-        onExit={exit}
-      />
-    );
-  }
-
   // Active formula-mode session (API-backed formula quiz)
   if (formulaQuizCards) {
     return (
       <FormulaModeQuiz
         key={`formula-${sessionKey}`}
-        lecture={lecture}
         cards={formulaQuizCards}
         onExit={exit}
       />
@@ -531,7 +500,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     onClick={() =>
                       setFormulaMode((v) => {
                         const next = !v;
-                        if (next) { setStepOrderingMode(false); setProofMode(false); }
+                        if (next) { setStepOrderingMode(false); }
                         return next;
                       })
                     }
@@ -586,7 +555,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     onClick={() =>
                       setStepOrderingMode((v) => {
                         const next = !v;
-                        if (next) { setFormulaMode(false); setProofMode(false); }
+                        if (next) { setFormulaMode(false); }
                         return next;
                       })
                     }
@@ -604,78 +573,6 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                   </button>
                 </div>
 
-                {/* Proof Mode */}
-                {proofEligible ? (
-                  <div
-                    className={cn(
-                      "flex items-start justify-between gap-3 rounded-xl border p-3 transition-colors",
-                      proofMode
-                        ? "border-bloom-evaluate/50 bg-bloom-evaluate/5"
-                        : "border-border bg-background",
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={cn(
-                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-                          proofMode
-                            ? "bg-bloom-evaluate text-background"
-                            : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        <ScrollText className="h-4 w-4" />
-                      </span>
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-semibold text-foreground">{t("Proof Mode")}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t("Multiple-choice proof drills: justify a step, predict the next line, spot the flaw, or pick the right strategy. Always shows the full explanation, plus the annotated proof at the end.")}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {t(proofCardCount === 1 ? "{n} Analyze/Evaluate card in this deck." : "{n} Analyze/Evaluate cards in this deck.").replace("{n}", String(proofCardCount))}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={proofMode}
-                      onClick={() =>
-                        setProofMode((v) => {
-                          const next = !v;
-                          if (next) {
-                            setFormulaMode(false);
-                            setStepOrderingMode(false);
-                          }
-                          return next;
-                        })
-                      }
-                      className={cn(
-                        "relative h-6 w-11 shrink-0 rounded-full transition-colors",
-                        proofMode ? "bg-bloom-evaluate" : "bg-muted",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "pointer-events-none absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform duration-200 ease-out",
-                          proofMode ? "translate-x-5" : "translate-x-0",
-                        )}
-                      />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-3 rounded-xl border border-dashed border-border bg-background/40 p-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                      <ScrollText className="h-4 w-4" />
-                    </span>
-                    <div className="space-y-0.5">
-                      <p className="text-sm font-semibold text-foreground">{t("Proof Mode")}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t("This lecture does not contain proof-based content.")}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Question count */}
                 {(() => {
                   const totalCards = allFlashcards.length;
@@ -684,8 +581,6 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     ? formulaCount
                     : stepOrderingMode
                     ? stepCardCount
-                    : proofMode
-                    ? proofCardCount
                     : totalCards;
                   const sliderMax = Math.max(MIN_QUESTION_COUNT, modeMax || MIN_QUESTION_COUNT);
                   const sliderValue = Math.max(
@@ -880,7 +775,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                           </p>
                         );
                       }
-                      return visibleRows.map(({ c, i }) => {
+                        return visibleRows.map(({ c, i }) => {
                         const key = cardKey(c, i);
                         const checked = selectedCardKeys.has(key);
                         return (
@@ -891,12 +786,22 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                             <Checkbox
                               checked={checked}
                               onCheckedChange={() => toggleCard(key)}
-                              className="mt-0.5"
+                              className="mt-0.5 shrink-0"
                             />
-                            <span className="flex-1 text-sm text-foreground/90 line-clamp-2">
-                              {c.question}
+                            <span className="flex min-w-0 flex-1 flex-col gap-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <span className="text-xs font-semibold px-2 py-1 rounded bg-muted">{c.bloom}</span>
+                                <span
+                                  className={cn(
+                                    "shrink-0 text-xs px-2 py-1 rounded",
+                                    c.isGenerated ? "bg-blue-500/10 text-blue-500" : "bg-green-500/10 text-green-500",
+                                  )}
+                                >
+                                  {c.isGenerated ? "✨ AI Generated" : "📚 Lecture Card"}
+                                </span>
+                              </div>
+                              <span className="text-sm text-foreground/90 line-clamp-2">{c.question}</span>
                             </span>
-                            <BloomBadge level={c.bloom} withInfo={false} className="shrink-0" />
                           </label>
                         );
                       });
@@ -904,23 +809,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                   </div>
 
                   <InfiniteGenerator
-                    topic={
-                      lecture.outline.find((o) => o.topic.trim())?.topic?.trim() || lecture.title || "Lecture"
-                    }
-                    bloomLevel={generatorBloom}
-                    lectureContext={
-                      lecture.summaries.full || lecture.summaries.medium || lecture.summaries.short
-                    }
-                    onCardsGenerated={(generated) => {
-                      setCustomCards((prev) => {
-                        const offset = lecture.flashcards.length + prev.length;
-                        setSelectedCardKeys((keys) => {
-                          const nk = new Set(keys);
-                          generated.forEach((c, i) => nk.add(cardKey(c, offset + i)));
-                          return nk;
-                        });
-                        return [...prev, ...generated];
-                      });
+                    topic={lecture.title}
+                    bloomLevel={selectedLevel}
+                    lectureContext={lecture.summaries.full}
+                    onCardsGenerated={(newCards) => {
+                      const taggedCards = newCards.map((card) => ({ ...card, isGenerated: true }));
+                      setCustomCards((prev) => [...prev, ...taggedCards]);
                     }}
                   />
                 </div>
@@ -929,15 +823,12 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                   <p className="text-xs text-muted-foreground">
                     {(() => {
                       if (filteredCardCount === 0) {
-                        if (proofMode) return t("No Analyze/Evaluate flashcards match the current filters.");
                         if (stepOrderingMode) return t("No step-sequence flashcards match the current filters. Create one in the Flashcards tab.");
                         if (formulaMode) return t("No formula flashcards match the current filters. Add a formula in the Flashcards tab.");
                         return t("No cards match the current filters.");
                       }
                       const n = Math.min(customCount, filteredCardCount);
-                      const prefix = proofMode
-                        ? t("Proof Mode — ")
-                        : stepOrderingMode
+                      const prefix = stepOrderingMode
                         ? t("Step Ordering — ")
                         : formulaMode
                         ? t("Formula Mode — ")
@@ -953,18 +844,14 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                     disabled={filteredCardCount === 0}
                     className="bg-gradient-primary"
                   >
-                    {proofMode ? (
-                      <ScrollText className="h-4 w-4" />
-                    ) : stepOrderingMode ? (
+                    {stepOrderingMode ? (
                       <ListOrdered className="h-4 w-4" />
                     ) : formulaMode ? (
                       <FunctionSquare className="h-4 w-4" />
                     ) : (
                       <Play className="h-4 w-4" />
                     )}
-                    {proofMode
-                      ? t("Start Proof Mode")
-                      : stepOrderingMode
+                    {stepOrderingMode
                       ? t("Start Step Ordering")
                       : formulaMode
                       ? t("Start Formula Quiz")

@@ -1,171 +1,145 @@
 import { useState, useEffect } from "react";
-import { Loader2, FunctionSquare, X, ChevronRight } from "lucide-react";
+import { Loader2, Calculator, X, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { BloomLevel, Lecture, Flashcard } from "@/lib/mockData";
-import { BloomBadge } from "@/components/BloomBadge";
+import { Textarea } from "@/components/ui/textarea";
+import type { Flashcard } from "@/lib/mockData";
 
 const API_BASE = "https://nebulalearn-production.up.railway.app";
 
-type FormulaQuestion = {
-  type?: string;
-  question: string;
-  answer: string;
-  bloom_level?: string;
-};
-
-interface Props {
-  lecture: Lecture;
-  cards: Flashcard[];
-  onExit: () => void;
-}
-
-const toBloomLevel = (raw: string | undefined): BloomLevel => {
-  const s = String(raw ?? "")
-    .trim()
-    .replace(/_/g, " ")
-    .toLowerCase();
-  const map: Record<string, BloomLevel> = {
-    remember: "Remember",
-    understand: "Understand",
-    apply: "Apply",
-    analyze: "Analyze",
-    analyse: "Analyze",
-    evaluate: "Evaluate",
-    create: "Create",
-  };
-  return map[s] ?? "Understand";
-};
-
-export const FormulaModeQuiz = ({ lecture, cards, onExit }: Props) => {
+export const FormulaModeQuiz = ({ cards, onExit }: { cards: Flashcard[]; onExit: () => void }) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<FormulaQuestion[]>([]);
-  const [idx, setIdx] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-
-  const card = cards[0];
-  const formula = card?.formula?.trim();
+  const [quizData, setQuizData] = useState<{ questions: Array<{ type?: string; question: string; answer: string }> } | null>(
+    null,
+  );
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [userScratchpad, setUserScratchpad] = useState("");
 
   useEffect(() => {
-    if (!card || !formula) {
+    const card = cards[0];
+    if (!card) {
       setLoading(false);
-      setError("No formula on this card.");
       return;
     }
     let cancelled = false;
-    const run = async () => {
-      setLoading(true);
-      setError(null);
+    const fetchFormula = async () => {
       try {
         const res = await fetch(`${API_BASE}/generate-formula-quiz`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            formula_name: card.question.replace(/[?.!]+$/, "").trim().slice(0, 200),
-            formula,
-            topic: lecture.title,
-            lecture_context: lecture.summaries.full || lecture.summaries.medium,
+            formula_name: card.question,
+            formula: card.formula || "Context formula",
+            topic: "Current Module",
+            lecture_context: card.answer,
           }),
         });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        const qs = Array.isArray(data.questions) ? data.questions : [];
-        if (cancelled) return;
-        setQuestions(qs);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Request failed");
+        if (!cancelled) setQuizData(data);
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
-    run();
+    fetchFormula();
     return () => {
       cancelled = true;
     };
-  }, [card, formula, lecture.summaries.full, lecture.summaries.medium, lecture.title]);
-
-  const q = questions[idx];
-  const atEnd = idx >= questions.length - 1;
-
-  const advance = () => {
-    setRevealed(false);
-    if (atEnd) onExit();
-    else setIdx((i) => i + 1);
-  };
+  }, [cards]);
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-20 text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
-        <p className="mt-3 text-sm text-muted-foreground">Loading formula quiz…</p>
+      <div className="p-20 text-center">
+        <Loader2 className="mx-auto animate-spin" />
       </div>
     );
   }
 
-  if (error || !q) {
+  const questions = quizData?.questions;
+  if (!questions?.length) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-8 space-y-4">
-        <div className="flex justify-between">
-          <h3 className="font-bold inline-flex items-center gap-2">
-            <FunctionSquare className="h-4 w-4" /> Formula mode
-          </h3>
+      <div className="p-6 bg-card border rounded-2xl max-w-2xl mx-auto">
+        <p className="text-sm text-muted-foreground">No formula questions returned.</p>
+        <Button className="mt-4" onClick={onExit}>
+          Exit
+        </Button>
+      </div>
+    );
+  }
+
+  const currentQ = questions[currentIndex];
+  const total = questions.length;
+
+  const handleNext = () => {
+    if (currentIndex < total - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setShowAnswer(false);
+      setUserScratchpad("");
+    } else {
+      onExit();
+    }
+  };
+
+  return (
+    <div className="p-6 bg-card border rounded-2xl max-w-2xl mx-auto">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <h3 className="font-bold inline-flex items-center gap-2">
+          <Calculator className="h-4 w-4" /> Formula Drill
+        </h3>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            Step {currentIndex + 1} of {total}
+          </span>
           <Button variant="ghost" size="sm" onClick={onExit}>
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <p className="text-sm text-destructive">{error ?? "No questions returned."}</p>
-        <Button onClick={onExit}>Exit</Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
-      <div className="flex justify-between items-start gap-3">
-        <div>
-          <h3 className="font-bold inline-flex items-center gap-2">
-            <FunctionSquare className="h-4 w-4 text-bloom-apply" /> Formula mode
-          </h3>
-          <p className="text-xs text-muted-foreground mt-1 font-mono">{formula}</p>
-        </div>
-        <Button variant="ghost" size="sm" onClick={onExit}>
-          <X className="h-4 w-4" />
-        </Button>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>
-          Question {idx + 1} / {questions.length}
+      <div className="mb-6 space-y-4">
+        <span className="text-xs font-bold uppercase tracking-wider text-primary">
+          {(currentQ.type ?? "Question").toString()} Check
         </span>
-        {q.bloom_level && <BloomBadge level={toBloomLevel(q.bloom_level)} withInfo={false} className="text-[10px]" />}
+        <h2 className="text-xl font-medium">{currentQ.question}</h2>
       </div>
 
-      {q.type && (
-        <span className="inline-block rounded-md border border-border bg-muted/50 px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-          {q.type}
-        </span>
-      )}
-
-      <p className="text-base font-medium text-foreground leading-relaxed">{q.question}</p>
-
-      {revealed ? (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm text-foreground whitespace-pre-wrap">
-          {q.answer}
+      {!showAnswer ? (
+        <div className="space-y-4">
+          <Textarea
+            placeholder="Work out your answer here..."
+            value={userScratchpad}
+            onChange={(e) => setUserScratchpad(e.target.value)}
+            className="min-h-[120px] resize-none"
+          />
+          <Button className="w-full" onClick={() => setShowAnswer(true)}>
+            Reveal Solution
+          </Button>
         </div>
       ) : (
-        <Button variant="secondary" onClick={() => setRevealed(true)} className="w-full sm:w-auto">
-          Reveal answer
-        </Button>
-      )}
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+          <div className="p-4 bg-muted rounded-xl border-l-4 border-primary">
+            <p className="text-sm font-semibold mb-2 text-muted-foreground">Correct Solution:</p>
+            <p className="whitespace-pre-wrap">{currentQ.answer}</p>
+          </div>
 
-      <div className="flex flex-wrap gap-2 pt-2">
-        {revealed && (
-          <Button className="bg-gradient-primary" onClick={advance}>
-            {atEnd ? "Finish" : "Next"}
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        )}
-      </div>
+          <div className="flex gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={handleNext}
+            >
+              <XCircle className="w-4 h-4 mr-2" /> Missed It
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 text-green-600 hover:text-green-600 hover:bg-green-500/10"
+              onClick={handleNext}
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" /> Got It
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

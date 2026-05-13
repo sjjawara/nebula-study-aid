@@ -28,6 +28,8 @@ export interface Flashcard {
   multiPath?: boolean;
   /** Optional per-step rationale, indexed alongside `steps`. */
   stepExplanations?: string[];
+  /** True when this card was produced by the Infinite Engine (or other AI generation). */
+  isGenerated?: boolean;
 }
 
 export interface SearchMoment {
