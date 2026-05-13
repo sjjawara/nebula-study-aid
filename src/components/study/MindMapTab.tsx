@@ -796,7 +796,8 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                 const x1 = tx - tRect.w / 2;
                 const midX = (x0 + x1) / 2;
                 const d = `M${x0},${sy} C${midX},${sy} ${midX},${ty} ${x1},${ty}`;
-                return <path key={i} d={d} strokeDasharray={t.data.isCustom ? "4 3" : undefined} />;
+                const dim = normalizedQuery && !(matchSet.has(s.data.id) && matchSet.has(t.data.id));
+                return <path key={i} d={d} strokeDasharray={t.data.isCustom ? "4 3" : undefined} style={{ opacity: dim ? 0.2 : 1, transition: "opacity 200ms" }} />;
               })}
             </g>
 
