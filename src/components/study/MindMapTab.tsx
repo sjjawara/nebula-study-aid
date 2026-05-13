@@ -99,11 +99,13 @@ const buildTree = (
   lecture: Lecture,
   labelOverrides: Record<string, string>,
   customNodes: CustomNode[],
+  deletedIds: Set<string>,
 ): TreeDatum => {
   const labelOf = (id: string, fallback: string) => labelOverrides[id] ?? fallback;
 
   const customByParent = new Map<string, CustomNode[]>();
   for (const c of customNodes) {
+    if (deletedIds.has(c.id)) continue;
     const arr = customByParent.get(c.parentId) ?? [];
     arr.push(c);
     customByParent.set(c.parentId, arr);
@@ -122,43 +124,48 @@ const buildTree = (
     }));
   };
 
-  const branches: TreeDatum[] = lecture.outline.map((o, i) => {
-    const branchId = `b:${o.timestamp}-${i}`;
-    const keywordPool = new Set<string>();
-    for (const m of lecture.searchIndex) {
-      if (m.timestamp === o.timestamp || (m.topic && m.topic === o.topic)) {
-        for (const k of m.keywords ?? []) {
-          if (k && k.trim()) keywordPool.add(k.trim());
+  const branches: TreeDatum[] = lecture.outline
+    .map((o, i) => {
+      const branchId = `b:${o.timestamp}-${i}`;
+      if (deletedIds.has(branchId)) return null;
+      const keywordPool = new Set<string>();
+      for (const m of lecture.searchIndex) {
+        if (m.timestamp === o.timestamp || (m.topic && m.topic === o.topic)) {
+          for (const k of m.keywords ?? []) {
+            if (k && k.trim()) keywordPool.add(k.trim());
+          }
         }
       }
-    }
-    const leaves: TreeDatum[] = Array.from(keywordPool)
-      .filter((k) => k.toLowerCase() !== o.topic.toLowerCase())
-      .slice(0, 5)
-      .map((k, j) => {
-        const id = `${branchId}:l:${j}`;
-        return {
+      const leaves: TreeDatum[] = Array.from(keywordPool)
+        .filter((k) => k.toLowerCase() !== o.topic.toLowerCase())
+        .slice(0, 5)
+        .map((k, j) => {
+          const id = `${branchId}:l:${j}`;
+          return { id, k, j };
+        })
+        .filter((x) => !deletedIds.has(x.id))
+        .map(({ id, k }) => ({
           id,
           name: labelOf(id, k),
-          kind: "leaf",
+          kind: "leaf" as const,
           keyword: k,
           topic: o.topic,
           timestamp: o.timestamp,
           children: attachCustom(id, o.topic, o.timestamp),
-        };
-      });
-    const branchCustomChildren = attachCustom(branchId, o.topic, o.timestamp);
-    return {
-      id: branchId,
-      name: labelOf(branchId, o.topic),
-      kind: "branch",
-      topic: o.topic,
-      timestamp: o.timestamp,
-      children: [...leaves, ...branchCustomChildren].length
-        ? [...leaves, ...branchCustomChildren]
-        : undefined,
-    };
-  });
+        }));
+      const branchCustomChildren = attachCustom(branchId, o.topic, o.timestamp);
+      return {
+        id: branchId,
+        name: labelOf(branchId, o.topic),
+        kind: "branch" as const,
+        topic: o.topic,
+        timestamp: o.timestamp,
+        children: [...leaves, ...branchCustomChildren].length
+          ? [...leaves, ...branchCustomChildren]
+          : undefined,
+      } as TreeDatum;
+    })
+    .filter((b): b is TreeDatum => b !== null);
 
   const rootCustom = attachCustom("root");
   return {
