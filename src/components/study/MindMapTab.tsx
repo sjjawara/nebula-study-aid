@@ -1234,18 +1234,6 @@ const NodePopover = ({
           </div>
         )}
 
-        {onDelete && (
-          <div className="mt-3 shrink-0 border-t border-border pt-3">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-3 w-3" />
-              {t("Delete concept")}
-            </button>
-          </div>
-        )}
       </div>
 
       {!maximized && (
