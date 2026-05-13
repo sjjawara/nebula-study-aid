@@ -1134,13 +1134,14 @@ const NodePopover = ({
               {isCustom ? t("Your concept") : node.kind === "root" ? t("Lecture") : node.kind === "branch" ? t("Topic") : t("Concept")}
               {!maximized && <Move className="h-2.5 w-2.5 opacity-50" />}
             </p>
-            {isCustom ? (
+            {isEditing ? (
               <Input
-                value={currentLabel}
-                onChange={(e) => onLabelChange(e.target.value)}
+                value={draftLabel}
+                onChange={(e) => setDraftLabel(e.target.value)}
                 className="mt-0.5 h-7 text-sm font-semibold"
                 placeholder={t("Concept name")}
                 onPointerDown={(e) => e.stopPropagation()}
+                autoFocus
               />
             ) : (
               <h4 className="text-sm font-semibold leading-tight text-foreground truncate">{currentLabel}</h4>
@@ -1148,6 +1149,28 @@ const NodePopover = ({
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={beginEdit}
+              aria-label={t("Edit")}
+              title={t("Edit")}
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {onDelete && !isEditing && (
+            <button
+              type="button"
+              onClick={onDelete}
+              aria-label={t("Delete")}
+              title={t("Delete")}
+              className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleMaximize}
@@ -1169,7 +1192,7 @@ const NodePopover = ({
       </div>
 
       <div className="flex flex-1 min-h-0 flex-col p-4">
-        {!isCustom && explanation && (
+        {!isCustom && explanation && !isEditing && (
           <p className="shrink-0 max-h-[40%] overflow-y-auto text-xs leading-relaxed text-foreground/90 whitespace-pre-line">
             {explanation}
           </p>
@@ -1180,12 +1203,22 @@ const NodePopover = ({
             {t("Your notes")}
           </label>
           <Textarea
-            value={note}
-            onChange={(e) => onNoteChange(e.target.value)}
+            value={isEditing ? draftNote : note}
+            onChange={(e) => (isEditing ? setDraftNote(e.target.value) : onNoteChange(e.target.value))}
             placeholder={t("Add your thoughts, connections, or study notes…")}
             className="mt-1 flex-1 min-h-[80px] resize-none text-xs"
           />
         </div>
+
+        {isEditing && (
+          <div className="mt-3 flex shrink-0 items-center justify-end gap-2 border-t border-border pt-3">
+            <Button variant="ghost" size="sm" onClick={cancelEdit}>{t("Cancel")}</Button>
+            <Button size="sm" onClick={saveEdit} className="bg-gradient-primary">
+              <Check className="h-3.5 w-3.5" />
+              {t("Save")}
+            </Button>
+          </div>
+        )}
 
         {timestamp && ytLink && (
           <div className="mt-3 flex shrink-0 items-center justify-between border-t border-border pt-3">
