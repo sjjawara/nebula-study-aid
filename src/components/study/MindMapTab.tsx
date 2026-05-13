@@ -694,29 +694,58 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3">
-        <button
-          onClick={() => setTool("select")}
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-            tool === "select" ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card text-foreground hover:border-primary/30",
-          )}
-        >
-          <MousePointer2 className="h-3.5 w-3.5" />
-          {t("Explore")}
-        </button>
-        <button
-          onClick={() => setTool("relabel")}
-          className={cn(
-            "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-            tool === "relabel" ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card text-foreground hover:border-primary/30",
-          )}
-        >
-          <Pencil className="h-3.5 w-3.5" />
-          {t("Relabel")}
-        </button>
+        <div className="relative flex items-center">
+          <SearchIcon className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && matchIds.length) {
+                e.preventDefault();
+                cycleMatch(1);
+              } else if (e.key === "Escape") {
+                setQuery("");
+              }
+            }}
+            placeholder={t("Search nodes & notes…")}
+            className="h-9 w-56 pl-8 pr-2 text-xs"
+          />
+        </div>
+        {normalizedQuery && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>
+              {matchIds.length === 0
+                ? t("No matches")
+                : matchIds.length === 1
+                ? t("1 match")
+                : `${matchIndex + 1} / ${matchIds.length} ${t("matches")}`}
+            </span>
+            {matchIds.length > 1 && (
+              <>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => cycleMatch(-1)} aria-label="Previous match">
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => cycleMatch(1)} aria-label="Next match">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)}><ZoomOut className="h-3.5 w-3.5" /></Button>
-          <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)}><ZoomIn className="h-3.5 w-3.5" /></Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={undoLast}
+            disabled={historyRef.current.length === 0}
+            aria-label="Undo"
+            title={t("Undo last action")}
+          >
+            <Undo2 className="h-3.5 w-3.5" />
+            {t("Undo")}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(0.8)} aria-label="Zoom out"><ZoomOut className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="sm" onClick={() => zoomBy(1.25)} aria-label="Zoom in"><ZoomIn className="h-3.5 w-3.5" /></Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
