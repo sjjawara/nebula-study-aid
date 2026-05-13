@@ -779,7 +779,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
           width="100%"
           height="100%"
           className="block bg-white"
-          style={{ cursor: tool === "relabel" ? "pointer" : "grab" }}
+          style={{ cursor: "grab" }}
         >
           <g ref={gRef}>
             <g className="links" fill="none" stroke="#cbd5e1" strokeWidth={1.4}>
