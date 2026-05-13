@@ -443,16 +443,10 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const { t } = useT();
   const handleNodeClick = (datum: TreeDatum) => {
     if (draggingRef.current?.moved) return;
-    if (tool === "relabel" && !datum.isCustom) {
-      const next = window.prompt(t("Rename this concept"), datum.name);
-      if (next && next.trim()) setLabels((prev) => ({ ...prev, [datum.id]: next.trim() }));
-      return;
-    }
     setSelected(datum);
   };
 
   const handleNodePointerDown = (e: React.PointerEvent<SVGGElement>, datum: TreeDatum, baseX: number, baseY: number) => {
-    if (tool !== "select") return;
     e.stopPropagation();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
 
