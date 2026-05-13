@@ -839,11 +839,26 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     onMouseEnter={() => setHoveredId(n.data.id)}
                     onMouseLeave={() => setHoveredId((cur) => (cur === n.data.id ? null : cur))}
                     style={{
-                      cursor: tool === "relabel" ? "pointer" : "grab",
+                      cursor: "grab",
                       touchAction: "none",
-                      transition: shouldLerp ? "transform 150ms ease-out" : undefined,
+                      transition: shouldLerp ? "transform 150ms ease-out" : "opacity 200ms",
+                      opacity: normalizedQuery && !matchSet.has(n.data.id) ? 0.2 : 1,
                     }}
                   >
+                    {pulseId === n.data.id && (
+                      <rect
+                        x={-4}
+                        y={-4}
+                        width={w + 8}
+                        height={h + 8}
+                        rx={12}
+                        ry={12}
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        style={{ animation: "pulse 1s ease-out 2" }}
+                      />
+                    )}
                     <rect
                       width={w}
                       height={h}
@@ -871,7 +886,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
                     {hasNote && (
                       <circle cx={w - 6} cy={6} r={4} fill="hsl(var(--primary))" style={{ pointerEvents: "none" }} />
                     )}
-                    {tool === "select" && hoveredId === n.data.id && (
+                    {hoveredId === n.data.id && (
                       <g
                         transform={`translate(${w - 12}, ${h / 2 - 12})`}
                         onClick={(e) => {
