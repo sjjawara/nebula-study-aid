@@ -929,7 +929,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
             onClose={() => setSelected(null)}
             onNoteChange={(v) => setNotes((prev) => ({ ...prev, [selected.id]: v }))}
             onLabelChange={(v) => setLabels((prev) => ({ ...prev, [selected.id]: v }))}
-            onDelete={selected.isCustom ? () => deleteCustomNode(selected.id) : undefined}
+            onDelete={() => deleteNode(selected.id)}
             containerRef={containerRef}
           />
         )}
