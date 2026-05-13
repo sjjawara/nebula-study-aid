@@ -26,7 +26,7 @@ export const YoutubePlayer = ({ videoUrl }: Props) => {
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (typeof e.data !== "string") return;
-      if (!/youtube\.com$/i.test(new URL(e.origin).hostname)) return;
+      if (!e.origin || !/youtube\.com|youtube-nocookie\.com/.test(e.origin)) return;
       try {
         const data = JSON.parse(e.data);
         if (data?.event === "onReady" || data?.event === "initialDelivery") {
