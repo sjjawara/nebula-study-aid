@@ -83,7 +83,19 @@ export const buildYoutubeUrl = (
   return null;
 };
 
-/** Open a YouTube video at a specific timestamp in a new tab. */
+/**
+ * Embedded-player handler. The YoutubePlayer component registers a function
+ * that receives (videoId, seconds) and returns true if it successfully
+ * dispatched a seek to its iframe. Returning false (or no handler) triggers
+ * the new-tab fallback.
+ */
+type EmbeddedSeekHandler = (videoId: string, seconds: number) => boolean;
+let embeddedSeekHandler: EmbeddedSeekHandler | null = null;
+export const registerEmbeddedSeekHandler = (h: EmbeddedSeekHandler | null) => {
+  embeddedSeekHandler = h;
+};
+
+/** Open a YouTube video at a specific timestamp — embedded player if available, else new tab. */
 export const openYoutubeAt = (
   videoUrlOrId: string | null | undefined,
   timestamp: string | undefined,
@@ -95,6 +107,7 @@ export const openYoutubeAt = (
     videoUrlOrId.startsWith("http") || videoUrlOrId.includes("/")
       ? extractVideoId(videoUrlOrId)
       : videoUrlOrId;
+  if (id && embeddedSeekHandler && embeddedSeekHandler(id, seconds)) return;
   const url = id
     ? `https://www.youtube.com/watch?v=${id}&t=${seconds}s`
     : null;
