@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { InfoTooltip, tooltipCopy } from "@/components/InfoTooltip";
 import { useT } from "@/lib/i18n";
 import { FlashcardFilters, useFlashcardFilters } from "./FlashcardFilters";
+import { toast } from "sonner";
 
 // Quiz-assessable Bloom levels. "Create" is intentionally excluded — it
 // requires extended project work and cannot be evaluated in a quiz.
@@ -111,6 +112,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
   const [questionsPerTopic, setQuestionsPerTopic] = useState<number>(2);
   const [customCards, setCustomCards] = useState<Flashcard[]>([]);
   const [formulaQuizCards, setFormulaQuizCards] = useState<Flashcard[] | null>(null);
+  const [singleLevelDrill, setSingleLevelDrill] = useState(false);
   const cardListFilters = useFlashcardFilters(lecture);
 
   const allFlashcards = useMemo(
@@ -215,6 +217,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
         : { ...c, bloom: targetLevels[idx % targetLevels.length] };
     const pool = basePool.map(overrideBloom);
     const customL: Lecture = { ...lecture, flashcards: pool };
+    setSingleLevelDrill(false);
     setCustomLecture(customL);
     setCustomAnswered(1);
     setCard(pool[0]);
@@ -237,7 +240,27 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     }
     const next = c ?? pickRandom(lecture);
     if (!next) return;
+    setSingleLevelDrill(false);
     setCard(next);
+    setSessionKey((k) => k + 1);
+  };
+
+  const startQuizFromGeneratedPool = (pool: Flashcard[], singleLevel: boolean) => {
+    if (!pool.length) {
+      toast.error("No cards in this set.");
+      return;
+    }
+    if (mode === "mastery") {
+      toast.error("Switch to Bottom Up or Top Down to run this quiz.");
+      return;
+    }
+    if (singleLevel) setMode("bottom");
+    setSingleLevelDrill(singleLevel);
+    const customL: Lecture = { ...lecture, flashcards: pool };
+    setCustomLecture(customL);
+    setCustomAnswered(1);
+    setCard(pool[0]);
+    setMasteryActive(false);
     setSessionKey((k) => k + 1);
   };
 
@@ -247,6 +270,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
       if (customAnswered >= customLecture.flashcards.length) {
         setCustomLecture(null);
         setCustomAnswered(0);
+        setSingleLevelDrill(false);
         setCard(null);
         return;
       }
@@ -274,6 +298,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
     setCustomAnswered(0);
     setStepOrderingCards(null);
     setFormulaQuizCards(null);
+    setSingleLevelDrill(false);
   };
 
   const ModePill = ({
@@ -422,13 +447,40 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
               ? t("Mastery Mode adapts to you — start at Remember and climb.")
               : t("We'll pull a question from your flashcards and launch instantly.")}
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-            <Button onClick={() => start()} className="bg-gradient-primary">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-2 sm:gap-3 pt-1">
+            <Button onClick={() => start()} className="bg-gradient-primary flex-1 sm:flex-initial">
               <Play className="h-4 w-4" />
               {t("Start Quiz")}
             </Button>
+            {customCards.length > 0 && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 sm:flex-initial"
+                  onClick={() => startQuizFromGeneratedPool(customCards, false)}
+                >
+                  {t("Standard Quiz")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="flex-1 sm:flex-initial bg-primary/10 text-primary hover:bg-primary/20"
+                  onClick={() => {
+                    const lockedCards = customCards.filter((c) => c.bloom === selectedLevel);
+                    if (lockedCards.length === 0) {
+                      toast.error(`No ${selectedLevel} cards available. Generate some first!`);
+                      return;
+                    }
+                    startQuizFromGeneratedPool(lockedCards, true);
+                  }}
+                >
+                  {t("Drill This Level Only")}
+                </Button>
+              </>
+            )}
             {mode !== "mastery" && hardest && (
-              <Button variant="secondary" onClick={() => start(hardest)}>
+              <Button variant="secondary" onClick={() => start(hardest)} className="flex-1 sm:flex-initial">
                 {t("Try the hardest one")}
               </Button>
             )}
@@ -789,16 +841,22 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
                               className="mt-0.5 shrink-0"
                             />
                             <span className="flex min-w-0 flex-1 flex-col gap-2">
-                              <div className="flex justify-between items-start gap-2">
-                                <span className="text-xs font-semibold px-2 py-1 rounded bg-muted">{c.bloom}</span>
-                                <span
-                                  className={cn(
-                                    "shrink-0 text-xs px-2 py-1 rounded",
-                                    c.isGenerated ? "bg-blue-500/10 text-blue-500" : "bg-green-500/10 text-green-500",
-                                  )}
-                                >
-                                  {c.isGenerated ? "✨ AI Generated" : "📚 Lecture Card"}
-                                </span>
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex gap-2 items-center flex-wrap">
+                                  <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-muted border border-border/50 shadow-sm">
+                                    {c.bloom}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "text-xs font-medium px-2.5 py-1 rounded-md border shadow-sm",
+                                      c.isGenerated
+                                        ? "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
+                                        : "bg-green-500/10 text-green-600 border-green-500/20 dark:text-green-400",
+                                    )}
+                                  >
+                                    {c.isGenerated ? "✨ AI Generated" : "📚 Lecture Base"}
+                                  </span>
+                                </div>
                               </div>
                               <span className="text-sm text-foreground/90 line-clamp-2">{c.question}</span>
                             </span>
@@ -933,6 +991,7 @@ export const QuizTab = ({ lecture, initialCard, onConsumedInitial }: Props) => {
           onExit={exit}
           onSelectFollowUp={launchSpecific}
           feedbackMode={feedbackMode}
+          singleLevelMode={singleLevelDrill}
         />
       )}
     </div>
