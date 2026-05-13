@@ -259,13 +259,51 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const transformRef = useRef<d3.ZoomTransform>(d3.zoomIdentity);
 
-  const [tool, setTool] = useState<Tool>("select");
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [customNodes, setCustomNodes] = useState<CustomNode[]>([]);
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<TreeDatum | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [matchIndex, setMatchIndex] = useState(0);
+  const [pulseId, setPulseId] = useState<string | null>(null);
+  const previousTransformRef = useRef<d3.ZoomTransform | null>(null);
+  // History for undo (snapshots of full state). Up to 5 entries.
+  const historyRef = useRef<PersistedState[]>([]);
+  const [historyVersion, setHistoryVersion] = useState(0);
+
+  const snapshot = useCallback((): PersistedState => ({
+    labels: { ...labels },
+    notes: { ...notes },
+    customNodes: customNodes.map((c) => ({ ...c })),
+    positions: { ...positions },
+    deletedIds: Array.from(deletedIds),
+  }), [labels, notes, customNodes, positions, deletedIds]);
+
+  const pushHistory = useCallback(() => {
+    historyRef.current = [snapshot(), ...historyRef.current].slice(0, 5);
+    setHistoryVersion((v) => v + 1);
+  }, [snapshot]);
+
+  const restoreSnapshot = (s: PersistedState) => {
+    setLabels(s.labels ?? {});
+    setNotes(s.notes ?? {});
+    setCustomNodes(s.customNodes ?? []);
+    setPositions(s.positions ?? {});
+    setDeletedIds(new Set(s.deletedIds ?? []));
+  };
+
+  const undoLast = () => {
+    const [prev, ...rest] = historyRef.current;
+    if (!prev) return;
+    historyRef.current = rest;
+    setHistoryVersion((v) => v + 1);
+    restoreSnapshot(prev);
+    toast.success("Undid last action");
+  };
+
   const draggingRef = useRef<{
     id: string;
     startX: number;
@@ -276,12 +314,13 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     descendants: { id: string; dx: number; dy: number }[];
     lerpIds: Set<string>;
   } | null>(null);
-  // Latest laid-out nodes (with positions) so pointer handlers can find descendants.
   const nodesRef = useRef<d3.HierarchyNode<TreeDatum>[]>([]);
 
   // Load persisted state on lecture change
   useEffect(() => {
     setSelected(null);
+    setQuery("");
+    historyRef.current = [];
     try {
       const raw = localStorage.getItem(storageKey(lecture));
       if (raw) {
@@ -290,6 +329,7 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
         setNotes(parsed.notes ?? {});
         setCustomNodes(parsed.customNodes ?? []);
         setPositions(parsed.positions ?? {});
+        setDeletedIds(new Set(parsed.deletedIds ?? []));
         return;
       }
     } catch {
@@ -299,19 +339,20 @@ export const MindMapTab = ({ lecture, videoUrl }: MindMapTabProps) => {
     setNotes({});
     setCustomNodes([]);
     setPositions({});
+    setDeletedIds(new Set());
   }, [lecture]);
 
   // Persist state
   useEffect(() => {
     try {
-      const data: PersistedState = { labels, notes, customNodes, positions };
+      const data: PersistedState = { labels, notes, customNodes, positions, deletedIds: Array.from(deletedIds) };
       localStorage.setItem(storageKey(lecture), JSON.stringify(data));
     } catch {
       /* ignore */
     }
-  }, [lecture, labels, notes, customNodes, positions]);
+  }, [lecture, labels, notes, customNodes, positions, deletedIds]);
 
-  const treeData = useMemo(() => buildTree(lecture, labels, customNodes), [lecture, labels, customNodes]);
+  const treeData = useMemo(() => buildTree(lecture, labels, customNodes, deletedIds), [lecture, labels, customNodes, deletedIds]);
 
   const wrappedById = useMemo(() => {
     const map = new Map<string, string[]>();
