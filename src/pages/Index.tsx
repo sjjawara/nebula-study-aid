@@ -25,6 +25,7 @@ import { SearchTab } from "@/components/study/SearchTab";
 import { QuizTab } from "@/components/study/QuizTab";
 import { MindMapTab } from "@/components/study/MindMapTab";
 import { LoadingScreen } from "@/components/study/LoadingScreen";
+import { YoutubePlayer } from "@/components/study/YoutubePlayer";
 import type { Flashcard } from "@/lib/mockData";
 import { loadFlashcards, saveFlashcards } from "@/lib/flashcardStore";
 import { LanguageProvider, T, useT, type Language } from "@/lib/i18n";
