@@ -152,6 +152,7 @@ export const SummariesTab = ({
   lecture,
   englishLecture,
   onNavigate,
+  videoUrl,
 }: {
   lecture: Lecture;
   /**
@@ -161,6 +162,7 @@ export const SummariesTab = ({
    */
   englishLecture?: Lecture;
   onNavigate?: (tab: StudyTabId) => void;
+  videoUrl?: string;
 }) => {
   const { language, t } = useT();
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
