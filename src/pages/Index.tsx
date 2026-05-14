@@ -455,7 +455,7 @@ const Index = () => {
                 <OutlineTab lecture={displayLecture} videoUrl={url} />
               </TabsContent>
               <TabsContent value="summaries" className="mt-6">
-                <SummariesTab lecture={displayLecture} englishLecture={lecture} onNavigate={setActiveTab} />
+                <SummariesTab lecture={displayLecture} englishLecture={lecture} onNavigate={setActiveTab} videoUrl={url} />
               </TabsContent>
               <TabsContent value="flashcards" className="mt-6">
                 <FlashcardsTab
