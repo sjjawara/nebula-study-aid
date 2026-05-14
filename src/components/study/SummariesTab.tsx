@@ -165,6 +165,7 @@ export const SummariesTab = ({
   videoUrl?: string;
 }) => {
   const { language, t } = useT();
+  const videoId = videoUrl ? extractVideoId(videoUrl) : null;
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
   const [translatedTakeaways, setTranslatedTakeaways] = useState<string[] | null>(null);
   const outline = useMemo(
