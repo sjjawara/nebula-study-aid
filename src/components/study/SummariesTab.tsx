@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { Lecture, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
+import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight, Play } from "lucide-react";
 import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
 import { useT, translateStrings } from "@/lib/i18n";
-import { timestampToSeconds } from "@/lib/timestamp";
+import { timestampToSeconds, openYoutubeAt, extractVideoId } from "@/lib/timestamp";
 
 type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
 
