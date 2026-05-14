@@ -458,10 +458,29 @@ export const SummariesTab = ({
                       key={`${o.timestamp}-${i}`}
                       className="flex items-start gap-2 text-sm text-foreground/90"
                     >
-                      <span className="mt-0.5 font-mono text-xs text-muted-foreground tabular-nums">
-                        {o.timestamp}
-                      </span>
-                      <span>{o.topic}</span>
+                      {videoId ? (
+                        <button
+                          type="button"
+                          onClick={() => openYoutubeAt(videoId, o.timestamp)}
+                          className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary tabular-nums hover:bg-primary/20 transition-colors"
+                          aria-label={`Open YouTube at ${o.timestamp}`}
+                        >
+                          <Play className="h-3 w-3 fill-current" />
+                          {o.timestamp}
+                        </button>
+                      ) : (
+                        <span className="mt-0.5 font-mono text-xs text-muted-foreground tabular-nums">
+                          {o.timestamp}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openYoutubeAt(videoId || videoUrl || "", o.timestamp)}
+                        className="text-left hover:text-primary hover:underline transition-colors"
+                        disabled={!videoId && !videoUrl}
+                      >
+                        {o.topic}
+                      </button>
                     </li>
                   ))}
                 </ul>
