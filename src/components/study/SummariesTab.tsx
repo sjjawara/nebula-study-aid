@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { Lecture, BloomLevel } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight } from "lucide-react";
+import { Sparkles, CheckCircle2, Compass, Lightbulb, ArrowRight, Play } from "lucide-react";
 import { InfoTooltip, tooltipCopy, bloomLevelDescriptions } from "@/components/InfoTooltip";
 import { BloomBadge } from "@/components/BloomBadge";
 import { useT, translateStrings } from "@/lib/i18n";
-import { timestampToSeconds } from "@/lib/timestamp";
+import { timestampToSeconds, openYoutubeAt, extractVideoId } from "@/lib/timestamp";
 
 type StudyTabId = "outline" | "summaries" | "flashcards" | "search" | "quiz" | "mindmap";
 
@@ -152,6 +152,7 @@ export const SummariesTab = ({
   lecture,
   englishLecture,
   onNavigate,
+  videoUrl,
 }: {
   lecture: Lecture;
   /**
@@ -161,8 +162,10 @@ export const SummariesTab = ({
    */
   englishLecture?: Lecture;
   onNavigate?: (tab: StudyTabId) => void;
+  videoUrl?: string;
 }) => {
   const { language, t } = useT();
+  const videoId = videoUrl ? extractVideoId(videoUrl) : null;
   const [selectedLevel, setSelectedLevel] = useState<BloomLevel | null>(null);
   const [translatedTakeaways, setTranslatedTakeaways] = useState<string[] | null>(null);
   const outline = useMemo(
@@ -455,10 +458,29 @@ export const SummariesTab = ({
                       key={`${o.timestamp}-${i}`}
                       className="flex items-start gap-2 text-sm text-foreground/90"
                     >
-                      <span className="mt-0.5 font-mono text-xs text-muted-foreground tabular-nums">
-                        {o.timestamp}
-                      </span>
-                      <span>{o.topic}</span>
+                      {videoId ? (
+                        <button
+                          type="button"
+                          onClick={() => openYoutubeAt(videoId, o.timestamp)}
+                          className="mt-0.5 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary tabular-nums hover:bg-primary/20 transition-colors"
+                          aria-label={`Open YouTube at ${o.timestamp}`}
+                        >
+                          <Play className="h-3 w-3 fill-current" />
+                          {o.timestamp}
+                        </button>
+                      ) : (
+                        <span className="mt-0.5 font-mono text-xs text-muted-foreground tabular-nums">
+                          {o.timestamp}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => openYoutubeAt(videoId || videoUrl || "", o.timestamp)}
+                        className="text-left hover:text-primary hover:underline transition-colors"
+                        disabled={!videoId && !videoUrl}
+                      >
+                        {o.topic}
+                      </button>
                     </li>
                   ))}
                 </ul>
